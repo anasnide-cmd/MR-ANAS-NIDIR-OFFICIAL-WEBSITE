@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { collection, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import Link from 'next/link';
 
@@ -36,6 +36,15 @@ export default function AdminPage() {
         }
     };
 
+    const handleGoogleLogin = async () => {
+        const provider = new GoogleAuthProvider();
+        try {
+            await signInWithPopup(auth, provider);
+        } catch (err) {
+            alert('Google Login failed: ' + err.message);
+        }
+    };
+
     const handleDelete = async (id) => {
         if (!confirm('Delete post?')) return;
         await deleteDoc(doc(db, 'posts', id));
@@ -52,6 +61,13 @@ export default function AdminPage() {
                     <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={{ padding: 10 }} />
                     <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: 10 }} />
                     <button type="submit" className="btn glow">Login</button>
+
+                    <div style={{ textAlign: 'center', margin: '10px 0' }}>OR</div>
+
+                    <button type="button" onClick={handleGoogleLogin} className="btn" style={{ background: '#fff', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        {/* Simple G icon */}
+                        <span style={{ fontWeight: 'bold', color: 'blue' }}>G</span> Login with Google
+                    </button>
                 </form>
             </div>
         );

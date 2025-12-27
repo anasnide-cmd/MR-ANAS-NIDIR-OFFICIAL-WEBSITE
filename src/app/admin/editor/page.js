@@ -1,10 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { auth, db } from '../../../lib/firebase';
 import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function EditorPage() {
+function EditorContent() {
     const [title, setTitle] = useState('');
     const [slug, setSlug] = useState('');
     const [content, setContent] = useState('');
@@ -76,5 +76,13 @@ export default function EditorPage() {
                 <button type="submit" className="btn glow">Save Post</button>
             </form>
         </div>
+    );
+}
+
+export default function EditorPage() {
+    return (
+        <Suspense fallback={<div className="section">Loading...</div>}>
+            <EditorContent />
+        </Suspense>
     );
 }

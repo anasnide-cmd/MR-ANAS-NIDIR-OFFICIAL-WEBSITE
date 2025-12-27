@@ -1,13 +1,14 @@
+'use client';
 export default function Footer() {
-    return (
-        <footer className="footer">
-            <p>&copy; {new Date().getFullYear()} MR ANAS NIDIR. All rights reserved.</p>
-            <div className="socials">
-                <a href="https://tiktok.com/@anasnide" target="_blank" rel="noopener noreferrer">TikTok</a> |
-                <a href="https://www.instagram.com/anasnide" target="_blank" rel="noopener noreferrer">Instagram</a> |
-                <a href="/pages/support.html">Support</a>
-            </div>
-            <style jsx>{`
+  return (
+    <footer className="footer">
+      <p>&copy; {new Date().getFullYear()} MR ANAS NIDIR. All rights reserved.</p>
+      <div className="socials">
+        <a href="https://tiktok.com/@anasnide" target="_blank" rel="noopener noreferrer">TikTok</a> |
+        <a href="https://www.instagram.com/anasnide" target="_blank" rel="noopener noreferrer">Instagram</a> |
+        <a href="/pages/support.html">Support</a>
+      </div>
+      <style jsx>{`
         .footer {
           text-align: center;
           padding: 24px;
@@ -21,6 +22,6 @@ export default function Footer() {
           margin: 0 8px;
         }
       `}</style>
-        </footer>
-    );
+    </footer>
+  );
 }
