@@ -13,27 +13,30 @@ function throttle(fn, wait = 100) {
 }
 
 /* ================================
-   2) SCROLL REVEAL
+   2) SCROLL REVEAL (IntersectionObserver)
 ================================ */
 const revealEls = document.querySelectorAll('.reveal');
 
-function handleReveal() {
-  const winH = window.innerHeight || document.documentElement.clientHeight;
-  revealEls.forEach(el => {
-    const top = el.getBoundingClientRect().top;
-    if (top < winH - 100) el.classList.add('active');
+const revealObserver = new IntersectionObserver((entries, observer) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('active');
+      observer.unobserve(entry.target); // Reveal only once
+    }
   });
-}
+}, {
+  root: null,
+  threshold: 0.15,
+});
 
-window.addEventListener('scroll', throttle(handleReveal, 120));
-window.addEventListener('load', handleReveal);
+revealEls.forEach(el => revealObserver.observe(el));
 
 /* ================================
    3) NAV: Mobile drawer (slide left)
 ================================ */
 const hamburger = document.getElementById('hamburger');
-const navLinks  = document.getElementById('nav-links');
-const body      = document.body;
+const navLinks = document.getElementById('nav-links');
+const body = document.body;
 
 function openMenu() {
   navLinks.classList.add('active');
@@ -57,7 +60,7 @@ if (hamburger && navLinks) {
   const closeBtn = document.getElementById('close-menu');
   if (closeBtn) {
     closeBtn.addEventListener('click', closeMenu);
-    closeBtn.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') closeMenu(); });
+    closeBtn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') closeMenu(); });
   }
 
   // Auto-close on link click
@@ -121,7 +124,7 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
   async function decodeImages(root) {
     const imgs = Array.from(root.querySelectorAll('img'));
     await Promise.all(
-      imgs.map(img => (img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
+      imgs.map(img => (img.decode ? img.decode().catch(() => { }) : Promise.resolve()))
     );
   }
 
