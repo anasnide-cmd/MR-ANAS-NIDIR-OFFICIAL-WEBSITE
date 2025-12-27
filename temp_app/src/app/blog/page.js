@@ -1,21 +1,27 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { db } from '../../lib/firebase';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
-import { client } from '../../sanity/lib/client';
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export default function BlogPage() {
+    const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-async function getPosts() {
-    const query = `*[_type == "post"] | order(publishedAt desc) {
-    _id,
-    title,
-    slug,
-    publishedAt,
-    "excerpt": array::join(string::split((pt::text(content)), "")[0..200], "") + "..."
-  }`;
-    return client.fetch(query);
-}
-
-export default async function BlogPage() {
-    const posts = await getPosts();
+    useEffect(() => {
+        const fetchPosts = async () => {
+            try {
+                const q = query(collection(db, 'posts'), orderBy('date', 'desc'));
+                const snap = await getDocs(q);
+                setPosts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            } catch (err) {
+                console.error("Error fetching posts:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPosts();
+    }, []);
 
     return (
         <main className="container section">
@@ -24,23 +30,26 @@ export default async function BlogPage() {
                 <p>Thoughts on engineering, product, and the indie stack.</p>
             </header>
 
-            <section className="grid" style={{ justifyContent: 'flex-start' }}>
-                {posts.length > 0 ? (
+            <div className="grid" style={{ justifyContent: 'flex-start' }}>
+                {loading ? (
+                    <p>Loading posts...</p>
+                ) : posts.length > 0 ? (
                     posts.map((post) => (
-                        <article key={post._id} className="card glass">
+                        <article key={post.id} className="card glass">
                             <h3>
-                                <Link href={`/blog/${post.slug.current}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                {/* Note: You need to create [slug]/page.js to handle individual post views */}
+                                <Link href={`/blog/${post.slug || '#'}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                                     {post.title}
                                 </Link>
                             </h3>
-                            <p className="meta">{new Date(post.publishedAt).toLocaleDateString()}</p>
-                            <p>{post.excerpt}</p>
+                            <p className="meta">{new Date(post.date).toLocaleDateString()}</p>
+                            <p>{post.content.substring(0, 100)}...</p>
                         </article>
                     ))
                 ) : (
-                    <p>No posts found. Add some in Sanity Studio!</p>
+                    <p>No posts found. <Link href="/admin">Login to add content</Link>.</p>
                 )}
-            </section>
+            </div>
 
             <style jsx>{`
         .page-hero { margin-bottom: 40px; }
