@@ -1,0 +1,171 @@
+:root {
+  --primary: #00f0ff;
+  --bg: #0a0a0a;
+  --text: #ffffff;
+  --logo-gap: 40px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  /* padding-top is handled by layout/navbar spacing if needed, or keep it */
+  padding-top: 70px;
+  background: var(--bg);
+  color: var(--text);
+  scroll-behavior: smooth;
+}
+
+/* Re-use existing utility classes */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .55);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  width: 90px;
+  margin-bottom: 12px;
+}
+
+.hero-title {
+  font-size: clamp(1.8rem, 4.5vw, 3rem);
+  margin: .25rem 0;
+}
+
+.hero-subtitle {
+  opacity: .9;
+}
+
+.btn,
+.glow-btn {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: var(--primary);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn.glow {
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.section {
+  padding: 70px 16px;
+  text-align: center;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.card {
+  width: 280px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .06);
+  backdrop-filter: blur(8px);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bio-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.bio-img {
+  width: 220px;
+  height: 220px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, .1);
+}
+
+.bio-text {
+  max-width: 600px;
+  text-align: left;
+  line-height: 1.6;
+}
+
+/* Reveal animation class (handled by Framer Motion or Observer in React, but keeping CSS fallback) */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all .5s ease;
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Project Logos */
+.project-logos {
+  overflow: hidden;
+  width: 100%;
+  padding: 20px 0;
+  display: grid;
+  gap: 16px;
+  position: relative;
+}
+
+.project-logos::before,
+.project-logos::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  pointer-events: none;
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+
+.project-logos::after {
+  right: 0;
+  left: auto;
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+
+.project-logos::before {
+  left: 0;
+}
+
+.logos-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  will-change: transform;
+}
+
+/* Note: Animation logic needs to be moved to CSS animation or Framer Motion for React consistency */
