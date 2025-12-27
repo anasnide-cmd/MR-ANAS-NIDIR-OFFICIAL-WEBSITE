@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NEX Pages</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+  <div class="container center">
+    <h1>Welcome to MR ANAS NIDIR Pages</h1>
+    <button id="loginBtn">Login with Google</button>
+  </div>
+  
+  <div id="paypal-button-container-P-5WY34475L84956149NCSK6JQ"></div>
+<script src="https://www.paypal.com/sdk/js?client-id=AXGCBOyxGyAb3dp_58S0_0Wv9OyLjRY4VLB9k55pEWO5hqA8cHhG8v_A0dW_EtR0oXsTXULcs14VDObs&vault=true&intent=subscription" data-sdk-integration-source="button-factory"></script>
+<script>
+  paypal.Buttons({
+      style: {
+          shape: 'rect',
+          color: 'gold',
+          layout: 'vertical',
+          label: 'subscribe'
+      },
+      createSubscription: function(data, actions) {
+        return actions.subscription.create({
+          /* Creates the subscription */
+          plan_id: 'P-5WY34475L84956149NCSK6JQ'
+        });
+      },
+      onApprove: function(data, actions) {
+        alert(data.subscriptionID); // You can add optional success message for the subscriber here
+      }
+  }).render('#paypal-button-container-P-5WY34475L84956149NCSK6JQ'); // Renders the PayPal button
+</script>
+
+  <script src="index.js"></script>
+</body>
+</html>

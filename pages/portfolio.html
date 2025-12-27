@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Portfolio | MR ANAS NIDIR</title>
+  <link rel="stylesheet" href="../css/index.css">
+  <link rel="stylesheet" href="../css/pages.css">
+</head>
+<body>
+  <!-- reuse site navbar -->
+  <nav class="navbar" role="navigation" aria-label="Main">
+    <div class="logo-container">
+      <div class="logo-img"><img src="../assets/logo.jpg" alt="MR ANAS NIDIR" class="navbar-logo" loading="lazy"></div>
+      <div class="logo-text">NEXENGINE</div>
+    </div>
+    <ul class="nav-links" id="nav-links">
+      <li class="close-btn" id="close-menu" role="button" tabindex="0">✕</li>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="/pages/portfolio.html" class="active">Portfolio</a></li>
+      <li><a href="/pages/blog/index.html">Blog</a></li>
+      <li><a href="/pages/timeline.html">Timeline</a></li>
+      <li><a href="/pages/support.html">Support</a></li>
+    </ul>
+    <button class="nav-btn" onclick="location.href='/#projects'">Get Started</button>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">☰</button>
+  </nav>
+
+  <header class="page-hero">
+    <h1>Selected Work</h1>
+    <p>Real projects, real results — engineered for speed, privacy, and control.</p>
+  </header>
+
+  <main class="container">
+    <section class="grid cols-3">
+      <article class="card glass">
+        <h3>NEXENGINE</h3>
+        <p class="meta">Infra • 2025</p>
+        <p>Independent web server stack with zero third-party lock-in.</p>
+        <div class="tagset"><span class="tag">Infra</span><span class="tag">Performance</span></div>
+      </article>
+      <article class="card glass">
+        <h3>NEX AI</h3>
+        <p class="meta">AI • 2025</p>
+        <p>Private chatbot platform with custom pipelines & prompt tools.</p>
+        <div class="tagset"><span class="tag">AI</span><span class="tag">LLM</span></div>
+      </article>
+      <article class="card glass">
+        <h3>ANAS GPT</h3>
+        <p class="meta">Assistant • 2024</p>
+        <p>LLM web assistant for automation & knowledge workflows.</p>
+        <div class="tagset"><span class="tag">Assistant</span><span class="tag">Web</span></div>
+      </article>
+    </section>
+
+    <div class="center" style="margin-top:24px">
+      <a class="btn-primary" href="/pages/support.html">Work with me</a>
+    </div>
+  </main>
+
+  <footer class="page-footer">&copy; 2025 MR ANAS NIDIR</footer>
+  <script src="../js/index.js"></script>
+</body>
+</html>

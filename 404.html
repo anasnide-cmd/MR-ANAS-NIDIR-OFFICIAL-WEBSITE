@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>404 — MR ANAS NIDIR</title>
+
+<!-- (optional) favicon di root, buang jika tak ada -->
+<link rel="icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Exo+2:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --primary:#00f0ff;
+  --bg1:#0f2027; --bg2:#203a43; --bg3:#2c5364;
+  --text:#eaf4f6; --muted:#9aa0a6;
+}
+
+*{box-sizing:border-box} html,body{height:100%}
+body{
+  margin:0; display:grid; place-items:center; text-align:center;
+  color:var(--text); font-family:'Exo 2',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background: linear-gradient(-45deg,var(--bg1),var(--bg2),var(--bg3),#000);
+  background-size:400% 400%; animation:bgMove 12s ease infinite;
+  overflow:hidden; padding:24px;
+}
+
+/* moving gradient background */
+@keyframes bgMove{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
+
+.card{
+  position:relative; max-width:560px; width:100%;
+  background:rgba(255,255,255,0.06); backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,0.1); border-radius:16px;
+  padding:36px 24px; box-shadow:0 0 24px rgba(0,240,255,.12);
+  overflow:hidden;
+}
+
+/* subtle scanlines + noise */
+.card::before{
+  content:""; position:absolute; inset:0;
+  background: repeating-linear-gradient(to bottom, rgba(255,255,255,.05) 0px, rgba(255,255,255,.05) 1px, transparent 2px, transparent 4px);
+  opacity:.07; pointer-events:none;
+}
+.card::after{
+  content:""; position:absolute; inset:-200%;
+  background:radial-gradient(circle at 50% 50%, rgba(0,240,255,.08), transparent 60%);
+  animation:floatGlow 18s linear infinite; pointer-events:none;
+}
+@keyframes floatGlow{to{transform:translate3d(10%,10%,0)}}
+
+/* GLITCH heading */
+h1{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(3rem,12vw,8rem);
+  line-height:1; margin:0 0 8px; color:var(--primary);
+  position:relative; text-shadow:0 0 14px rgba(0,240,255,.35);
+}
+
+/* pseudo layers for chromatic glitch */
+h1::before, h1::after{
+  content:attr(data-text);
+  position:absolute; inset:0;
+  clip-path:inset(0 0 0 0); /* baseline */
+  mix-blend-mode:screen; opacity:.9; filter:blur(.3px);
+}
+h1::before{ color:#ff3b81; transform:translate(2px,0); animation:glA 2.2s infinite steps(20,end);}
+h1::after { color:#4dff91; transform:translate(-2px,0); animation:glB 2.2s infinite steps(18,end);}
+
+@keyframes glA{
+  0%{clip-path:inset(0 0 92% 0)}
+  10%{clip-path:inset(0 0 0 0); transform:translate(2px,-1px)}
+  20%{clip-path:inset(80% 0 0 0)}
+  30%{clip-path:inset(0 0 40% 0)}
+  40%{clip-path:inset(60% 0 0 0); transform:translate(3px,1px)}
+  50%{clip-path:inset(0 0 0 0)}
+  60%{clip-path:inset(0 0 88% 0)}
+  70%{clip-path:inset(0 0 0 0)}
+  80%{clip-path:inset(70% 0 0 0)}
+  100%{clip-path:inset(0 0 0 0)}
+}
+@keyframes glB{
+  0%{clip-path:inset(86% 0 0 0)}
+  12%{clip-path:inset(0 0 0 0); transform:translate(-2px,1px)}
+  22%{clip-path:inset(0 0 68% 0)}
+  36%{clip-path:inset(0 0 0 0)}
+  48%{clip-path:inset(55% 0 0 0); transform:translate(-3px,-1px)}
+  64%{clip-path:inset(0 0 0 0)}
+  78%{clip-path:inset(0 0 84% 0)}
+  100%{clip-path:inset(0 0 0 0)}
+}
+
+/* subtext */
+p{
+  margin:0 0 18px; font-size:1.05rem; color:var(--text);
+  opacity:0; transform:translateY(8px);
+  animation:fadeUp .8s ease .3s forwards;
+}
+@keyframes fadeUp{to{opacity:1; transform:none}}
+
+.brand{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  margin-bottom:10px; opacity:0; animation:fadeUp .6s ease .15s forwards;
+}
+.brand img{height:46px; width:auto; border-radius:10px; filter:drop-shadow(0 0 8px rgba(0,240,255,.35))}
+.brand span{font-family:'Orbitron',sans-serif; letter-spacing:.5px}
+
+.actions{display:flex; gap:12px; justify-content:center; flex-wrap:wrap}
+a.btn{
+  display:inline-block; padding:12px 22px; border-radius:12px;
+  background:var(--primary); color:#061214; font-weight:800; text-decoration:none;
+  box-shadow:0 0 18px rgba(0,240,255,.25);
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+a.btn:hover{ transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,240,255,.35) }
+a.ghost{
+  background:transparent; color:var(--primary);
+  border:1px solid rgba(0,240,255,.4);
+}
+
+/* tiny footer line */
+small{display:block; margin-top:14px; color:var(--muted)}
+
+/* reduced motion: turn off fancy stuff */
+@media (prefers-reduced-motion: reduce){
+  body{animation:none}
+  h1::before,h1::after{animation:none}
+  .card::after{animation:none}
+}
+</style>
+</head>
+<body>
+
+  <main class="card" role="main" aria-labelledby="errTitle">
+    <div class="brand">
+      <img src="/assets/logo.jpg" alt="MR ANAS NIDIR logo">
+      <span>MR ANAS NIDIR</span>
+    </div>
+
+    <h1 id="errTitle" data-text="404">404</h1>
+    <p>Oops — the page you’re looking for doesn’t exist or has moved.</p>
+
+    <div class="actions">
+      <a class="btn" href="/">Go Home</a>
+      <a class="btn ghost" href="/pages/support.html">Contact Support</a>
+    </div>
+
+    <small>Error code: 404 • Page not found</small>
+  </main>
+
+</body>
+</html>

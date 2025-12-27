@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Onboarding - Create Your Page</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="onboarding-container">
+    <h2>Setup Your Page</h2>
+    <form id="onboardingForm">
+      <label>Username (unik)</label>
+      <input type="text" id="username" required placeholder="contoh: anas">
+
+      <label>Display Name</label>
+      <input type="text" id="displayName" required placeholder="contoh: Anas Nide Official">
+
+      <label>Bio</label>
+      <textarea id="bio" rows="3" placeholder="Tulis sedikit tentang anda"></textarea>
+
+      <label>Pilih Features</label>
+      <select id="features" multiple>
+        <option value="link">Link Collection</option>
+        <option value="blog">Blog</option>
+        <option value="shop">Shop</option>
+        <option value="service">Service Booking</option>
+      </select>
+
+      <button type="submit">Create My Page</button>
+    </form>
+  </div>
+
+  <script src="firebase-config.js"></script>
+  <script src="onboarding.js"></script>
+</body>
+</html>

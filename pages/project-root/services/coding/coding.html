@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Coding Mode • NEX</title>
+  <link rel="stylesheet" href="../../style.css" />
+</head>
+<body onload="App.requireAuth(); App.requireSubscriber(); Coding.init();">
+  <header class="topbar">
+    <div class="topbar-left"><a class="btn ghost" href="../../dashboard.html">← Dashboard</a></div>
+    <div class="topbar-right"><a class="btn" href="../pages/pages.html">Save as Page</a></div>
+  </header>
+
+  <main class="container max-w-800">
+    <div class="card">
+      <h2>Coding Mode</h2>
+      <p class="muted">Tulis HTML/CSS/JS. Preview hidup di bawah.</p>
+      <textarea id="code" class="mono" placeholder="&lt;h1&gt;Hello&lt;/h1&gt;\n&lt;style&gt;h1{color:rebeccapurple}&lt;/style&gt;"></textarea>
+      <div class="actions">
+        <button class="btn primary" onclick="Coding.preview()">▶️ Run / Preview</button>
+        <button class="btn" onclick="Coding.sendToPages()">📄 Send to Pages</button>
+      </div>
+      <iframe id="frame" class="preview"></iframe>
+    </div>
+  </main>
+
+  <footer class="bottomnav">
+    <a href="../../dashboard.html">🏠 Home</a>
+    <a href="../pages/pages.html">📄 Pages</a>
+    <a href="../features/features.html">⚡ Features</a>
+    <a href="coding.html" class="active">💻 Code</a>
+  </footer>
+
+  <script src="../../script.js"></script>
+  <script src="coding.js"></script>
+</body>
+</html>

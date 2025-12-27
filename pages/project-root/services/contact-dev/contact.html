@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contact Developer • NEX</title>
+  <link rel="stylesheet" href="../../style.css" />
+</head>
+<body onload="App.requireAuth(); Contact.init();">
+  <header class="topbar">
+    <div class="topbar-left"><a class="btn ghost" href="../../dashboard.html">← Dashboard</a></div>
+  </header>
+
+  <main class="container max-w-800">
+    <div class="card">
+      <h2>Contact Developer</h2>
+      <div class="row">
+        <input id="subject" class="input" placeholder="Subject" />
+        <input id="contact" class="input" placeholder="Your email/WhatsApp" />
+      </div>
+      <textarea id="message" class="mono" placeholder="Describe your need / masalah…"></textarea>
+      <div class="actions">
+        <button class="btn primary" onclick="Contact.submit()">Hantar</button>
+        <a class="btn" id="waLink" target="_blank">WhatsApp</a>
+        <a class="btn" id="mailLink">Email</a>
+      </div>
+      <p class="muted small">Permintaan ini disimpan secara tempatan (demo). Integrasi sebenar boleh guna Firestore/Email API.</p>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="card">
+      <h3>Requests Saya</h3>
+      <div id="list" class="list"></div>
+    </div>
+  </main>
+
+  <footer class="bottomnav">
+    <a href="../../dashboard.html">🏠 Home</a>
+    <a href="../pages/pages.html">📄 Pages</a>
+    <a href="../features/features.html">⚡ Features</a>
+    <a href="contact.html" class="active">📩 Contact</a>
+  </footer>
+
+  <script src="../../script.js"></script>
+  <script src="contact.js"></script>
+</body>
+</html>

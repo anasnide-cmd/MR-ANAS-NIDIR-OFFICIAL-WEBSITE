@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Post Title | MR ANAS NIDIR</title>
+  <link rel="stylesheet" href="../../css/index.css">
+  <link rel="stylesheet" href="../../css/pages.css">
+  <style>
+    .post{max-width:860px;margin:24px auto 80px;padding:0 16px}
+    .post .title{font-family:'Orbitron',sans-serif;font-size:clamp(1.6rem,4vw,2.2rem);margin:0}
+    .post .meta{color:#9aa0a6;margin:6px 0 18px}
+    .post .cover{border-radius:16px;overflow:hidden}
+    .post img{width:100%;height:auto;display:block}
+    .post .content{line-height:1.8}
+    .post .content h2{margin-top:1.4em}
+    .post .content code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:6px}
+    .post .content pre{background:rgba(255,255,255,.06);padding:14px;border-radius:10px;overflow:auto}
+  </style>
+</head>
+<body>
+  <nav class="navbar" role="navigation">
+    <div class="logo-container">
+      <div class="logo-img"><img src="../../assets/logo.jpg" alt="MR ANAS NIDIR" class="navbar-logo" loading="lazy"></div>
+      <div class="logo-text">NEXENGINE</div>
+    </div>
+    <ul class="nav-links" id="nav-links">
+      <li class="close-btn" id="close-menu" role="button" tabindex="0">✕</li>
+      <li><a href="/index.html">Home</a></li>
+      <li><a href="/pages/blog/index.html" class="active">Blog</a></li>
+      <li><a href="/pages/portfolio.html">Portfolio</a></li>
+      <li><a href="/pages/timeline.html">Timeline</a></li>
+      <li><a href="/pages/support.html">Support</a></li>
+    </ul>
+    <button class="nav-btn" onclick="location.href='/pages/support.html'">Contact</button>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">☰</button>
+  </nav>
+
+  <header class="page-hero">
+    <h1>Blog</h1>
+    <p>Notes on building and shipping.</p>
+  </header>
+
+  <main class="post">
+    <h1 class="title">Why Simplicity Wins</h1>
+    <p class="meta">March 2025 • 3 min read</p>
+
+    <div class="cover glass">
+      <img src="../../assets/bg.jpg" alt="Cover">
+    </div>
+
+    <article class="content">
+      <p>Keeping systems simple makes them faster to build, easier to debug, and cheaper to run.</p>
+
+      <h2>Principles</h2>
+      <ul>
+        <li>Prefer fewer moving parts.</li>
+        <li>Make every dependency earn its place.</li>
+        <li>Automate repeatable steps.</li>
+      </ul>
+
+      <h2>Example</h2>
+      <pre><code>// tiny example
+function ship(feature) {
+  validate(feature);
+  launch(feature);
+}</code></pre>
+
+      <p>That’s the idea: clarity over complexity, speed over ceremony.</p>
+    </article>
+  </main>
+
+  <footer class="page-footer">&copy; 2025 MR ANAS NIDIR</footer>
+  <script src="../../js/index.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Blog | MR ANAS NIDIR</title>
+  <link rel="stylesheet" href="../../css/index.css">
+  <link rel="stylesheet" href="../../css/pages.css">
+</head>
+<body>
+  <nav class="navbar" role="navigation">
+    <div class="logo-container">
+      <div class="logo-img"><img src="../../assets/logo.jpg" alt="MR ANAS NIDIR" class="navbar-logo" loading="lazy"></div>
+      <div class="logo-text">NEXENGINE</div>
+    </div>
+    <ul class="nav-links" id="nav-links">
+      <li class="close-btn" id="close-menu" role="button" tabindex="0">✕</li>
+      <li><a href="/index.html">Home</a></li>
+      <li><a href="/pages/portfolio.html">Portfolio</a></li>
+      <li><a href="/pages/blog/index.html" class="active">Blog</a></li>
+      <li><a href="/pages/timeline.html">Timeline</a></li>
+      <li><a href="/pages/support.html">Support</a></li>
+    </ul>
+    <button class="nav-btn" onclick="location.href='/pages/support.html'">Contact</button>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">☰</button>
+  </nav>
+
+  <header class="page-hero">
+    <h1>Notes & Updates</h1>
+    <p>Thoughts on engineering, product, and the indie stack.</p>
+  </header>
+
+  <main class="container">
+    <section class="grid cols-3">
+      <!-- Add posts by duplicating these cards -->
+      <article class="card glass">
+        <h3><a href="/pages/blog/post-template.html" style="text-decoration:none;color:inherit">Why Simplicity Wins</a></h3>
+        <p class="meta">Mar 2025 • 3 min read</p>
+        <p>A practical look at building fast, focused products with fewer moving parts.</p>
+        <div class="tagset"><span class="tag">Product</span><span class="tag">Mindset</span></div>
+      </article>
+
+      <article class="card glass">
+        <h3><a href="/pages/blog/post-template.html" style="text-decoration:none;color:inherit">Hosting Without Lock‑In</a></h3>
+        <p class="meta">Feb 2025 • 4 min read</p>
+        <p>Design principles behind independent hosting and portable infrastructure.</p>
+        <div class="tagset"><span class="tag">Infra</span><span class="tag">Self‑host</span></div>
+      </article>
+
+      <article class="card glass">
+        <h3><a href="/pages/blog/post-template.html" style="text-decoration:none;color:inherit">Private AI, Real Control</a></h3>
+        <p class="meta">Jan 2025 • 5 min read</p>
+        <p>Architecting private AI pipelines with strong data boundaries.</p>
+        <div class="tagset"><span class="tag">AI</span><span class="tag">Privacy</span></div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="page-footer">&copy; 2025 MR ANAS NIDIR</footer>
+  <script src="../../js/index.js"></script>
+</body>
+</html>

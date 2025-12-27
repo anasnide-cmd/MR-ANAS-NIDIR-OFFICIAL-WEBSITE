@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+  <header>
+    <h2>My Dashboard</h2>
+    <button id="logoutBtn">Logout</button>
+  </header>
+
+  <section class="profile">
+    <h3>Profile</h3>
+    <p><b>Username:</b> <span id="username"></span></p>
+    <input id="usernameInput" placeholder="Change username">
+    <button id="saveProfile">Save</button>
+  </section>
+
+  <section class="pages">
+    <h3>My Pages</h3>
+    <div id="pagesList"></div>
+    <button id="newPageBtn">+ New Page</button>
+  </section>
+
+  <div id="editor" class="hidden">
+    <h3>Edit Page</h3>
+    <input id="pageTitle" placeholder="Page Title"><br>
+    <textarea id="pageContent" placeholder="Page Content"></textarea><br>
+    <button id="savePage">Save & Publish</button>
+    <button id="cancelEdit">Cancel</button>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

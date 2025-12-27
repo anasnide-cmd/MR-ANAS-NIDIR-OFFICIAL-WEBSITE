@@ -1,0 +1,44 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+.container {
+  padding: 20px;
+}
+.center {
+  text-align: center;
+  margin-top: 20%;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: #222;
+  color: white;
+}
+section {
+  padding: 15px;
+}
+#pagesList div {
+  background: #f4f4f4;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 8px;
+}
+textarea, input {
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+}
+button {
+  padding: 8px 15px;
+  margin: 5px;
+  cursor: pointer;
+}
+.hidden {
+  display: none;
+}
+.page-container {
+  padding: 20px;
+}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>No‑Code Builder • NEX</title>
+  <link rel="stylesheet" href="../../style.css" />
+</head>
+<body onload="App.requireAuth(); App.requireSubscriber(); Features.init();">
+  <header class="topbar">
+    <div class="topbar-left"><a class="btn ghost" href="../../dashboard.html">← Dashboard</a></div>
+    <div class="topbar-right"><a class="btn" href="../pages/pages.html">Save as Page</a></div>
+  </header>
+
+  <main class="container max-w-800">
+    <div class="card">
+      <h2>No‑Code Builder</h2>
+      <div class="row">
+        <select id="blockSelect" class="input">
+          <option value="text">Text Block</option>
+          <option value="image">Image</option>
+          <option value="button">Button</option>
+          <option value="hero">Hero Section</option>
+          <option value="contact">Contact Form (static)</option>
+        </select>
+        <button class="btn" onclick="Features.addBlock()">+ Add</button>
+      </div>
+
+      <textarea id="code" class="mono" placeholder="Generated HTML will appear here..."></textarea>
+      <div class="actions">
+        <button class="btn primary" onclick="Features.preview()">▶️ Preview</button>
+        <button class="btn" onclick="Features.sendToPages()">📄 Send to Pages</button>
+      </div>
+      <iframe id="frame" class="preview"></iframe>
+    </div>
+  </main>
+
+  <footer class="bottomnav">
+    <a href="../../dashboard.html">🏠 Home</a>
+    <a href="../pages/pages.html">📄 Pages</a>
+    <a href="features.html" class="active">⚡ Features</a>
+    <a href="../coding/coding.html">💻 Code</a>
+  </footer>
+
+  <script src="../../script.js"></script>
+  <script src="features.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEX Page</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { background:#fff; color:#111; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 16px; }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div id="content">Loading…</div>
+  </div>
+
+  <script>
+    // URL expected: /u/:username/:slug
+    const path = location.pathname.replace(/^\/+|\/+$/g, ""); // trim slashes
+    const parts = path.split("/"); // ["u", "username", "slug"]
+    const contentEl = document.getElementById("content");
+
+    (async function main() {
+      if (parts.length < 3 || parts[0] !== "u") {
+        contentEl.innerHTML = "<p class='muted'>Invalid URL.</p>";
+        return;
+      }
+      const username = parts[1];
+      const slug = parts.slice(2).join("/"); // sokong subpath kalau perlu
+      try {
+        // Cari user by username → ambil uid
+        const users = await db.collection("users").where("username", "==", username).limit(1).get();
+        if (users.empty) {
+          contentEl.innerHTML = "<p class='muted'>User not found.</p>";
+          return;
+        }
+        const userDoc = users.docs[0];
+        const uid = userDoc.id;
+
+        // Ambil page by slug & status published
+        const pagesSnap = await db
+          .collection("users").doc(uid)
+          .collection("pages").where("slug", "==", slug).limit(1).get();
+
+        if (pagesSnap.empty) {
+          contentEl.innerHTML = "<p class='muted'>Page not found.</p>";
+          return;
+        }
+        const page = pagesSnap.docs[0].data();
+        if (page.status !== "published") {
+          contentEl.innerHTML = "<p class='muted'>This page is not published.</p>";
+          return;
+        }
+
+        document.title = page.title || slug;
+        contentEl.innerHTML = page.content || "<p class='muted'>No content.</p>";
+      } catch (e) {
+        console.error(e);
+        contentEl.innerHTML = "<p class='muted'>Something went wrong.</p>";
+      }
+    })();
+  </script>
+</body>
+</html>

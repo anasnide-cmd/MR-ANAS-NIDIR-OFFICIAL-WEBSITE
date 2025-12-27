@@ -1,0 +1,206 @@
+/* =========================================
+   1. VARIABLES & BASE STYLES
+========================================= */
+:root {
+  --primary: #00f0ff;
+  --bg: #0a0a0a;
+  --text: #ffffff;
+  --logo-gap: 40px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  padding-top: 70px; /* elak navbar fixed tutup content */
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Exo 2", sans-serif;
+  scroll-behavior: smooth;
+}
+
+/* =========================================
+   2. NAVBAR DESKTOP
+========================================= */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 70px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; z-index: 1000;
+  background: rgba(0, 0, 0, 0.45);    /* glass */
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.logo-container { display: flex; align-items: center; gap: 10px; }
+.navbar-logo { height: 36px; width: auto; border-radius: 6px; }
+.logo-text { font-weight: 700; letter-spacing: .5px; color: var(--primary); }
+
+.nav-links { display: flex; gap: 18px; list-style: none; margin: 0; padding: 0; }
+.nav-links a { color: var(--text); text-decoration: none; padding: 8px 4px; border-radius: 6px; transition: color .2s ease; }
+.nav-links a:hover { color: var(--primary); }
+
+.nav-btn {
+  background: transparent; border: 1px solid var(--primary); color: var(--primary);
+  padding: .5rem 1rem; border-radius: 999px; cursor: pointer;
+}
+.hamburger { display: none; background: none; border: none; color: var(--text); font-size: 1.6rem; cursor: pointer; }
+
+/* =========================================
+   3. NAVBAR MOBILE (DRAWER)
+========================================= */
+@media (max-width: 768px) {
+  .hamburger { display: block; }
+  .nav-btn { display: none; }
+
+  .nav-links {
+    position: fixed; top: 70px; left: -260px; /* off-canvas */
+    width: 260px; height: calc(100vh - 70px);
+    flex-direction: column; gap: 0; padding: 12px;
+    background: rgba(0,0,0,.85); backdrop-filter: blur(14px);
+    border-right: 1px solid rgba(255,255,255,.08);
+    box-shadow: 8px 0 24px rgba(0,0,0,.4);
+    transition: left .28s ease; z-index: 999;
+  }
+  .nav-links li { list-style: none; }
+  .nav-links a { display: block; padding: 12px 8px; }
+  .nav-links.active { left: 0; }
+
+  .close-btn {
+    font-size: 1.8rem; color: var(--text); cursor: pointer;
+    align-self: flex-end; margin: 6px 6px 10px 0; transition: color .2s;
+  }
+  .close-btn:hover { color: var(--primary); }
+}
+
+/* =========================================
+   4. HERO
+========================================= */
+.hero {
+  min-height: 100vh;
+  background: url('../assets/bg.jpg') center/cover no-repeat;
+  position: relative; display: flex; align-items: center; justify-content: center; text-align: center;
+}
+.overlay { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
+.hero-content { position: relative; z-index: 1; }
+.logo { width: 90px; margin-bottom: 12px; }
+.hero-title { font-size: clamp(1.8rem, 4.5vw, 3rem); margin: .25rem 0; }
+.hero-subtitle { opacity: .9; }
+.btn, .glow-btn { display: inline-block; margin-top: 16px; padding: 10px 20px; background: var(--primary); color: #000; border: none; border-radius: 6px; font-weight: 700; }
+
+/* =========================================
+   5. PROJECT LOGOS — 2-ROW PARALLAX
+========================================= */
+.project-logos{
+  overflow: hidden;
+  width: 100%;
+  padding: 20px 0;
+  display: grid;
+  gap: 16px;              /* jarak Row A & B */
+  position: relative;
+}
+
+/* Fade tepi kiri/kanan (optional) */
+.project-logos::before,
+.project-logos::after{
+  content:''; 
+  position:absolute; 
+  top:0; 
+  bottom:0; 
+  width:60px; pointer-events:none;
+  background:linear-gradient(to right, var(--bg), transparent);
+}
+.project-logos::after{
+  right:0;
+  left:auto; 
+  background:linear-gradient(to left, var(--bg), transparent);
+}
+.project-logos::before{ left:0; }
+
+#logos-track-1, #logos-track-2{
+  display:flex; 
+  align-items:center;
+  width:max-content; 
+  transform: translate3d(0,0,0); /* prime GPU */
+  will-change: transform;
+}
+.logos-track .set{
+  display:flex; 
+  align-items:center;
+  gap:var(--logo-gap);
+  white-space: nowrap;
+  padding-right: var(--logo-gap);
+}
+
+.project-logos img{
+  display:block;           /* elak inline-gap */
+  height:80px;             /* 🎯 saiz logo (ubah sini kalau nak lebih besar/kecil) */
+  width:auto;
+  margin: 0;
+  user-select:none;
+  filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.25));
+  transition: transform .25s ease;
+}
+.project-logos img:hover{ transform: scale(1.08); }
+
+@media (max-width:600px){
+  .logos-track .set{ gap:25px; }
+  .project-logos img{ height:55px; } /* mobile size */
+}
+@media (prefers-reduced-motion: reduce){
+  #logos-track-1, #logos-track-2{ transform: translate3d(0,0,0) !important; }
+}
+
+/* =========================================
+   6. CONTENT SECTIONS, BIO, FOOTER, REVEAL
+========================================= */
+.section { padding: 70px 16px; text-align: center; }
+.grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+.card { width: 280px; padding: 16px; border-radius: 12px; background: rgba(255,255,255,.06); backdrop-filter: blur(8px); }
+
+.bio-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: center; max-width: 1000px; margin: auto; }
+.bio-img { width: 220px; height: 220px; border-radius: 16px; object-fit: cover; border: 1px solid rgba(255,255,255,.1); }
+.bio-text { max-width: 600px; text-align: left; line-height: 1.6; }
+
+footer { text-align: center; padding: 24px; background: #000; color: #aaa; }
+.socials a { color: var(--primary); text-decoration: none; margin: 0 8px; }
+
+.reveal { opacity: 0; transform: translateY(30px); transition: all .5s ease; }
+.reveal.active { opacity: 1; transform: translateY(0); }
+
+.marquee{overflow:hidden; white-space:nowrap; padding:10px 0; background:transparent}
+.marquee-content{display:inline-flex; gap:28px; list-style:none; padding:0; margin:0; animation:marq 16s linear infinite}
+.marquee i{font-size:1.2rem; opacity:.8}
+@keyframes marq{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+
+
+
+
+
+
+.update-toast{
+  position: fixed; inset: auto 16px 16px auto; z-index: 3000;
+  display: grid; place-items: end; pointer-events: none;
+}
+.update-card{
+  width: min(92vw, 360px);
+  background: rgba(255,255,255,.06);
+  backdrop-filter: blur(12px);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  box-shadow: 0 10px 26px rgba(0,0,0,.35), 0 0 12px rgba(0,240,255,.12) inset;
+  color:#fff; padding: 14px; pointer-events: auto;
+  animation: toastIn .35s ease;
+}
+.update-card strong{ display:block; margin-bottom:4px; color:#00f0ff; font-family:'Orbitron',sans-serif }
+.update-card p{ margin:0 0 10px; color:#dfe6ec; font-size:.95rem }
+.update-card .actions{ display:flex; gap:10px; justify-content:flex-end }
+.btn-primary{
+  background:#00f0ff; color:#061214; border:0; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer
+}
+.btn-ghost{
+  background:transparent; color:#00f0ff; border:1px solid rgba(0,240,255,.5); border-radius:10px; padding:10px 14px; cursor:pointer
+}
+@keyframes toastIn{ from{opacity:0; transform: translateY(8px)} to{opacity:1; transform:none} }
