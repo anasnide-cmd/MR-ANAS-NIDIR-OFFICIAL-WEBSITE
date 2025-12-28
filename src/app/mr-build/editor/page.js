@@ -19,12 +19,15 @@ function MrBuildEditorContent() {
             instagram: '',
             tiktok: '',
             twitter: ''
-        }
+        },
+        customHtml: '',
+        customCss: ''
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [slugError, setSlugError] = useState('');
+    const [activeTab, setActiveTab] = useState('basic');
 
     // Sanitize slug: lowercase, alphanumeric + hyphens only
     const sanitizeSlug = (slug) => {
@@ -56,7 +59,9 @@ function MrBuildEditorContent() {
                         title: data.title || '',
                         description: data.description || '',
                         theme: data.theme || 'dark-nebula',
-                        socials: data.socials || { instagram: '', tiktok: '', twitter: '' }
+                        socials: data.socials || { instagram: '', tiktok: '', twitter: '' },
+                        customHtml: data.customHtml || '',
+                        customCss: data.customCss || ''
                     });
                 }
             } catch (err) {
@@ -150,6 +155,8 @@ function MrBuildEditorContent() {
                     tiktok: (siteData.socials?.tiktok || '').trim(),
                     twitter: (siteData.socials?.twitter || '').trim()
                 },
+                customHtml: siteData.customHtml.trim(),
+                customCss: siteData.customCss.trim(),
                 userId: user.uid,
                 updatedAt: new Date().toISOString()
             };
@@ -343,6 +350,33 @@ function MrBuildEditorContent() {
                                 />
                             </div>
                         </div>
+
+                        <div className="glass card code-editor">
+                            <h3>Custom Code (Advanced)</h3>
+                            <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
+                                Override the default template with your own HTML and CSS. Leave blank to use the standard design.
+                            </p>
+                            <div className="input-group">
+                                <label>Custom HTML</label>
+                                <textarea
+                                    value={siteData.customHtml}
+                                    onChange={e => setSiteData({ ...siteData, customHtml: e.target.value })}
+                                    placeholder="<div>Hello World</div>"
+                                    className="code-textarea"
+                                    rows={10}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Custom CSS</label>
+                                <textarea
+                                    value={siteData.customCss}
+                                    onChange={e => setSiteData({ ...siteData, customCss: e.target.value })}
+                                    placeholder="body { background: red; }"
+                                    className="code-textarea"
+                                    rows={10}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -437,6 +471,24 @@ function MrBuildEditorContent() {
                 }
                 .modern-input.error {
                     border-color: #ff3232;
+                }
+                .code-textarea {
+                    background: rgba(0, 0, 0, 0.5);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 12px;
+                    padding: 15px;
+                    color: #00f0ff;
+                    font-size: 0.9rem;
+                    font-family: 'Courier New', monospace;
+                    resize: vertical;
+                    min-height: 150px;
+                    transition: all 0.3s;
+                }
+                .code-textarea:focus {
+                    border-color: #00f0ff;
+                    outline: none;
+                    box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+                    background: rgba(0, 0, 0, 0.7);
                 }
                 .field-error {
                     color: #ff3232;

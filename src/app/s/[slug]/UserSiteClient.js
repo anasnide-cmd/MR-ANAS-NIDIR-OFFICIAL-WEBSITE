@@ -46,6 +46,16 @@ export default function UserSiteClient() {
         </div>
     );
 
+    // If custom HTML is provided, render it instead of the template
+    if (site.customHtml) {
+        return (
+            <div>
+                <style>{site.customCss || ''}</style>
+                <div dangerouslySetInnerHTML={{ __html: site.customHtml }} />
+            </div>
+        );
+    }
+
     return (
         <div className={`site-wrapper theme-${site.theme}`}>
             <div className="grid-overlay"></div>
