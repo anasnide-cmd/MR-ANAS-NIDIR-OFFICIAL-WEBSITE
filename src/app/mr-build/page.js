@@ -2,16 +2,18 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 
 export default function BuildDashboard() {
+    const router = useRouter();
     const [user, setUser] = useState(null);
     const [site, setSite] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const checkUser = auth.onAuthStateChanged(async (u) => {
+        const checkUser = onAuthStateChanged(auth, async (u) => {
             if (u) {
                 setUser(u);
                 const q = query(collection(db, 'user_sites'), where('userId', '==', u.uid));
@@ -25,51 +27,43 @@ export default function BuildDashboard() {
         return () => checkUser();
     }, []);
 
-    if (loading) return null;
+    if (loading) return (
+        <div className="loading-screen">
+            <div className="scanner"></div>
+            <p>Scanning Identity...</p>
+            <style jsx>{`
+                .loading-screen {
+                    height: 80vh;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    color: #00f0ff;
+                }
+                .scanner {
+                    width: 200px;
+                    height: 2px;
+                    background: #00f0ff;
+                    box-shadow: 0 0 20px #00f0ff;
+                    margin-bottom: 20px;
+                    animation: scan 2s infinite ease-in-out;
+                }
+                @keyframes scan {
+                    0%, 100% { transform: translateY(-50px); opacity: 0; }
+                    50% { transform: translateY(50px); opacity: 1; }
+                }
+            `}</style>
+        </div>
+    );
+
+    useEffect(() => {
+        if (!user && !loading) {
+            router.push('/mr-build/login');
+        }
+    }, [user, loading, router]);
 
     if (!user) {
-        return (
-            <div className="hero-section center">
-                <div className="glitch-title" data-text="MR BUILD">MR BUILD</div>
-                <h2 className="tagline">The Future of Personal Web Presence</h2>
-                <p className="description">Deploy your digital identity with precision. One-click architecture for visionaries.</p>
-                <Link href="/mr-build/login" className="btn-large pulse-blue">Initialize Deployment</Link>
-
-                <div className="features-grid">
-                    <div className="feature-card glass">
-                        <span className="icon">🚀</span>
-                        <h3>Instant Launch</h3>
-                        <p>Zero-config deployment in seconds.</p>
-                    </div>
-                    <div className="feature-card glass">
-                        <span className="icon">🎨</span>
-                        <h3>Bespoke Design</h3>
-                        <p>Tailored aesthetic for elite personal brands.</p>
-                    </div>
-                    <div className="feature-card glass">
-                        <span className="icon">💎</span>
-                        <h3>Free Trial</h3>
-                        <p>Build your first site at zero cost.</p>
-                    </div>
-                </div>
-
-                <style jsx>{`
-                    .hero-section { text-align: center; max-width: 900px; margin: 0 auto; padding: 100px 20px; }
-                    .glitch-title { font-family: var(--font-orbitron); font-size: 5rem; font-weight: 900; letter-spacing: 5px; color: #fff; position: relative; }
-                    .tagline { font-size: 1.5rem; color: #00f0ff; margin: 20px 0; font-weight: 300; letter-spacing: 2px; }
-                    .description { opacity: 0.6; margin-bottom: 40px; font-size: 1.1rem; line-height: 1.6; }
-                    .btn-large { padding: 20px 40px; background: #00f0ff; color: #000; text-decoration: none; border-radius: 12px; font-weight: 900; font-size: 1.2rem; letter-spacing: 1px; display: inline-block; transition: all 0.3s; }
-                    .pulse-blue:hover { box-shadow: 0 0 40px rgba(0, 240, 255, 0.5); transform: translateY(-3px); }
-                    
-                    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 100px; }
-                    .feature-card { padding: 30px; border-radius: 20px; transition: transform 0.3s; }
-                    .feature-card:hover { transform: translateY(-10px); background: rgba(0, 240, 255, 0.05); }
-                    .feature-card .icon { font-size: 2.5rem; display: block; margin-bottom: 20px; }
-                    .feature-card h3 { font-family: var(--font-orbitron); font-size: 1.2rem; margin-bottom: 10px; }
-                    .feature-card p { font-size: 0.9rem; opacity: 0.6; }
-                `}</style>
-            </div>
-        );
+        return null;
     }
 
     return (
@@ -86,7 +80,10 @@ export default function BuildDashboard() {
                     </div>
                 </div>
                 <div className="header-actions">
-                    <button onClick={() => auth.signOut()} className="btn-signout">Terminate Session</button>
+                    <button onClick={async () => {
+                        await signOut(auth);
+                        router.push('/mr-build/login');
+                    }} className="btn-signout">Terminate Session</button>
                 </div>
             </header>
 
@@ -111,18 +108,20 @@ export default function BuildDashboard() {
                                 </div>
                             </div>
                             <div className="site-meta">
-                                <h4 className="site-name">{site.name || 'Untitled Discovery'}</h4>
+                                <h4 className="site-name">{site.name || site.title || 'Untitled Discovery'}</h4>
                                 <div className="meta-row">
                                     <span className="label">Endpoint:</span>
-                                    <span className="value slug">{site.slug}.mrbuild.io</span>
+                                    <span className="value slug">{site.slug ? `/s/${site.slug}` : 'Not set'}</span>
                                 </div>
                                 <div className="meta-row">
                                     <span className="label">Architecture:</span>
-                                    <span className="value">{site.theme?.replace('-', ' ')}</span>
+                                    <span className="value">{site.theme ? site.theme.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Default'}</span>
                                 </div>
                                 <div className="site-actions-row">
                                     <Link href="/mr-build/editor" className="btn-action primary">OPTIMIZE CORE</Link>
-                                    <Link href={`/s/${site.slug}`} target="_blank" className="btn-action secondary">VIEW LIVE</Link>
+                                    {site.slug && (
+                                        <Link href={`/s/${site.slug}`} target="_blank" className="btn-action secondary">VIEW LIVE</Link>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -52,6 +52,12 @@ function UserSiteContent() {
                         {site.socials?.tiktok && (
                             <a href={site.socials.tiktok} target="_blank" rel="noopener noreferrer" className="social-tag">TIKTOK</a>
                         )}
+                        {site.socials?.twitter && (
+                            <a href={site.socials.twitter} target="_blank" rel="noopener noreferrer" className="social-tag">TWITTER</a>
+                        )}
+                        {(!site.socials?.instagram && !site.socials?.tiktok && !site.socials?.twitter) && (
+                            <p style={{ opacity: 0.3, fontStyle: 'italic' }}>No social links configured</p>
+                        )}
                     </div>
                 </div>
             </main>
@@ -118,12 +124,24 @@ function UserSiteContent() {
 
                 .site-footer { position: absolute; bottom: 40px; width: 100%; opacity: 0.3; font-size: 0.8rem; letter-spacing: 2px; }
 
-                .theme-liquid-gold .logo-circ { background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%); box-shadow: 0 0 30px rgba(255, 215, 0, 0.4); }
-                .theme-liquid-gold .social-tag { border-color: rgba(255, 215, 0, 0.3); color: #ffd700; }
-                .theme-liquid-gold .social-tag:hover { background: #ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+                /* Dark Nebula (default) */
+                .theme-dark-nebula .logo-circ { background: linear-gradient(135deg, #00f0ff 0%, #0064e0 100%); box-shadow: 0 0 30px rgba(0, 240, 255, 0.4); }
+                .theme-dark-nebula .social-tag { border-color: rgba(0, 240, 255, 0.3); color: #00f0ff; }
+                .theme-dark-nebula .social-tag:hover { background: #00f0ff; box-shadow: 0 0 20px rgba(0, 240, 255, 0.5); }
 
+                /* Liquid Gold */
+                .theme-liquid-gold .logo-circ { background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%); box-shadow: 0 0 30px rgba(255, 215, 0, 0.4); }
+                .theme-liquid-gold .glow-text { color: #ffd700; }
+                .theme-liquid-gold .social-tag { border-color: rgba(255, 215, 0, 0.3); color: #ffd700; }
+                .theme-liquid-gold .social-tag:hover { background: #ffd700; color: #000; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+                .theme-liquid-gold .grid-overlay { background-image: linear-gradient(rgba(255, 215, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 215, 0, 0.05) 1px, transparent 1px); }
+
+                /* Cyber Grid */
                 .theme-cyber-grid .glow-text { color: #00ff88; }
-                .theme-cyber-grid .logo-circ { background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%); }
+                .theme-cyber-grid .logo-circ { background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%); box-shadow: 0 0 30px rgba(0, 255, 136, 0.4); }
+                .theme-cyber-grid .social-tag { border-color: rgba(0, 255, 136, 0.3); color: #00ff88; }
+                .theme-cyber-grid .social-tag:hover { background: #00ff88; color: #000; box-shadow: 0 0 20px rgba(0, 255, 136, 0.5); }
+                .theme-cyber-grid .grid-overlay { background-image: linear-gradient(rgba(0, 255, 136, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 136, 0.1) 1px, transparent 1px); }
 
                 .loading, .not-found { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #00f0ff; text-align: center; }
                 .not-found h1 { font-size: 3rem; margin-bottom: 20px; }

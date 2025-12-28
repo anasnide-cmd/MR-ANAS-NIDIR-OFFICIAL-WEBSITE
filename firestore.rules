@@ -12,5 +12,11 @@ service cloud.firestore {
       allow read: if true; // Public needs to read homepage settings
       allow write: if request.auth != null; 
     }
+    // Allow public read of user sites, but only owners can write
+    match /user_sites/{siteId} {
+      allow read: if true; // Public can view all sites
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
   }
 }

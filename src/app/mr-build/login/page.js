@@ -1,11 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { auth } from '../../../lib/firebase';
 import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signInWithPopup,
-    GoogleAuthProvider
+    GoogleAuthProvider,
+    onAuthStateChanged
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
@@ -15,6 +16,16 @@ export default function BuildLogin() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    // Redirect if already logged in
+    useEffect(() => {
+        const unsub = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                router.push('/mr-build');
+            }
+        });
+        return () => unsub();
+    }, [router]);
 
     const handleAuth = async (e) => {
         e.preventDefault();
@@ -34,11 +45,13 @@ export default function BuildLogin() {
     };
 
     const handleGoogle = async () => {
+        setLoading(true);
         try {
             await signInWithPopup(auth, new GoogleAuthProvider());
             router.push('/mr-build');
         } catch (err) {
             alert(err.message);
+            setLoading(false);
         }
     };
 
