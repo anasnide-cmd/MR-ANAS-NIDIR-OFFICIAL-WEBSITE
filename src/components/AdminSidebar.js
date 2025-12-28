@@ -88,26 +88,32 @@ export default function AdminSidebar({ isOpen, close, isMinimized, toggleMinimiz
 
                 .minimize-toggle {
                     position: absolute;
-                    bottom: -15px;
+                    top: 50%;
                     right: -15px;
-                    width: 30px;
-                    height: 30px;
+                    transform: translateY(-50%);
+                    width: 32px;
+                    height: 32px;
                     background: #00f0ff;
                     color: #000;
-                    border: none;
+                    border: 2px solid #020202;
                     border-radius: 50%;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 0.8rem;
+                    font-size: 0.9rem;
                     font-weight: 900;
-                    z-index: 10;
+                    z-index: 100;
                     box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
-                    transition: all 0.3s;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
-                .minimized .minimize-toggle { right: 25px; }
-                .minimize-toggle:hover { transform: scale(1.1); }
+                .minimized .minimize-toggle { 
+                    right: -16px;
+                }
+                .minimize-toggle:hover { 
+                    transform: translateY(-50%) scale(1.1);
+                    background: #fff;
+                }
 
                 .status-badge {
                     font-size: 0.6rem;
