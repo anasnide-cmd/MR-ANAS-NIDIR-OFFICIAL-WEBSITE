@@ -100,8 +100,9 @@ export default function AdminPage() {
                 <button onClick={() => signOut(auth)} style={{ background: 'red', color: '#fff', border: 0, padding: '6px 12px', borderRadius: 4 }}>Logout</button>
             </div>
 
-            <div style={{ margin: '20px 0' }}>
+            <div style={{ margin: '20px 0', display: 'flex', gap: 15 }}>
                 <Link href="/admin/editor" className="btn glow">+ New Post</Link>
+                <Link href="/admin/settings" className="btn" style={{ background: '#333', color: '#fff' }}>⚙️ Site Settings</Link>
             </div>
 
             <div className="grid" style={{ justifyContent: 'flex-start' }}>

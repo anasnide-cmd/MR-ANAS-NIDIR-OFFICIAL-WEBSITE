@@ -7,5 +7,10 @@ service cloud.firestore {
       allow read: if true; // Public can read blog posts
       allow write: if request.auth != null; // Only logged-in users can create/edit
     }
+    // Allow authenticated users to manage site settings
+    match /settings/{docId} {
+      allow read: if true; // Public needs to read homepage settings
+      allow write: if request.auth != null; 
+    }
   }
 }
