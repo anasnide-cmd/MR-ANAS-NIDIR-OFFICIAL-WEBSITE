@@ -5,6 +5,12 @@ import { signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProv
 import { collection, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import Link from 'next/link';
 
+// ⚠️ OWNER EMAIL(S) - Only these emails can access the admin dashboard
+const ALLOWED_ADMINS = [
+    'anasnide@gmail.com',
+    'ceo@anasnidir.com',
+];
+
 export default function AdminPage() {
     const [user, setUser] = useState(null);
     const [email, setEmail] = useState('');
@@ -52,6 +58,20 @@ export default function AdminPage() {
     };
 
     if (loading) return <div className="section">Loading...</div>;
+
+    // Check if user is allowed (Owner Only)
+    const isOwner = user && ALLOWED_ADMINS.includes(user.email);
+
+    if (user && !isOwner) {
+        return (
+            <div className="section" style={{ maxWidth: 500, margin: '100px auto', textAlign: 'center' }}>
+                <h1 style={{ color: 'red' }}>⛔ Access Denied</h1>
+                <p>You are logged in as <strong>{user.email}</strong></p>
+                <p>This area is restricted to site owners only.</p>
+                <button onClick={() => signOut(auth)} className="btn" style={{ marginTop: 20 }}>Logout</button>
+            </div>
+        );
+    }
 
     if (!user) {
         return (
