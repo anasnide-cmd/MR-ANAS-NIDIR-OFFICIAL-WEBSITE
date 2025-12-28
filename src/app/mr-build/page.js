@@ -23,6 +23,9 @@ export default function BuildDashboard() {
                 }
             }
             setLoading(false);
+            if (!u) {
+                router.push('/mr-build/login');
+            }
         });
         return () => checkUser();
     }, []);
@@ -55,12 +58,6 @@ export default function BuildDashboard() {
             `}</style>
         </div>
     );
-
-    useEffect(() => {
-        if (!user && !loading) {
-            router.push('/mr-build/login');
-        }
-    }, [user, loading, router]);
 
     if (!user) {
         return null;
