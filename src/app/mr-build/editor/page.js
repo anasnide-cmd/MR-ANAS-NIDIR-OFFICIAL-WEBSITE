@@ -26,9 +26,9 @@ function MrBuildEditorContent() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [slugError, setSlugError] = useState('');
     const [activeTab, setActiveTab] = useState('basic');
-    const [success, setSuccess] = useState('');
 
     // Sanitize slug: lowercase, alphanumeric + hyphens only
     const sanitizeSlug = (slug) => {
@@ -40,40 +40,50 @@ function MrBuildEditorContent() {
     };
 
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, async (u) => {
-            if (!u) {
-                router.push('/mr-build/login');
-                return;
-            }
-            
-            try {
-                // Fetch existing site if any
-                const q = query(collection(db, 'user_sites'), where('userId', '==', u.uid));
-                const snap = await getDocs(q);
-                if (!snap.empty) {
-                    const doc = snap.docs[0];
-                    const data = doc.data();
-                    setSiteId(doc.id);
-                    setSiteData({
-                        name: data.name || '',
-                        slug: data.slug || '',
-                        title: data.title || '',
-                        description: data.description || '',
-                        theme: data.theme || 'dark-nebula',
-                        socials: data.socials || { instagram: '', tiktok: '', twitter: '' },
-                        customHtml: data.customHtml || '',
-                        customCss: data.customCss || ''
-                    });
+        const unsub = onAuthStateChanged(auth, (u) => {
+            const loadUserData = async () => {
+                if (!u) {
+                    router.push('/mr-build/login');
+                    return;
                 }
-            } catch (err) {
-                console.error('Error loading site:', err);
-                setError('Failed to load site data');
-            } finally {
-                setLoading(false);
-            }
+                
+                try {
+                    // Fetch existing site if any
+                    const q = query(collection(db, 'user_sites'), where('userId', '==', u.uid));
+                    const snap = await getDocs(q);
+                    if (!snap.empty) {
+                        const doc = snap.docs[0];
+                        const data = doc.data();
+                        setSiteId(doc.id);
+                        setSiteData({
+                            name: data.name || '',
+                            slug: data.slug || '',
+                            title: data.title || '',
+                            description: data.description || '',
+                            theme: data.theme || 'dark-nebula',
+                            socials: data.socials || { instagram: '', tiktok: '', twitter: '' },
+                            customHtml: data.customHtml || '',
+                            customCss: data.customCss || ''
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error loading site:', err);
+                    setError('Failed to load site data');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            loadUserData();
         });
         return () => unsub();
     }, [router]);
+
+    useEffect(() => {
+        if (success) {
+            const timer = setTimeout(() => setSuccess(''), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [success]);
 
     // Check slug uniqueness
     const checkSlugAvailability = async (slug, currentSiteId) => {
@@ -483,6 +493,15 @@ function MrBuildEditorContent() {
                     background: rgba(255, 50, 50, 0.1);
                     border: 1px solid rgba(255, 50, 50, 0.3);
                     color: #ff3232;
+                    padding: 15px 20px;
+                    border-radius: 12px;
+                    margin-bottom: 30px;
+                    font-weight: 700;
+                }
+                .success-banner {
+                    background: rgba(0, 255, 136, 0.1);
+                    border: 1px solid rgba(0, 255, 136, 0.3);
+                    color: #00ff88;
                     padding: 15px 20px;
                     border-radius: 12px;
                     margin-bottom: 30px;
