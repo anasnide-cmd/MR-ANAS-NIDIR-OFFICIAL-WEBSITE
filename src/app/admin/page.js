@@ -1,23 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import Link from 'next/link';
-
-// ⚠️ OWNER EMAIL(S) - Only these emails can access the admin dashboard
-const ALLOWED_ADMINS = [
-    'anasnide@gmail.com',
-    'ceo@anasnidir.com',
-];
 
 export default function AdminPage() {
     const [user, setUser] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [authLoading, setAuthLoading] = useState(false);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (u) => {
@@ -34,29 +25,6 @@ export default function AdminPage() {
         setPosts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     };
 
-    const handleGoogleLogin = async () => {
-        setAuthLoading(true);
-        try {
-            await signInWithPopup(auth, new GoogleAuthProvider());
-        } catch (err) {
-            alert(err.message);
-        } finally {
-            setAuthLoading(false);
-        }
-    };
-
-    const handleEmailLogin = async (e) => {
-        e.preventDefault();
-        setAuthLoading(true);
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-        } catch (err) {
-            alert(err.message);
-        } finally {
-            setAuthLoading(false);
-        }
-    };
-
     const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this post?')) return;
         try {
@@ -67,163 +35,8 @@ export default function AdminPage() {
         }
     };
 
-    if (loading) return <div className="loading-state">Initializing Dashboard...</div>;
-
-    if (!user) {
-        return (
-            <div className="login-container animate-fade-in">
-                <div className="login-card glass">
-                    <div className="login-header">
-                        <div className="login-logo">A</div>
-                        <h1>Admin Engine</h1>
-                        <p>Authorized personnel only. Access terminal restricted.</p>
-                    </div>
-
-                    <form onSubmit={handleEmailLogin} className="login-form">
-                        <div className="input-field">
-                            <input
-                                type="email"
-                                placeholder="Email Identity"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div className="input-field">
-                            <input
-                                type="password"
-                                placeholder="Security Key"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <button type="submit" className="btn-login" disabled={authLoading}>
-                            {authLoading ? '🔐 Verifying...' : '⚡ Establish Connection'}
-                        </button>
-                    </form>
-
-                    <div className="divider">
-                        <span>OR</span>
-                    </div>
-
-                    <button className="btn-google" onClick={handleGoogleLogin} disabled={authLoading}>
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" alt="" />
-                        Sync with Google Space
-                    </button>
-
-                    <p className="login-footer">System v2.0 • Secured by NEXENGINE</p>
-                </div>
-
-                <style jsx>{`
-                    .login-container {
-                        height: 100vh;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        background: radial-gradient(circle at center, #1a1a2e 0%, #020202 100%);
-                        padding: 20px;
-                    }
-                    .login-card {
-                        width: 100%;
-                        max-width: 450px;
-                        padding: 50px;
-                        border-radius: 30px;
-                        text-align: center;
-                    }
-                    .login-header { margin-bottom: 40px; }
-                    .login-logo {
-                        width: 60px; height: 60px;
-                        background: #00f0ff;
-                        color: #000;
-                        font-size: 2rem;
-                        font-weight: 900;
-                        border-radius: 15px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 0 auto 20px;
-                        box-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
-                    }
-                    .login-header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -1px; }
-                    .login-header p { opacity: 0.5; font-size: 0.9rem; line-height: 1.5; }
-
-                    .login-form { display: flex; flex-direction: column; gap: 15px; }
-                    .input-field input {
-                        width: 100%;
-                        background: rgba(255, 255, 255, 0.03);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        padding: 16px;
-                        border-radius: 12px;
-                        color: #fff;
-                        font-size: 1rem;
-                        transition: all 0.3s;
-                    }
-                    .input-field input:focus {
-                        background: rgba(255, 255, 255, 0.07);
-                        border-color: #00f0ff;
-                        outline: none;
-                        box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
-                    }
-
-                    .btn-login {
-                        background: #00f0ff;
-                        color: #000;
-                        border: none;
-                        padding: 16px;
-                        border-radius: 12px;
-                        font-weight: 800;
-                        font-size: 1rem;
-                        cursor: pointer;
-                        transition: all 0.3s;
-                    }
-                    .btn-login:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 240, 255, 0.3); }
-                    .btn-login:disabled { opacity: 0.5; transform: none; }
-
-                    .divider {
-                        margin: 30px 0;
-                        position: relative;
-                        text-align: center;
-                    }
-                    .divider::before {
-                        content: '';
-                        position: absolute;
-                        top: 50%; left: 0; right: 0;
-                        height: 1px;
-                        background: rgba(255, 255, 255, 0.1);
-                    }
-                    .divider span {
-                        position: relative;
-                        background: #0a0a0a;
-                        padding: 0 15px;
-                        font-size: 0.75rem;
-                        font-weight: 800;
-                        opacity: 0.4;
-                    }
-
-                    .btn-google {
-                        width: 100%;
-                        background: #fff;
-                        color: #000;
-                        border: none;
-                        padding: 14px;
-                        border-radius: 12px;
-                        font-weight: 700;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 12px;
-                        cursor: pointer;
-                        transition: all 0.3s;
-                    }
-                    .btn-google:hover { background: #f0f0f0; transform: translateY(-2px); }
-                    .btn-google img { width: 20px; height: 20px; }
-
-                    .login-footer { margin-top: 40px; font-size: 0.75rem; opacity: 0.3; letter-spacing: 1px; font-weight: 700; }
-                `}</style>
-            </div>
-        );
-    }
+    if (loading) return <div className="loading-state">Syncing Dashboard Data...</div>;
+    if (!user) return null;
 
     return (
         <div className="dashboard-view">
@@ -233,7 +46,7 @@ export default function AdminPage() {
                     <h1>Hello, {user.displayName?.split(' ')[0] || 'Anas'}</h1>
                     <p className="subtitle">Everything is under control. What's next?</p>
                 </div>
-                <Link href="/admin/editor" className="btn glow-blue">+ Express Post</Link>
+                <Link href="/admin/editor/" className="btn glow-blue">+ Express Post</Link>
             </header>
 
             <section className="stats-grid">
@@ -287,7 +100,7 @@ export default function AdminPage() {
                                     <td><span className="date-tag">{post.date}</span></td>
                                     <td align="right">
                                         <div className="action-btns">
-                                            <Link href={`/admin/editor?id=${post.id}`} className="btn-icon edit" title="Edit Content">✏️</Link>
+                                            <Link href={`/admin/editor/?id=${post.id}`} className="btn-icon edit" title="Edit Content">✏️</Link>
                                             <button onClick={() => handleDelete(post.id)} className="btn-icon delete" title="Delete Permanent">🗑️</button>
                                         </div>
                                     </td>

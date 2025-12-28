@@ -8,9 +8,9 @@ export default function AdminSidebar({ isOpen, close }) {
     const pathname = usePathname();
 
     const menuItems = [
-        { name: 'Dashboard', path: '/admin', icon: '📊' },
-        { name: 'Site Settings', path: '/admin/settings', icon: '⚙️' },
-        { name: 'New Post', path: '/admin/editor', icon: '✍️' },
+        { name: 'Dashboard', path: '/admin/', icon: '📊' },
+        { name: 'Site Settings', path: '/admin/settings/', icon: '⚙️' },
+        { name: 'New Post', path: '/admin/editor/', icon: '✍️' },
     ];
 
     return (

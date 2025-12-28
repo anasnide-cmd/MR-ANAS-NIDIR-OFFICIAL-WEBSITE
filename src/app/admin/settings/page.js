@@ -6,8 +6,6 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-const ALLOWED_ADMINS = ['anasnide@gmail.com', 'ceo@anasnidir.com'];
-
 export default function SettingsPage() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -44,10 +42,7 @@ export default function SettingsPage() {
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (u) => {
-            if (!u || !ALLOWED_ADMINS.includes(u.email)) {
-                router.push('/admin');
-                return;
-            }
+            if (!u) return;
             setUser(u);
 
             const docRef = doc(db, 'settings', 'homepage');
@@ -64,7 +59,7 @@ export default function SettingsPage() {
             setLoading(false);
         });
         return () => unsub();
-    }, [router]);
+    }, []);
 
     const handleSave = async (e) => {
         e.preventDefault();

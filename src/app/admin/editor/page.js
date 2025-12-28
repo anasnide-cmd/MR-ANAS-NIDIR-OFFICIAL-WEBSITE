@@ -11,21 +11,18 @@ function EditorContent() {
     const [content, setContent] = useState('');
     const [loading, setLoading] = useState(true);
 
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const editId = searchParams.get('id');
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
-        // Protect route
-        if (!auth.currentUser) {
-            // A bit rough check, for UX rely on onAuthStateChanged
-        }
-
-        if (editId) {
-            loadPost(editId);
-        } else {
-            setLoading(false);
-        }
+        const unsub = onAuthStateChanged(auth, (u) => {
+            setUser(u);
+            if (editId) {
+                loadPost(editId);
+            } else {
+                setLoading(false);
+            }
+        });
+        return () => unsub();
     }, [editId]);
 
     const loadPost = async (id) => {
