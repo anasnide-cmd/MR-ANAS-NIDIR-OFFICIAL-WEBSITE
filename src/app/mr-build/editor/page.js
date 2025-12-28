@@ -225,17 +225,6 @@ function MrBuildEditorContent() {
             {error && (
                 <div className="error-banner">
                     ⚠️ {error}
-                    <style jsx>{`
-                        .error-banner {
-                            background: rgba(255, 50, 50, 0.1);
-                            border: 1px solid rgba(255, 50, 50, 0.3);
-                            color: #ff3232;
-                            padding: 15px 20px;
-                            border-radius: 12px;
-                            margin-bottom: 30px;
-                            font-weight: 700;
-                        }
-                    `}</style>
                 </div>
             )}
 
@@ -360,6 +349,15 @@ function MrBuildEditorContent() {
 
             <style jsx>{`
                 .editor-view { animation: fadeIn 0.5s ease-out; }
+                .error-banner {
+                    background: rgba(255, 50, 50, 0.1);
+                    border: 1px solid rgba(255, 50, 50, 0.3);
+                    color: #ff3232;
+                    padding: 15px 20px;
+                    border-radius: 12px;
+                    margin-bottom: 30px;
+                    font-weight: 700;
+                }
                 .page-header {
                     display: flex;
                     justify-content: space-between;
