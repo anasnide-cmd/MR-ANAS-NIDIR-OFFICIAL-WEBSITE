@@ -12,6 +12,9 @@ const ALLOWED_ADMINS = [
 ];
 
 export default function AdminPage() {
+    const [user, setUser] = useState(null);
+    const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [authLoading, setAuthLoading] = useState(false);
