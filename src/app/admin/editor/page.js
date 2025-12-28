@@ -44,7 +44,8 @@ function EditorContent() {
             title,
             slug,
             content,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            author: auth.currentUser?.email || 'unknown'
         };
 
         if (editId) {
