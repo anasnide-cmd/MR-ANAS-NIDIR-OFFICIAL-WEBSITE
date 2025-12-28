@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { auth, db } from '../../../lib/firebase';
 import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 function EditorContent() {
     const [title, setTitle] = useState('');
