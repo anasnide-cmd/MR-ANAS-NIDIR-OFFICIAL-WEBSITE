@@ -1,16 +1,16 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { db } from '../../../lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 // Emails that get verified badge
 const VERIFIED_EMAILS = ['anasnide@gmail.com', 'ceo@anasnidir.com'];
 
-export default function PostPage() {
-    const params = useParams();
-    const slug = decodeURIComponent(params.slug); // Decode URL-encoded slug
+function PostContent() {
+    const searchParams = useSearchParams();
+    const slug = searchParams.get('slug');
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -30,6 +30,7 @@ export default function PostPage() {
             }
         };
         if (slug) fetchPost();
+        else setLoading(false);
     }, [slug]);
 
     if (loading) return <div className="section">Loading...</div>;
@@ -78,5 +79,13 @@ export default function PostPage() {
                 .post-content :global(code) { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }
             `}</style>
         </main>
+    );
+}
+
+export default function PostPage() {
+    return (
+        <Suspense fallback={<div className="section">Loading...</div>}>
+            <PostContent />
+        </Suspense>
     );
 }

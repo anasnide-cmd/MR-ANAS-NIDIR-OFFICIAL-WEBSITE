@@ -40,8 +40,7 @@ export default function BlogPage() {
                     posts.map((post) => (
                         <article key={post.id} className="card glass">
                             <h3>
-                                {/* Note: You need to create [slug]/page.js to handle individual post views */}
-                                <Link href={`/blog/${post.slug || '#'}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                <Link href={`/blog/post?slug=${post.slug || '#'}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                                     {post.title}
                                 </Link>
                                 {VERIFIED_EMAILS.includes(post.author) && (

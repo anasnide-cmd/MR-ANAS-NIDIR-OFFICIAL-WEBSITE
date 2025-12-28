@@ -10,6 +10,7 @@ export default function Home() {
   const [settings, setSettings] = useState({
     heroTitle: 'MR ANAS NIDIR',
     heroSubtitle: 'Entrepreneur • Visionary • Digital Innovator',
+    aboutText: "I'm Mr Anas Nidir, a builder of tech, AI systems, and futuristic platforms — driven by simplicity and independence. I believe in creating tools that empower, not restrict.",
     bioTitle: 'My Story',
     bioText1: 'Mr Anas Nidir is a tech entrepreneur, futurist, and digital architect. He is the founder of innovation-focused projects including NEXENGINE, NEX AI, and ANAS GPT.',
     bioText2: 'Since March 2025, he has been developing high-performance solutions from scratch — without relying on traditional tools or platforms.',
@@ -17,6 +18,11 @@ export default function Home() {
     contactEmail: 'ceo@anasnidir.com',
     tiktok: 'https://tiktok.com/@anasnide',
     instagram: 'https://www.instagram.com/anasnide',
+    stats: [
+      { label: 'Active Projects', value: '3+' },
+      { label: 'Founded', value: '2025' },
+      { label: 'Possibilities', value: '∞' }
+    ],
     projects: [
       { icon: '⚡', title: 'NEXENGINE', desc: 'Independent web server system built for speed, privacy, and total control.', tag: 'Infrastructure' },
       { icon: '🤖', title: 'NEX AI', desc: 'Custom AI Chatbot Platform with advanced natural language processing.', tag: 'AI / ML' },
@@ -96,18 +102,12 @@ export default function Home() {
 
       {/* STATS */}
       <section className="stats-section">
-        <div className="stat">
-          <span className="stat-number">3+</span>
-          <span className="stat-label">Active Projects</span>
-        </div>
-        <div className="stat">
-          <span className="stat-number">2025</span>
-          <span className="stat-label">Founded</span>
-        </div>
-        <div className="stat">
-          <span className="stat-number">∞</span>
-          <span className="stat-label">Possibilities</span>
-        </div>
+        {(settings.stats || []).map((stat, idx) => (
+          <div className="stat" key={idx}>
+            <span className="stat-number">{stat.value}</span>
+            <span className="stat-label">{stat.label}</span>
+          </div>
+        ))}
       </section>
 
       {/* ABOUT */}
@@ -115,9 +115,7 @@ export default function Home() {
         <h2 className="section-title">👤 About Me</h2>
         <div className="about-content">
           <p className="about-text">
-            I'm <strong>Mr Anas Nidir</strong>, a builder of tech, AI systems, and futuristic platforms —
-            driven by simplicity and independence. I believe in creating tools that empower,
-            not restrict.
+            {settings.aboutText}
           </p>
         </div>
       </section>
