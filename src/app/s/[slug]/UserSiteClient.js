@@ -1,19 +1,26 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { db } from '../../../lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
-export default function UserSiteClient({ slug }) {
+export default function UserSiteClient() {
+    const params = useParams();
+    const slug = params?.slug || '';
     const [site, setSite] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!slug || slug === 'placeholder') {
+            setLoading(false);
+            setSite(null);
+            return;
+        }
+        
+        setLoading(true);
+        setSite(null);
+        
         const fetchSite = async () => {
-            if (!slug) {
-                setLoading(false);
-                return;
-            }
-            
             try {
                 const q = query(collection(db, 'user_sites'), where('slug', '==', slug));
                 const snap = await getDocs(q);
@@ -26,6 +33,7 @@ export default function UserSiteClient({ slug }) {
                 setLoading(false);
             }
         };
+        
         fetchSite();
     }, [slug]);
 

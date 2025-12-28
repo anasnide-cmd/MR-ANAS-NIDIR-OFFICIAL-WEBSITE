@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import UserSiteClient from './UserSiteClient';
 
 // For static export, we need to provide generateStaticParams
@@ -9,6 +10,10 @@ export const generateStaticParams = async () => {
     return [{ slug: 'placeholder' }];
 };
 
-export default function UserSitePage({ params }) {
-    return <UserSiteClient slug={params.slug} />;
+export default function UserSitePage() {
+    return (
+        <Suspense fallback={<div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00f0ff' }}>Loading...</div>}>
+            <UserSiteClient />
+        </Suspense>
+    );
 }
