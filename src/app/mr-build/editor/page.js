@@ -28,6 +28,7 @@ function MrBuildEditorContent() {
     const [error, setError] = useState('');
     const [slugError, setSlugError] = useState('');
     const [activeTab, setActiveTab] = useState('basic');
+    const [success, setSuccess] = useState('');
 
     // Sanitize slug: lowercase, alphanumeric + hyphens only
     const sanitizeSlug = (slug) => {
@@ -164,6 +165,7 @@ function MrBuildEditorContent() {
             if (siteId) {
                 // Update existing
                 await setDoc(doc(db, 'user_sites', siteId), finalData, { merge: true });
+                setSuccess('Site updated successfully!');
             } else {
                 // Create new
                 const newDocRef = doc(collection(db, 'user_sites'));
@@ -172,7 +174,9 @@ function MrBuildEditorContent() {
                     createdAt: new Date().toISOString()
                 });
                 setSiteId(newDocRef.id);
+                setSuccess('Site deployed successfully!');
             }
+            setError('');
             
             router.push('/mr-build');
         } catch (err) {
@@ -223,9 +227,11 @@ function MrBuildEditorContent() {
                     <p className="subtitle">Configure your digital node on the Mr Build network.</p>
                 </div>
                 <div className="header-actions">
-                    <button onClick={handleSave} className="btn-modern glow-blue" disabled={saving}>
-                        {saving ? 'Synchronizing...' : (siteId ? '💾 Update Node' : '🚀 Deploy Node')}
-                    </button>
+                    {siteId && siteData.slug && (
+                        <a href={`/s/${siteData.slug}`} target="_blank" rel="noopener noreferrer" className="btn-modern outline">
+                            👁️ Preview
+                        </a>
+                    )}
                 </div>
             </header>
 
@@ -235,67 +241,93 @@ function MrBuildEditorContent() {
                 </div>
             )}
 
+            {success && (
+                <div className="success-banner">
+                    ✅ {success}
+                </div>
+            )}
+
+            <div className="tabs-container">
+                <button type="button" className={`tab-btn ${activeTab === 'basic' ? 'active' : ''}`} onClick={() => setActiveTab('basic')}>
+                    📋 Basic Settings
+                </button>
+                <button type="button" className={`tab-btn ${activeTab === 'appearance' ? 'active' : ''}`} onClick={() => setActiveTab('appearance')}>
+                    🎨 Appearance
+                </button>
+                <button type="button" className={`tab-btn ${activeTab === 'social' ? 'active' : ''}`} onClick={() => setActiveTab('social')}>
+                    🔗 Social Links
+                </button>
+                <button type="button" className={`tab-btn ${activeTab === 'code' ? 'active' : ''}`} onClick={() => setActiveTab('code')}>
+                    💻 Custom Code
+                </button>
+            </div>
+
             <div className="editor-container">
                 <form onSubmit={handleSave} className="editor-layout">
-                    <div className="main-config glass card">
-                        <h3>General Configuration</h3>
-                        <div className="input-group">
-                            <label>Internal Node Name (Reference only)</label>
-                            <input
-                                value={siteData.name}
-                                onChange={e => setSiteData({ ...siteData, name: e.target.value })}
-                                placeholder="My Cyber Portfolio"
-                                className="modern-input"
-                                required
-                            />
-                        </div>
-                        <div className="input-group">
-                            <label>Access Slug (URL identifier)</label>
-                            <div className="slug-input-wrapper">
+                    {activeTab === 'basic' && (
+                        <div className="main-config glass card">
+                            <h3>General Configuration</h3>
+                            <div className="input-group">
+                                <label>Internal Node Name (Reference only)</label>
                                 <input
-                                    value={siteData.slug}
-                                    onChange={handleSlugChange}
-                                    placeholder="my-alias"
-                                    className={`modern-input ${slugError ? 'error' : ''}`}
+                                    value={siteData.name}
+                                    onChange={e => setSiteData({ ...siteData, name: e.target.value })}
+                                    placeholder="My Cyber Portfolio"
+                                    className="modern-input"
                                     required
                                 />
-                                <span className="slug-suffix">/s/</span>
                             </div>
-                            {slugError && (
-                                <span className="field-error">{slugError}</span>
-                            )}
-                            <span className="field-hint">Only lowercase letters, numbers, and hyphens. 3-30 characters.</span>
-                        </div>
+                            <div className="input-group">
+                                <label>Access Slug (URL identifier)</label>
+                                <div className="slug-input-wrapper">
+                                    <input
+                                        value={siteData.slug}
+                                        onChange={handleSlugChange}
+                                        placeholder="my-alias"
+                                        className={`modern-input ${slugError ? 'error' : ''}`}
+                                        required
+                                    />
+                                    <span className="slug-suffix">/s/</span>
+                                </div>
+                                {slugError && (
+                                    <span className="field-error">{slugError}</span>
+                                )}
+                                <span className="field-hint">Only lowercase letters, numbers, and hyphens. 3-30 characters.</span>
+                            </div>
 
-                        <div className="divider"></div>
+                            <div className="divider"></div>
 
-                        <h3>On-Page Identity</h3>
-                        <div className="input-group">
-                            <label>Public Title</label>
-                            <input
-                                value={siteData.title}
-                                onChange={e => setSiteData({ ...siteData, title: e.target.value })}
-                                placeholder="THE ARCHITECT"
-                                className="modern-input"
-                                required
-                            />
+                            <h3>On-Page Identity</h3>
+                            <div className="input-group">
+                                <label>Public Title</label>
+                                <input
+                                    value={siteData.title}
+                                    onChange={e => setSiteData({ ...siteData, title: e.target.value })}
+                                    placeholder="THE ARCHITECT"
+                                    className="modern-input"
+                                    required
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Short Bio/Description</label>
+                                <textarea
+                                    value={siteData.description}
+                                    onChange={e => setSiteData({ ...siteData, description: e.target.value })}
+                                    placeholder="Building the future of the web..."
+                                    className="modern-input"
+                                    rows={4}
+                                />
+                            </div>
                         </div>
-                        <div className="input-group">
-                            <label>Short Bio/Description</label>
-                            <textarea
-                                value={siteData.description}
-                                onChange={e => setSiteData({ ...siteData, description: e.target.value })}
-                                placeholder="Building the future of the web..."
-                                className="modern-input"
-                                rows={4}
-                            />
-                        </div>
-                    </div>
+                    )}
 
-                    <div className="sidebar-config">
-                        <div className="glass card theme-selector">
-                            <h3>Aesthetic Protocols</h3>
-                            <div className="theme-options">
+                    {activeTab === 'appearance' && (
+                        <div className="main-config glass card">
+                            <h3>Visual Theme</h3>
+                            <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
+                                Choose a theme that matches your digital aesthetic.
+                            </p>
+                            <div className="theme-grid">
                                 <button type="button"
                                     className={`theme-btn ${siteData.theme === 'dark-nebula' ? 'active' : ''}`}
                                     onClick={() => setSiteData({ ...siteData, theme: 'dark-nebula' })}
@@ -316,9 +348,14 @@ function MrBuildEditorContent() {
                                 </button>
                             </div>
                         </div>
+                    )}
 
-                        <div className="glass card social-config">
+                    {activeTab === 'social' && (
+                        <div className="main-config glass card">
                             <h3>Social Connectivity</h3>
+                            <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
+                                Link your social platforms for easy access.
+                            </p>
                             <div className="input-group">
                                 <label>Instagram URL</label>
                                 <input
@@ -350,8 +387,10 @@ function MrBuildEditorContent() {
                                 />
                             </div>
                         </div>
+                    )}
 
-                        <div className="glass card code-editor">
+                    {activeTab === 'code' && (
+                        <div className="main-config glass card">
                             <h3>Custom Code (Advanced)</h3>
                             <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
                                 Override the default template with your own HTML and CSS. Leave blank to use the standard design.
@@ -363,7 +402,7 @@ function MrBuildEditorContent() {
                                     onChange={e => setSiteData({ ...siteData, customHtml: e.target.value })}
                                     placeholder="<div>Hello World</div>"
                                     className="code-textarea"
-                                    rows={10}
+                                    rows={15}
                                 />
                             </div>
                             <div className="input-group">
@@ -373,8 +412,65 @@ function MrBuildEditorContent() {
                                     onChange={e => setSiteData({ ...siteData, customCss: e.target.value })}
                                     placeholder="body { background: red; }"
                                     className="code-textarea"
-                                    rows={10}
+                                    rows={15}
                                 />
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="sidebar-actions">
+                        <div className="glass card actions-panel">
+                            <h3>Quick Actions</h3>
+                            <button type="submit" className="btn-modern glow-blue full-width" disabled={saving}>
+                                {saving ? '⏳ Synchronizing...' : (siteId ? '💾 Update Node' : '🚀 Deploy Node')}
+                            </button>
+                            {siteId && siteData.slug && (
+                                <a href={`/s/${siteData.slug}`} target="_blank" rel="noopener noreferrer" className="btn-modern outline full-width">
+                                    👁️ Preview Site
+                                </a>
+                            )}
+                            <button type="button" onClick={() => {
+                                if (confirm('Reset all changes?')) {
+                                    setSiteData({
+                                        name: '',
+                                        slug: '',
+                                        title: '',
+                                        description: '',
+                                        theme: 'dark-nebula',
+                                        socials: { instagram: '', tiktok: '', twitter: '' },
+                                        customHtml: '',
+                                        customCss: ''
+                                    });
+                                    setSlugError('');
+                                }
+                            }} className="btn-modern danger full-width">
+                                🔄 Reset Form
+                            </button>
+                        </div>
+
+                        <div className="glass card status-panel">
+                            <h3>System Status</h3>
+                            <div className="status-item">
+                                <span className="status-label">Configuration:</span>
+                                <span className={`status-value ${siteData.title && siteData.slug ? 'ready' : 'pending'}`}>
+                                    {siteData.title && siteData.slug ? '✅ Complete' : '⏳ In Progress'}
+                                </span>
+                            </div>
+                            <div className="status-item">
+                                <span className="status-label">Theme:</span>
+                                <span className="status-value ready">🎨 {siteData.theme.replace('-', ' ').toUpperCase()}</span>
+                            </div>
+                            <div className="status-item">
+                                <span className="status-label">Social Links:</span>
+                                <span className={`status-value ${Object.values(siteData.socials || {}).some(v => v) ? 'ready' : 'pending'}`}>
+                                    {Object.values(siteData.socials || {}).filter(v => v).length} Connected
+                                </span>
+                            </div>
+                            <div className="status-item">
+                                <span className="status-label">Custom Code:</span>
+                                <span className={`status-value ${siteData.customHtml || siteData.customCss ? 'ready' : 'pending'}`}>
+                                    {siteData.customHtml || siteData.customCss ? '💻 Active' : '📝 Template'}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -420,8 +516,8 @@ function MrBuildEditorContent() {
                 .subtitle { opacity: 0.5; font-size: 1rem; }
 
                 .editor-layout {
-                    display: grid;
-                    grid-template-columns: 2fr 1fr;
+                    display: flex;
+                    flex-direction: column;
                     gap: 30px;
                 }
                 .card {
@@ -591,6 +687,110 @@ function MrBuildEditorContent() {
                     .page-header {
                         flex-direction: column;
                         align-items: flex-start;
+                    }
+                }
+
+                .btn-modern.danger {
+                    background: rgba(255, 50, 50, 0.1);
+                    border: 1px solid rgba(255, 50, 50, 0.3);
+                    color: #ff3232;
+                }
+                .btn-modern.danger:hover {
+                    background: rgba(255, 50, 50, 0.2);
+                }
+                .btn-modern.outline {
+                    background: transparent;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    color: #fff;
+                }
+                .btn-modern.outline:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                }
+                .btn-modern.full-width {
+                    width: 100%;
+                    margin-bottom: 15px;
+                }
+
+                .tabs-container {
+                    display: flex;
+                    gap: 10px;
+                    margin-bottom: 30px;
+                    flex-wrap: wrap;
+                }
+                .tab-btn {
+                    padding: 12px 20px;
+                    border-radius: 12px;
+                    background: rgba(255, 255, 255, 0.02);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    color: #fff;
+                    cursor: pointer;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    transition: all 0.3s;
+                }
+                .tab-btn:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                }
+                .tab-btn.active {
+                    background: rgba(0, 240, 255, 0.1);
+                    border-color: #00f0ff;
+                    color: #00f0ff;
+                }
+
+                .sidebar-actions {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+                .actions-panel .btn-modern {
+                    margin-bottom: 10px;
+                }
+                .status-panel {
+                    padding: 20px;
+                }
+                .status-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                    font-size: 0.85rem;
+                }
+                .status-label {
+                    opacity: 0.7;
+                }
+                .status-value {
+                    font-weight: 700;
+                }
+                .status-value.ready {
+                    color: #00f0ff;
+                }
+                .status-value.pending {
+                    color: #ffa500;
+                }
+
+                .theme-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 10px;
+                }
+
+                .divider {
+                    height: 1px;
+                    background: rgba(255, 255, 255, 0.1);
+                    margin: 30px 0;
+                }
+
+                @media (max-width: 768px) {
+                    .editor-layout {
+                        grid-template-columns: 1fr;
+                        gap: 20px;
+                    }
+                    .tabs-container {
+                        justify-content: center;
+                    }
+                    .tab-btn {
+                        flex: 1;
+                        text-align: center;
                     }
                 }
             `}</style>
