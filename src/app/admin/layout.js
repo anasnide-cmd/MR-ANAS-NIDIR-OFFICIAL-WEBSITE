@@ -21,6 +21,7 @@ export default function AdminLayout({ children }) {
     const [loading, setLoading] = useState(true);
     const [authLoading, setAuthLoading] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarMinimized, setSidebarMinimized] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const router = useRouter();
@@ -30,8 +31,19 @@ export default function AdminLayout({ children }) {
             setUser(u);
             setLoading(false);
         });
+
+        // Load sidebar preference
+        const saved = localStorage.getItem('sidebarMinimized');
+        if (saved !== null) setSidebarMinimized(saved === 'true');
+
         return () => unsub();
     }, []);
+
+    const toggleMinimize = () => {
+        const newState = !sidebarMinimized;
+        setSidebarMinimized(newState);
+        localStorage.setItem('sidebarMinimized', newState);
+    };
 
     const handleGoogleLogin = async () => {
         setAuthLoading(true);
@@ -275,11 +287,16 @@ export default function AdminLayout({ children }) {
                 {sidebarOpen ? '✕' : '☰'}
             </button>
 
-            <AdminSidebar isOpen={sidebarOpen} close={() => setSidebarOpen(false)} />
+            <AdminSidebar
+                isOpen={sidebarOpen}
+                close={() => setSidebarOpen(false)}
+                isMinimized={sidebarMinimized}
+                toggleMinimize={toggleMinimize}
+            />
 
             {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
-            <main className="admin-main">
+            <main className={`admin-main ${sidebarMinimized ? 'minimized' : ''}`}>
                 <div className="admin-content-wrapper">
                     {children}
                 </div>
@@ -329,7 +346,10 @@ export default function AdminLayout({ children }) {
                     flex: 1;
                     margin-left: 280px;
                     padding: 40px;
-                    transition: all 0.3s ease;
+                    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .admin-main.minimized {
+                    margin-left: 80px;
                 }
                 .admin-content-wrapper {
                     max-width: 1100px;

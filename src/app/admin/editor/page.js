@@ -5,12 +5,17 @@ import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
+import { onAuthStateChanged } from 'firebase/auth';
+
 function EditorContent() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const editId = searchParams.get('id');
+
     const [title, setTitle] = useState('');
     const [slug, setSlug] = useState('');
     const [content, setContent] = useState('');
     const [loading, setLoading] = useState(true);
-
     const [user, setUser] = useState(null);
 
     useEffect(() => {

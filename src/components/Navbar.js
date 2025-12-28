@@ -64,7 +64,7 @@ export default function Navbar() {
                     left: 0;
                     right: 0;
                     height: 80px;
-                    z-index: 2000;
+                    z-index: 100;
                     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                     background: transparent;
                 }
