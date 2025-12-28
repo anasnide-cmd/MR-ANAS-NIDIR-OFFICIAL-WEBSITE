@@ -13,8 +13,6 @@ const ALLOWED_ADMINS = [
 
 export default function AdminPage() {
     const [user, setUser] = useState(null);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -33,236 +31,269 @@ export default function AdminPage() {
         setPosts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     };
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-        } catch (err) {
-            alert('Login failed: ' + err.message);
-        }
-    };
-
-    const handleGoogleLogin = async () => {
-        const provider = new GoogleAuthProvider();
-        try {
-            await signInWithPopup(auth, provider);
-        } catch (err) {
-            alert('Google Login failed: ' + err.message);
-        }
-    };
-
     const handleDelete = async (id) => {
-        if (!confirm('Delete post?')) return;
-        await deleteDoc(doc(db, 'posts', id));
-        fetchPosts();
+        if (!confirm('Are you sure you want to delete this post?')) return;
+        try {
+            await deleteDoc(doc(db, 'posts', id));
+            setPosts(posts.filter(p => p.id !== id));
+        } catch (err) {
+            alert('Error deleting post: ' + err.message);
+        }
     };
 
-    if (loading) return <div className="section">Loading...</div>;
+    if (loading) return <div className="loading-state">Initializing Dashboard...</div>;
+    if (!user) return null; // Let AdminLayout handle login redirect
 
-    // Check if user is allowed (Owner Only)
-    const isOwner = user && ALLOWED_ADMINS.includes(user.email);
-
-    if (user && !isOwner) {
-        return (
-            <div className="section" style={{ maxWidth: 500, margin: '100px auto', textAlign: 'center' }}>
-                <h1 style={{ color: 'red' }}>⛔ Access Denied</h1>
-                <p>You are logged in as <strong>{user.email}</strong></p>
-                <p>This area is restricted to site owners only.</p>
-                <button onClick={() => signOut(auth)} className="btn" style={{ marginTop: 20 }}>Logout</button>
-            </div>
-        );
-    }
-
-    if (!user) {
-        return (
-            <div className="section login-container">
-                <div className="card glass login-card">
-                    <h1>Admin Login</h1>
-                    <p style={{ opacity: 0.6, marginBottom: 20 }}>Welcome back, please sign in.</p>
-                    <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
-                        <input type="email" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} required className="admin-input" />
-                        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required className="admin-input" />
-                        <button type="submit" className="btn glow">Login</button>
-
-                        <div className="separator"><span>OR</span></div>
-
-                        <button type="button" onClick={handleGoogleLogin} className="btn google-btn">
-                            <span className="google-icon">G</span> Login with Google
-                        </button>
-                    </form>
-                </div>
-
-                <style jsx>{`
-                    .login-container {
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        min-height: 80vh;
-                    }
-                    .login-card {
-                        width: 100%;
-                        max-width: 400px;
-                        padding: 40px;
-                        text-align: center;
-                    }
-                    .admin-input {
-                        padding: 12px;
-                        background: rgba(255, 255, 255, 0.05);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        border-radius: 8px;
-                        color: #fff;
-                        transition: border 0.3s;
-                    }
-                    .admin-input:focus {
-                        border-color: #00f0ff;
-                        outline: none;
-                    }
-                    .separator {
-                        position: relative;
-                        margin: 20px 0;
-                        text-align: center;
-                    }
-                    .separator::before {
-                        content: '';
-                        position: absolute;
-                        left: 0;
-                        top: 50%;
-                        width: 100%;
-                        height: 1px;
-                        background: rgba(255, 255, 255, 0.1);
-                    }
-                    .separator span {
-                        position: relative;
-                        background: #0a0a0a;
-                        padding: 0 10px;
-                        color: rgba(255, 255, 255, 0.4);
-                        font-size: 0.8rem;
-                    }
-                    .google-btn {
-                        background: #fff;
-                        color: #000;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 10px;
-                    }
-                    .google-icon {
-                        font-weight: 900;
-                        color: #4285F4;
-                    }
-                `}</style>
-            </div>
-        );
-    }
-
-    // Main Dashboard View
     return (
         <div className="dashboard-view">
-            <header className="dashboard-header">
-                <div>
-                    <h1>Welcome, {user.displayName || 'Admin'}</h1>
-                    <p style={{ opacity: 0.6 }}>Manage your content and site settings here.</p>
+            <header className="page-header">
+                <div className="welcome-area">
+                    <span className="welcome-tag">DASHBOARD COMMAND</span>
+                    <h1>Hello, {user.displayName?.split(' ')[0] || 'Anas'}</h1>
+                    <p className="subtitle">Everything is under control. What's next?</p>
                 </div>
-                <div className="stats-mini">
-                    <div className="stat-pill">
-                        <span className="pill-count">{posts.length}</span>
-                        <span className="pill-label">Total Posts</span>
-                    </div>
-                </div>
+                <Link href="/admin/editor" className="btn glow-blue">+ Express Post</Link>
             </header>
 
-            <section className="posts-section">
-                <div className="section-header">
-                    <h2>Recent Posts</h2>
-                    <Link href="/admin/editor" className="btn glow">+ New Post</Link>
+            <section className="stats-grid">
+                <div className="stat-card glass animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                    <div className="stat-info">
+                        <span className="stat-label">Total Articles</span>
+                        <span className="stat-value">{posts.length}</span>
+                    </div>
+                    <div className="stat-icon pulse">📝</div>
+                </div>
+                <div className="stat-card glass animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                    <div className="stat-info">
+                        <span className="stat-label">System Status</span>
+                        <span className="stat-value">Active</span>
+                    </div>
+                    <div className="stat-icon glow-green">⚡</div>
+                </div>
+                <div className="stat-card glass animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                    <div className="stat-info">
+                        <span className="stat-label">Platform</span>
+                        <span className="stat-value">Next.js</span>
+                    </div>
+                    <div className="stat-icon glow-purple">🚀</div>
+                </div>
+            </section>
+
+            <section className="content-section animate-fade-in">
+                <div className="section-bar">
+                    <h2>Recent Content Management</h2>
+                    <span className="count-badge">{posts.length} Posts</span>
                 </div>
 
-                <div className="posts-grid">
-                    {posts.map(post => (
-                        <div key={post.id} className="post-row card glass">
-                            <div className="post-info">
-                                <h3>{post.title}</h3>
-                                <span className="post-date">{post.date}</span>
-                            </div>
-                            <div className="post-actions">
-                                <Link href={`/admin/editor?id=${post.id}`} className="action-link edit">Edit</Link>
-                                <button onClick={() => handleDelete(post.id)} className="action-link delete">Delete</button>
-                            </div>
-                        </div>
-                    ))}
-                    {posts.length === 0 && <p style={{ opacity: 0.5 }}>No posts yet.</p>}
+                <div className="posts-table-wrapper card glass">
+                    <table className="posts-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Date Published</th>
+                                <th align="right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {posts.map((post, idx) => (
+                                <tr key={post.id} className="post-row" style={{ animationDelay: `${idx * 0.05}s` }}>
+                                    <td>
+                                        <div className="post-title-cell">
+                                            <span className="post-avatar">{post.title.charAt(0)}</span>
+                                            <strong>{post.title}</strong>
+                                        </div>
+                                    </td>
+                                    <td><span className="date-tag">{post.date}</span></td>
+                                    <td align="right">
+                                        <div className="action-btns">
+                                            <Link href={`/admin/editor?id=${post.id}`} className="btn-icon edit" title="Edit Content">✏️</Link>
+                                            <button onClick={() => handleDelete(post.id)} className="btn-icon delete" title="Delete Permanent">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            {posts.length === 0 && (
+                                <tr>
+                                    <td colSpan="3" align="center" style={{ padding: '60px', opacity: 0.5 }}>
+                                        No content found. Start by creating a new post.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
             <style jsx>{`
-                .dashboard-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: flex-end;
-                    margin-bottom: 40px;
-                }
-                .stat-pill {
-                    background: rgba(0, 240, 255, 0.1);
-                    border: 1px solid rgba(0, 240, 255, 0.2);
-                    padding: 8px 16px;
-                    border-radius: 100px;
+                .loading-state {
+                    height: 60vh;
                     display: flex;
                     align-items: center;
-                    gap: 8px;
-                }
-                .pill-count {
+                    justify-content: center;
                     color: #00f0ff;
-                    font-weight: bold;
-                    font-size: 1.2rem;
                 }
-                .pill-label {
-                    font-size: 0.8rem;
-                    opacity: 0.8;
-                }
-                .section-header {
+                .page-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    margin-bottom: 20px;
+                    margin-bottom: 50px;
                 }
-                .posts-grid {
+                .welcome-tag {
+                    font-size: 0.65rem;
+                    color: #00f0ff;
+                    font-weight: 800;
+                    letter-spacing: 2px;
+                    background: rgba(0, 240, 255, 0.1);
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                    margin-bottom: 10px;
+                    display: inline-block;
+                }
+                .subtitle { opacity: 0.6; font-size: 1.1rem; }
+                
+                .stats-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 25px;
+                    margin-bottom: 50px;
+                }
+                .stat-card {
+                    padding: 30px;
+                    border-radius: 20px;
                     display: flex;
-                    flex-direction: column;
-                    gap: 15px;
+                    justify-content: space-between;
+                    align-items: center;
+                    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                }
+                .stat-card:hover {
+                    transform: translateY(-10px);
+                    border-color: rgba(0, 240, 255, 0.3);
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                }
+                .stat-info { display: flex; flex-direction: column; }
+                .stat-label { font-size: 0.85rem; opacity: 0.6; margin-bottom: 5px; }
+                .stat-value { font-size: 1.8rem; font-weight: 800; }
+                .stat-icon { font-size: 2rem; }
+
+                .content-section { margin-top: 40px; }
+                .section-bar {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 25px;
+                }
+                .count-badge {
+                    background: rgba(255, 255, 255, 0.05);
+                    padding: 6px 15px;
+                    border-radius: 10px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                }
+
+                .posts-table-wrapper {
+                    overflow-x: auto;
+                    border-radius: 24px;
+                    padding: 10px;
+                }
+                .posts-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                .posts-table th {
+                    text-align: left;
+                    padding: 20px;
+                    font-size: 0.8rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    opacity: 0.4;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                }
+                .posts-table td {
+                    padding: 20px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
                 }
                 .post-row {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 20px 25px;
-                    transition: transform 0.3s;
+                    transition: background 0.3s;
+                    animation: rowIn 0.5s ease-out forwards;
+                    opacity: 0;
+                }
+                @keyframes rowIn {
+                    from { opacity: 0; transform: translateX(-10px); }
+                    to { opacity: 1; transform: translateX(0); }
                 }
                 .post-row:hover {
-                    transform: translateX(5px);
-                    background: rgba(255, 255, 255, 0.05);
+                    background: rgba(255, 255, 255, 0.02);
                 }
-                .post-date {
-                    font-size: 0.8rem;
-                    opacity: 0.5;
-                }
-                .post-actions {
+                .post-title-cell {
                     display: flex;
-                    gap: 20px;
+                    align-items: center;
+                    gap: 15px;
                 }
-                .action-link {
-                    font-size: 0.9rem;
+                .post-avatar {
+                    width: 40px;
+                    height: 40px;
+                    background: linear-gradient(135deg, #00f0ff 0%, #0064e0 100%);
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 900;
+                    color: #fff;
+                    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                }
+                .date-tag {
+                    font-size: 0.85rem;
+                    color: rgba(255, 255, 255, 0.5);
+                    background: rgba(255, 255, 255, 0.05);
+                    padding: 4px 10px;
+                    border-radius: 6px;
+                }
+                .action-btns { display: flex; gap: 10px; justify-content: flex-end; }
+                .btn-icon {
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                     text-decoration: none;
-                    font-weight: 500;
-                    transition: opacity 0.3s;
+                    font-size: 1.1rem;
+                    transition: all 0.2s;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                     cursor: pointer;
-                    background: none;
-                    border: none;
                 }
-                .action-link:hover {
-                    opacity: 0.7;
+                .btn-icon:hover {
+                    transform: scale(1.1);
+                    border-color: #fff;
                 }
-                .edit { color: #00f0ff; }
-                .delete { color: #ff3232; }
+                .btn-icon.delete:hover { border-color: #ff3232; background: rgba(255, 50, 50, 0.1); }
+
+                .animate-slide-up {
+                    opacity: 0;
+                    animation: slideUp 0.6s ease-out forwards;
+                }
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translateY(30px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                .glow-blue { box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
+                .glow-green { text-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
+                .glow-purple { text-shadow: 0 0 15px rgba(188, 0, 255, 0.5); }
+                .pulse { animation: pulse 2s infinite; }
+                @keyframes pulse {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.1); }
+                    100% { transform: scale(1); }
+                }
+
+                @media (max-width: 768px) {
+                    .page-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+                    .stats-grid { grid-template-columns: 1fr; }
+                    .posts-table th:nth-child(2), .posts-table td:nth-child(2) { display: none; }
+                }
             `}</style>
         </div>
     );
