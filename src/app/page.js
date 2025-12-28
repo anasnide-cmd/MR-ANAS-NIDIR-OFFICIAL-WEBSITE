@@ -33,6 +33,8 @@ export default function Home() {
     ]
   });
 
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
   useEffect(() => {
     // Fetch Settings
     const fetchSettings = async () => {
@@ -44,6 +46,14 @@ export default function Home() {
     };
     fetchSettings();
 
+    const handleMouseMove = (e) => {
+      setMousePos({
+        x: (e.clientX / window.innerWidth - 0.5) * 20,
+        y: (e.clientY / window.innerHeight - 0.5) * 20,
+      });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -53,48 +63,76 @@ export default function Home() {
     }, { threshold: 0.1 });
 
     sectionsRef.current.forEach(el => el && observer.observe(el));
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
   }, []);
 
   return (
     <>
       {/* HERO */}
       <header className="hero" id="home">
-        <div className="hero-bg"></div>
-        <div className="hero-content">
+        <div className="hero-bg">
+          <div className="orb orb-1"></div>
+          <div className="orb orb-2"></div>
+          <div className="orb orb-3"></div>
+          <div className="grid-overlay"></div>
+        </div>
+
+        <div className="hero-content" style={{ transform: `translate3d(${mousePos.x}px, ${mousePos.y}px, 0)` }}>
           <div className="logo-container">
-            <div className="logo-ring"></div>
-            <div className="logo-ring ring-2"></div>
+            <div className="logo-pulse"></div>
             <div className="logo-glow">
               <img src="/assets/logo.jpg" alt="Logo" className="logo" />
             </div>
           </div>
-          <h1 className="hero-title">
+          <h1 className="hero-title animate-reveal">
             <span className="gradient-text">{settings.heroTitle}</span>
           </h1>
-          <p className="hero-subtitle">{settings.heroSubtitle}</p>
-          <div className="hero-buttons">
-            <Link href="#projects" className="btn primary">Explore Projects</Link>
-            <Link href="/blog" className="btn secondary">Read Blog</Link>
+          <p className="hero-subtitle animate-reveal-delay">{settings.heroSubtitle}</p>
+          <div className="hero-buttons animate-reveal-delay-2">
+            <Link href="#projects" className="btn-premium">
+              <span>EXPLORE UNIVERSE</span>
+              <div className="btn-glow"></div>
+            </Link>
+            <Link href="/blog" className="btn-outline">
+              READ ARCHIVES
+            </Link>
           </div>
         </div>
+
         <div className="scroll-indicator">
-          <span></span>
+          <div className="mouse">
+            <div className="wheel"></div>
+          </div>
+          <span>EXPLORE</span>
         </div>
       </header>
 
       {/* PROJECTS */}
       <section id="projects" className="section reveal" ref={el => sectionsRef.current[0] = el}>
-        <h2 className="section-title">🚀 My Projects</h2>
-        <p className="section-subtitle">Building the future, one innovation at a time</p>
+        <div className="section-header">
+          <span className="section-tag">PORTFOLIO</span>
+          <h2 className="section-title">ENGINEERED PROJECTS</h2>
+          <div className="section-line"></div>
+        </div>
 
         <div className="project-grid">
           {settings.projects.map((proj, i) => (
-            <article key={i} className={`project-card ${i === 1 ? 'featured' : ''}`}>
-              <div className="card-icon">{proj.icon}</div>
+            <article key={i} className="project-card glass shadow-hover">
+              <div className="card-top">
+                <div className="card-icon-wrapper">
+                  <span className="card-icon">{proj.icon}</span>
+                  <div className="icon-glow"></div>
+                </div>
+                <span className="card-tag">{proj.tag}</span>
+              </div>
               <h3>{proj.title}</h3>
               <p>{proj.desc}</p>
-              <span className="card-tag">{proj.tag}</span>
+              <div className="card-footer">
+                <span className="view-link">INITIATING DATA...</span>
+              </div>
             </article>
           ))}
         </div>
@@ -102,12 +140,16 @@ export default function Home() {
 
       {/* STATS */}
       <section className="stats-section">
-        {(settings.stats || []).map((stat, idx) => (
-          <div className="stat" key={idx}>
-            <span className="stat-number">{stat.value}</span>
-            <span className="stat-label">{stat.label}</span>
-          </div>
-        ))}
+        <div className="stats-container">
+          {(settings.stats || []).map((stat, idx) => (
+            <div className="stat-item" key={idx}>
+              <div className="stat-circle">
+                <span className="stat-number">{stat.value}</span>
+                <span className="stat-label">{stat.label}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ABOUT */}
@@ -122,27 +164,39 @@ export default function Home() {
 
       {/* BIO */}
       <section id="bio" className="section bio-section reveal" ref={el => sectionsRef.current[2] = el}>
+        <div className="bio-glitch-bg"></div>
         <div className="bio-container">
-          <div className="bio-image-wrapper">
-            <Image src="/assets/profile.jpg" alt="Mr Anas Nidir" width={280} height={280} className="bio-img" />
-            <div className="bio-badge">Founder & CEO</div>
+          <div className="bio-visual">
+            <div className="bio-image-frame">
+              <Image src="/assets/profile.jpg" alt="Anas" width={400} height={400} className="bio-img" />
+              <div className="frame-border"></div>
+            </div>
+            <div className="bio-experience">
+              <span className="exp-num">EST.</span>
+              <span className="exp-text">2025</span>
+            </div>
           </div>
           <div className="bio-text">
+            <span className="subtitle">THE ARCHITECT</span>
             <h2>{settings.bioTitle}</h2>
-            <p>{settings.bioText1}</p>
+            <p className="highlight">{settings.bioText1}</p>
             <p>{settings.bioText2}</p>
-            <blockquote>"{settings.quote}"</blockquote>
+            <div className="quote-box">
+              <span className="quote-icon">"</span>
+              <p>{settings.quote}</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="products" className="section reveal" ref={el => sectionsRef.current[3] = el}>
-        <h2 className="section-title">📚 Digital Products</h2>
-        <p className="section-subtitle">Resources to help you build and grow</p>
-        <div style={{ display: 'flex', gap: 15, justifyContent: 'center', flexWrap: 'wrap' }}>
+      {/* PRODUCTS */}
+      <section id="products" className="section product-section reveal" ref={el => sectionsRef.current[3] = el}>
+        <h2 className="section-title">DIGITAL ASSETS</h2>
+        <div className="asset-grid">
           {settings.products.map((prod, i) => (
-            <a key={i} href={prod.url} target="_blank" rel="noopener noreferrer" className="btn primary large">
-              {prod.name} →
+            <a key={i} href={prod.url} target="_blank" rel="noopener noreferrer" className="asset-link glass">
+              <span className="asset-name">{prod.name}</span>
+              <span className="asset-arrow">→</span>
             </a>
           ))}
         </div>
@@ -150,378 +204,347 @@ export default function Home() {
 
       {/* CONTACT */}
       <section id="contact" className="section contact-section reveal" ref={el => sectionsRef.current[4] = el}>
-        <h2 className="section-title">📨 Let's Connect</h2>
-        <p className="section-subtitle">Have a project in mind? Let's talk.</p>
-        <a href={`mailto:${settings.contactEmail}`} className="contact-email">{settings.contactEmail}</a>
-        <div className="social-links">
-          <a href={settings.tiktok} target="_blank" rel="noopener noreferrer">TikTok</a>
-          <a href={settings.instagram} target="_blank" rel="noopener noreferrer">Instagram</a>
+        <div className="footer-glow"></div>
+        <h2 className="section-title">SECURE CONNECTION</h2>
+        <p className="section-subtitle">READY TO LAUNCH YOUR NEXT VISION?</p>
+        <a href={`mailto:${settings.contactEmail}`} className="contact-link gradient-text">{settings.contactEmail}</a>
+
+        <div className="social-wrap">
+          <a href={settings.tiktok} target="_blank" className="social-btn">TIKTOK</a>
+          <div className="dot"></div>
+          <a href={settings.instagram} target="_blank" className="social-btn">INSTAGRAM</a>
         </div>
       </section>
 
       <style jsx>{`
-        /* Hero Section */
+        /* Hero Section Premium */
         .hero {
           min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
-          text-align: center;
           position: relative;
           overflow: hidden;
+          background: #020202;
         }
         .hero-bg {
           position: absolute;
           inset: 0;
-          background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
           z-index: 0;
+          overflow: hidden;
         }
-        .hero-bg::before {
-          content: '';
+        .grid-overlay {
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.1) 0%, transparent 50%);
+          background-image: linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+          background-size: 50px 50px;
+          mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
         }
+        .orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          opacity: 0.4;
+          animation: orbFloat 20s infinite alternate;
+        }
+        .orb-1 { width: 400px; height: 400px; background: #00f0ff; top: -100px; right: -100px; }
+        .orb-2 { width: 300px; height: 300px; background: #0064e0; bottom: -50px; left: -50px; animation-delay: -5s; }
+        .orb-3 { width: 250px; height: 250px; background: #7000ff; top: 40%; left: 30%; animation-delay: -10s; }
+
+        @keyframes orbFloat {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(50px, 50px) scale(1.1); }
+        }
+
         .hero-content {
           position: relative;
-          z-index: 1;
-          padding: 20px;
+          z-index: 2;
+          text-align: center;
+          transition: transform 0.1s ease-out;
         }
         .logo-container {
           position: relative;
-          display: inline-block;
-          margin-bottom: 48px;
-        }
-        .logo-ring {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 650px;
-          height: 650px;
-          border: 1px solid rgba(0, 240, 255, 0.2);
-          border-radius: 50%;
-          transform: translate(-50%, -50%);
-          animation: ring-rotate 10s linear infinite;
-        }
-        .logo-ring.ring-2 {
-          width: 700px;
-          height: 700px;
-          border-color: rgba(0, 100, 224, 0.15);
-          animation: ring-rotate 15s linear infinite reverse;
+          margin-bottom: 50px;
         }
         .logo-glow {
           position: relative;
-          display: inline-block;
-          border-radius: 20px;
-          animation: float 4s ease-in-out infinite;
-          box-shadow: 
-            0 0 60px rgba(0, 240, 255, 0.3),
-            0 0 120px rgba(0, 240, 255, 0.15);
-        }
-        .logo {
-          max-width: 600px;
+          width: 320px;
           height: auto;
-          border-radius: 12px;
-          display: block;
-          transition: transform 0.4s ease;
+          margin: 0 auto;
+          border-radius: 40px;
+          overflow: hidden;
+          box-shadow: 0 0 50px rgba(0, 240, 255, 0.2);
+          border: 1px solid rgba(0, 240, 255, 0.2);
         }
-        .logo-glow:hover .logo {
-          transform: scale(1.03);
+        .logo { width: 100%; display: block; }
+        .logo-pulse {
+          position: absolute;
+          top: 50%; left: 50%;
+          width: 350px; height: 350px;
+          transform: translate(-50%, -50%);
+          border: 1px solid rgba(0, 240, 255, 0.2);
+          border-radius: 50px;
+          animation: pulseRotate 10s linear infinite;
         }
+        @keyframes pulseRotate {
+          from { transform: translate(-50%, -50%) rotate(0deg); }
+          to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
         .hero-title {
-          font-size: clamp(2.5rem, 8vw, 4.5rem);
-          margin: 0 0 16px;
-          font-weight: 800;
-          letter-spacing: -1px;
+          font-size: clamp(3rem, 10vw, 6rem);
+          font-weight: 950;
+          letter-spacing: -3px;
+          margin-bottom: 10px;
         }
         .gradient-text {
-          background: linear-gradient(90deg, #00f0ff, #0064e0, #00f0ff);
+          background: linear-gradient(90deg, #fff, #00f0ff, #fff);
           background-size: 200% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          animation: shimmer 3s linear infinite;
+          animation: shimmer 4s linear infinite;
         }
         .hero-subtitle {
           font-size: 1.2rem;
-          opacity: 0.8;
-          margin-bottom: 32px;
+          color: rgba(255, 255, 255, 0.6);
+          letter-spacing: 4px;
+          text-transform: uppercase;
+          margin-bottom: 40px;
         }
-        .hero-buttons {
-          display: flex;
-          gap: 16px;
-          justify-content: center;
-          flex-wrap: wrap;
-        }
-        .btn {
-          padding: 14px 32px;
-          border-radius: 50px;
-          font-weight: 600;
-          text-decoration: none;
-          transition: all 0.3s ease;
-          cursor: pointer;
-          border: none;
-        }
-        .btn.primary {
-          background: linear-gradient(90deg, #00f0ff, #0064e0);
+
+        .hero-buttons { display: flex; gap: 20px; justify-content: center; }
+        .btn-premium {
+          position: relative;
+          padding: 16px 40px;
+          background: #fff;
           color: #000;
+          text-decoration: none;
+          font-weight: 900;
+          font-size: 0.9rem;
+          letter-spacing: 2px;
+          border-radius: 4px;
+          overflow: hidden;
+          transition: all 0.3s;
         }
-        .btn.primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(0, 240, 255, 0.3);
+        .btn-premium:hover { transform: translateY(-3px); letter-spacing: 3px; }
+        .btn-glow {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+          transform: translateX(-100%);
+          transition: transform 0.6s;
         }
-        .btn.secondary {
-          background: transparent;
-          border: 2px solid #00f0ff;
-          color: #00f0ff;
+        .btn-premium:hover .btn-glow { transform: translateX(100%); }
+
+        .btn-outline {
+          padding: 16px 40px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #fff;
+          text-decoration: none;
+          font-weight: 700;
+          letter-spacing: 2px;
+          border-radius: 4px;
+          transition: all 0.3s;
         }
-        .btn.secondary:hover {
-          background: rgba(0, 240, 255, 0.1);
-        }
-        .btn.large {
-          padding: 18px 48px;
-          font-size: 1.1rem;
-        }
+        .btn-outline:hover { background: #fff; color: #000; }
+
         .scroll-indicator {
           position: absolute;
           bottom: 40px;
-          left: 50%;
-          transform: translateX(-50%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 15px;
+          color: rgba(255, 255, 255, 0.4);
+          font-size: 0.7rem;
+          letter-spacing: 3px;
         }
-        .scroll-indicator span {
-          display: block;
-          width: 24px;
-          height: 40px;
-          border: 2px solid rgba(255,255,255,0.3);
+        .mouse {
+          width: 24px; height: 40px;
+          border: 2px solid rgba(255, 255, 255, 0.2);
           border-radius: 12px;
           position: relative;
         }
-        .scroll-indicator span::before {
-          content: '';
-          position: absolute;
-          top: 6px;
-          left: 50%;
-          width: 4px;
-          height: 8px;
+        .wheel {
+          width: 4px; height: 8px;
           background: #00f0ff;
-          border-radius: 2px;
+          position: absolute;
+          top: 6px; left: 50%;
           transform: translateX(-50%);
-          animation: scroll 1.5s infinite;
+          border-radius: 2px;
+          animation: wheelScroll 1.5s infinite;
+        }
+        @keyframes wheelScroll {
+          0% { transform: translate(-50%, 0); opacity: 1; }
+          100% { transform: translate(-50%, 15px); opacity: 0; }
         }
 
-        /* Section Styles */
-        .section {
-          padding: 100px 24px;
-          text-align: center;
-        }
-        .section-title {
-          font-size: 2.5rem;
-          margin-bottom: 12px;
-        }
-        .section-subtitle {
-          opacity: 0.7;
-          margin-bottom: 48px;
-          font-size: 1.1rem;
-        }
+        /* Section Styling */
+        .section { padding: 150px 40px; max-width: 1400px; margin: 0 auto; }
+        .section-header { text-align: left; margin-bottom: 80px; }
+        .section-tag { color: #00f0ff; letter-spacing: 5px; font-weight: 900; font-size: 0.75rem; display: block; margin-bottom: 15px; }
+        .section-title { font-size: 3rem; font-weight: 900; letter-spacing: -1px; }
+        .section-header .section-line { width: 100px; height: 4px; background: #00f0ff; margin-top: 20px; box-shadow: 0 0 20px #00f0ff; }
 
-        /* Project Cards */
+        /* Project Cards 3D */
         .project-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 24px;
-          max-width: 1200px;
-          margin: 0 auto;
+          grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+          gap: 30px;
         }
         .project-card {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 20px;
-          padding: 32px;
+          padding: 50px;
+          border-radius: 30px;
           text-align: left;
-          transition: all 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          position: relative;
+          overflow: hidden;
         }
         .project-card:hover {
-          transform: translateY(-8px);
-          border-color: rgba(0, 240, 255, 0.3);
-          box-shadow: 0 20px 40px rgba(0, 240, 255, 0.1);
+          transform: translateY(-15px) scale(1.02);
+          border-color: rgba(0, 240, 255, 0.4);
+          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
         }
-        .project-card.featured {
-          border-color: rgba(0, 240, 255, 0.3);
-          background: linear-gradient(135deg, rgba(0, 240, 255, 0.05), rgba(0, 100, 224, 0.05));
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
+        .card-icon-wrapper { position: relative; }
+        .card-icon { font-size: 3rem; position: relative; z-index: 2; }
+        .icon-glow {
+          position: absolute; inset: 0;
+          background: #00f0ff; filter: blur(20px);
+          opacity: 0.2; border-radius: 50%;
         }
-        .card-icon {
-          font-size: 2.5rem;
-          margin-bottom: 16px;
-        }
-        .project-card h3 {
-          font-size: 1.5rem;
-          margin: 0 0 12px;
-        }
-        .project-card p {
-          opacity: 0.7;
-          line-height: 1.6;
-          margin: 0 0 16px;
-        }
-        .card-tag {
-          display: inline-block;
-          padding: 6px 12px;
-          background: rgba(0, 240, 255, 0.1);
-          border-radius: 20px;
-          font-size: 0.85rem;
-          color: #00f0ff;
-        }
+        .project-card h3 { font-size: 1.8rem; font-weight: 800; margin-bottom: 15px; }
+        .project-card p { color: rgba(255, 255, 255, 0.6); line-height: 1.8; margin-bottom: 30px; }
+        .card-footer { font-size: 0.7rem; letter-spacing: 2px; font-weight: 900; color: #00f0ff; }
 
-        /* Stats */
-        .stats-section {
-          display: flex;
-          justify-content: center;
-          gap: 60px;
-          padding: 60px 24px;
-          background: rgba(0, 240, 255, 0.03);
-          flex-wrap: wrap;
+        /* Stats Pulse */
+        .stats-section { background: #050505; padding: 100px 0; border-y: 1px solid rgba(255, 255, 255, 0.05); }
+        .stats-container {
+          display: flex; justify-content: space-around;
+          max-width: 1200px; margin: 0 auto; flex-wrap: wrap; gap: 40px;
         }
-        .stat {
-          text-align: center;
+        .stat-circle {
+          width: 200px; height: 200px;
+          border: 1px solid rgba(0, 240, 255, 0.1);
+          border-radius: 50%;
+          display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          transition: all 0.4s;
+          background: radial-gradient(circle, rgba(0, 240, 255, 0.05) 0%, transparent 70%);
         }
-        .stat-number {
-          display: block;
-          font-size: 3rem;
-          font-weight: 700;
-          color: #00f0ff;
+        .stat-circle:hover {
+          border-color: #00f0ff;
+          box-shadow: 0 0 40px rgba(0, 240, 255, 0.2);
+          transform: scale(1.05);
         }
-        .stat-label {
-          opacity: 0.7;
-        }
+        .stat-number { font-size: 3rem; font-weight: 900; color: #fff; }
+        .stat-label { font-size: 0.7rem; letter-spacing: 3px; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; }
 
-        /* Bio Section */
-        .bio-section {
-          background: linear-gradient(180deg, transparent, rgba(0, 240, 255, 0.02));
+        /* Bio Enhancement */
+        .bio-section { position: relative; overflow: hidden; }
+        .bio-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 80px; align-items: center; }
+        .bio-visual { position: relative; }
+        .bio-image-frame {
+          position: relative;
+          border-radius: 40px;
+          overflow: hidden;
+          z-index: 2;
         }
-        .bio-container {
-          display: flex;
-          gap: 48px;
-          max-width: 1000px;
-          margin: 0 auto;
-          align-items: center;
-          flex-wrap: wrap;
-          justify-content: center;
+        .frame-border {
+          position: absolute; inset: 20px;
+          border: 1px solid #00f0ff;
+          border-radius: 30px;
+          opacity: 0.3;
         }
-        .bio-image-wrapper {
+        .bio-img { width: 100%; height: auto; display: block; }
+        .bio-experience {
+          position: absolute; bottom: -30px; right: -30px;
+          background: #00f0ff; color: #000;
+          padding: 30px; border-radius: 30px;
+          display: flex; flex-direction: column;
+          z-index: 3; font-weight: 900;
+        }
+        .bio-text h2 { font-size: 3.5rem; font-weight: 900; margin-bottom: 30px; }
+        .highlight { font-size: 1.4rem; font-weight: 600; color: #00f0ff; margin-bottom: 25px; }
+        .bio-text p { color: rgba(255, 255, 255, 0.6); line-height: 2; margin-bottom: 25px; }
+        .quote-box {
+          background: rgba(255, 255, 255, 0.03);
+          padding: 40px; border-radius: 20px;
+          border-left: 5px solid #00f0ff;
           position: relative;
         }
-        .bio-img {
-          border-radius: 20px;
-          border: 3px solid rgba(0, 240, 255, 0.3);
-        }
-        .bio-badge {
-          position: absolute;
-          bottom: -12px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: linear-gradient(90deg, #00f0ff, #0064e0);
-          color: #000;
-          padding: 8px 20px;
-          border-radius: 20px;
-          font-weight: 600;
-          font-size: 0.9rem;
-        }
-        .bio-text {
-          max-width: 500px;
-          text-align: left;
-        }
-        .bio-text h2 {
-          font-size: 2rem;
-          margin-bottom: 20px;
-        }
-        .bio-text p {
-          line-height: 1.8;
-          margin-bottom: 16px;
-          opacity: 0.9;
-        }
-        .bio-text blockquote {
-          font-size: 1.3rem;
-          font-style: italic;
-          color: #00f0ff;
-          border-left: 3px solid #00f0ff;
-          padding-left: 20px;
-          margin: 24px 0;
+        .quote-icon {
+          position: absolute; top: 10px; left: 20px;
+          font-size: 4rem; opacity: 0.1; color: #00f0ff;
         }
 
-        /* Contact */
-        .contact-section {
-          background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.5));
+        /* Products Grid */
+        .asset-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 20px;
+          margin-top: 50px;
         }
-        .contact-email {
-          display: inline-block;
-          font-size: 1.5rem;
-          color: #00f0ff;
-          text-decoration: none;
-          margin-bottom: 24px;
+        .asset-link {
+          padding: 30px;
+          display: flex; justify-content: space-between; align-items: center;
+          text-decoration: none; border-radius: 15px;
+          color: #fff; font-weight: 800; font-size: 1.2rem;
           transition: all 0.3s;
         }
-        .contact-email:hover {
-          text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+        .asset-link:hover {
+          background: #fff; color: #000;
+          transform: translateX(10px);
         }
-        .social-links {
-          display: flex;
-          gap: 24px;
-          justify-content: center;
-        }
-        .social-links a {
-          color: #fff;
+
+        /* Contact Section */
+        .contact-section { text-align: center; background: #000; }
+        .contact-link {
+          font-size: clamp(2rem, 8vw, 5rem);
+          font-weight: 950;
           text-decoration: none;
-          opacity: 0.7;
+          display: block;
+          margin: 40px 0;
+          transition: transform 0.3s;
+        }
+        .contact-link:hover { transform: scale(1.05); }
+        .social-wrap { display: flex; justify-content: center; align-items: center; gap: 30px; }
+        .social-btn {
+          font-weight: 900; letter-spacing: 4px; font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.4); text-decoration: none;
           transition: all 0.3s;
         }
-        .social-links a:hover {
-          opacity: 1;
-          color: #00f0ff;
+        .social-btn:hover { color: #00f0ff; }
+        .dot { width: 6px; height: 6px; background: #00f0ff; border-radius: 50%; opacity: 0.4; }
+
+        /* Global Reveal */
+        .reveal { opacity: 0; transform: translateY(50px); transition: all 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* Animation Helpers */
+        .animate-reveal { animation: revIn 1s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .animate-reveal-delay { animation: revIn 1s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards; opacity: 0; }
+        .animate-reveal-delay-2 { animation: revIn 1s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards; opacity: 0; }
+        @keyframes revIn {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Animations */
-        @keyframes shimmer {
-          0% { background-position: 0% center; }
-          100% { background-position: 200% center; }
-        }
-        @keyframes pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.4); }
-          50% { box-shadow: 0 0 0 20px rgba(0, 240, 255, 0); }
-        }
-        @keyframes scroll {
-          0% { opacity: 1; transform: translateX(-50%) translateY(0); }
-          100% { opacity: 0; transform: translateX(-50%) translateY(12px); }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes ring-rotate {
-          0% { transform: translate(-50%, -50%) rotate(0deg); }
-          100% { transform: translate(-50%, -50%) rotate(360deg); }
+        @media (max-width: 1024px) {
+          .bio-container { grid-template-columns: 1fr; gap: 50px; }
+          .bio-text { order: 1; text-align: center; }
+          .bio-visual { order: 2; max-width: 500px; margin: 0 auto; }
+          .quote-box { text-align: left; }
         }
 
-        /* Reveal Animation */
-        .reveal {
-          opacity: 0;
-          transform: translateY(40px);
-          transition: all 0.8s ease;
-        }
-        .reveal.active {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        /* Responsive */
         @media (max-width: 768px) {
-          .hero-title { font-size: 2.2rem; }
-          .stats-section { gap: 40px; }
+          .section-title { font-size: 2.2rem; }
+          .hero-title { font-size: 3.5rem; }
+          .project-grid { grid-template-columns: 1fr; }
+          .hero-buttons { flex-direction: column; }
+          .stat-circle { width: 150px; height: 150px; }
           .stat-number { font-size: 2rem; }
-          .bio-container { flex-direction: column; text-align: center; }
-          .bio-text { text-align: center; }
-          .bio-text blockquote { border-left: none; padding: 0; }
         }
       `}</style>
     </>
