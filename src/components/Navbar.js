@@ -41,6 +41,7 @@ export default function Navbar() {
           <li><Link href="/#projects" onClick={() => setIsOpen(false)}>Projects</Link></li>
           <li><Link href="/#products" onClick={() => setIsOpen(false)}>Products</Link></li>
           <li><Link href="/blog" onClick={() => setIsOpen(false)}>Blog</Link></li>
+          <li><Link href="/mr-build" onClick={() => setIsOpen(false)}>Mr Build</Link></li>
           <li><Link href="/#contact" onClick={() => setIsOpen(false)}>Contact</Link></li>
           <li className="mobile-only"><Link href="/admin" onClick={() => setIsOpen(false)}>Admin Engine</Link></li>
         </ul>
