@@ -72,6 +72,25 @@ export default function UserSiteClient() {
                 </div>
                 <h1 className="glow-text">{site.title}</h1>
                 <p className="description">{site.description}</p>
+                <button 
+                    onClick={() => {
+                        const url = window.location.href;
+                        navigator.clipboard.writeText(url).then(() => {
+                            // Show success feedback
+                            const btn = event.target;
+                            const originalText = btn.textContent;
+                            btn.textContent = '✅ Link Copied!';
+                            btn.classList.add('copied');
+                            setTimeout(() => {
+                                btn.textContent = originalText;
+                                btn.classList.remove('copied');
+                            }, 2000);
+                        });
+                    }}
+                    className="share-btn"
+                >
+                    📤 Share This Site
+                </button>
             </header>
 
             <main className="content">
@@ -155,6 +174,30 @@ export default function UserSiteClient() {
                 .social-tag:hover { background: #00f0ff; color: #000; box-shadow: 0 0 20px rgba(0, 240, 255, 0.5); }
 
                 .site-footer { position: absolute; bottom: 40px; width: 100%; opacity: 0.3; font-size: 0.8rem; letter-spacing: 2px; }
+
+                .share-btn {
+                    margin-top: 20px;
+                    padding: 12px 25px;
+                    border-radius: 25px;
+                    border: 1px solid rgba(0, 240, 255, 0.3);
+                    background: rgba(0, 240, 255, 0.05);
+                    color: #00f0ff;
+                    font-weight: 800;
+                    font-size: 0.9rem;
+                    letter-spacing: 1px;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                }
+                .share-btn:hover {
+                    background: rgba(0, 240, 255, 0.1);
+                    border-color: #00f0ff;
+                    box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+                }
+                .share-btn.copied {
+                    background: rgba(0, 255, 136, 0.1);
+                    border-color: #00ff88;
+                    color: #00ff88;
+                }
 
                 /* Dark Nebula (default) */
                 .theme-dark-nebula .logo-circ { background: linear-gradient(135deg, #00f0ff 0%, #0064e0 100%); box-shadow: 0 0 30px rgba(0, 240, 255, 0.4); }

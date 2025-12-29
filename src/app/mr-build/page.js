@@ -117,7 +117,28 @@ export default function BuildDashboard() {
                                 <div className="site-actions-row">
                                     <Link href="/mr-build/editor" className="btn-action primary">OPTIMIZE CORE</Link>
                                     {site.slug && (
-                                        <Link href={`/s/${site.slug}`} target="_blank" className="btn-action secondary">VIEW LIVE</Link>
+                                        <>
+                                            <Link href={`/s/${site.slug}`} target="_blank" className="btn-action secondary">VIEW LIVE</Link>
+                                            <button 
+                                                onClick={() => {
+                                                    const url = `${window.location.origin}/s/${site.slug}`;
+                                                    navigator.clipboard.writeText(url).then(() => {
+                                                        // Show success feedback
+                                                        const btn = event.target;
+                                                        const originalText = btn.textContent;
+                                                        btn.textContent = '✅ COPIED!';
+                                                        btn.style.background = '#00ff88';
+                                                        setTimeout(() => {
+                                                            btn.textContent = originalText;
+                                                            btn.style.background = '';
+                                                        }, 2000);
+                                                    });
+                                                }}
+                                                className="btn-action share"
+                                            >
+                                                📤 SHARE LINK
+                                            </button>
+                                        </>
                                     )}
                                 </div>
                             </div>
@@ -252,6 +273,8 @@ export default function BuildDashboard() {
                 .btn-action.primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 240, 255, 0.4); }
                 .btn-action.secondary { border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; }
                 .btn-action.secondary:hover { background: rgba(255, 255, 255, 0.05); }
+                .btn-action.share { border: 1px solid rgba(112, 0, 255, 0.3); color: #7000ff; background: rgba(112, 0, 255, 0.05); }
+                .btn-action.share:hover { background: rgba(112, 0, 255, 0.1); border-color: #7000ff; }
 
                 .resource-item { margin-bottom: 30px; }
                 .res-header { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; margin-bottom: 10px; color: rgba(255, 255, 255, 0.5); }

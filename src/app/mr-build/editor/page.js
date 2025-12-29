@@ -263,9 +263,30 @@ function MrBuildEditorContent() {
                 </div>
                 <div className="header-actions">
                     {siteId && siteData.slug && (
-                        <a href={`/s/${siteData.slug}`} target="_blank" rel="noopener noreferrer" className="btn-modern outline">
-                            👁️ Preview
-                        </a>
+                        <>
+                            <a href={`/s/${siteData.slug}`} target="_blank" rel="noopener noreferrer" className="btn-modern outline">
+                                👁️ Preview
+                            </a>
+                            <button 
+                                onClick={() => {
+                                    const url = `${window.location.origin}/s/${siteData.slug}`;
+                                    navigator.clipboard.writeText(url).then(() => {
+                                        // Show success feedback
+                                        const btn = event.target;
+                                        const originalText = btn.textContent;
+                                        btn.textContent = '✅ Link Copied!';
+                                        btn.classList.add('success');
+                                        setTimeout(() => {
+                                            btn.textContent = originalText;
+                                            btn.classList.remove('success');
+                                        }, 2000);
+                                    });
+                                }}
+                                className="btn-modern share"
+                            >
+                                📤 Share Site
+                            </button>
+                        </>
                     )}
                 </div>
             </header>
@@ -489,9 +510,30 @@ function MrBuildEditorContent() {
                                 {saving ? '⏳ Synchronizing...' : (siteId ? '💾 Update Node' : '🚀 Deploy Node')}
                             </button>
                             {siteId && siteData.slug && (
-                                <a href={`/s/${siteData.slug}`} target="_blank" rel="noopener noreferrer" className="btn-modern outline full-width">
-                                    👁️ Preview Site
-                                </a>
+                                <>
+                                    <a href={`/s/${siteData.slug}`} target="_blank" rel="noopener noreferrer" className="btn-modern outline full-width">
+                                        👁️ Preview Site
+                                    </a>
+                                    <button type="button" 
+                                        onClick={() => {
+                                            const url = `${window.location.origin}/s/${siteData.slug}`;
+                                            navigator.clipboard.writeText(url).then(() => {
+                                                // Show success feedback
+                                                const btn = event.target;
+                                                const originalText = btn.textContent;
+                                                btn.textContent = '✅ Link Copied!';
+                                                btn.classList.add('success');
+                                                setTimeout(() => {
+                                                    btn.textContent = '📤 Share Site Link';
+                                                    btn.classList.remove('success');
+                                                }, 2000);
+                                            });
+                                        }}
+                                        className="btn-modern share full-width"
+                                    >
+                                        📤 Share Site Link
+                                    </button>
+                                </>
                             )}
                             <button type="button" onClick={() => {
                                 if (confirm('Reset all changes?')) {
@@ -806,6 +848,20 @@ function MrBuildEditorContent() {
                 }
                 .btn-modern.outline:hover {
                     background: rgba(255, 255, 255, 0.05);
+                }
+                .btn-modern.share {
+                    background: rgba(112, 0, 255, 0.1);
+                    border: 1px solid rgba(112, 0, 255, 0.3);
+                    color: #7000ff;
+                }
+                .btn-modern.share:hover {
+                    background: rgba(112, 0, 255, 0.2);
+                    border-color: #7000ff;
+                }
+                .btn-modern.success {
+                    background: rgba(0, 255, 136, 0.1);
+                    border-color: #00ff88;
+                    color: #00ff88;
                 }
                 .btn-modern.full-width {
                     width: 100%;

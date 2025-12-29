@@ -21,7 +21,10 @@ export default function BuildLogin() {
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (user) => {
             if (user) {
+                console.log('User already logged in:', user.email);
                 router.push('/mr-build');
+            } else {
+                console.log('No user logged in');
             }
         });
         return () => unsub();
@@ -31,13 +34,17 @@ export default function BuildLogin() {
         e.preventDefault();
         setLoading(true);
         try {
+            console.log('Attempting authentication:', isRegister ? 'register' : 'login');
             if (isRegister) {
                 await createUserWithEmailAndPassword(auth, email, password);
+                console.log('User registered successfully');
             } else {
                 await signInWithEmailAndPassword(auth, email, password);
+                console.log('User logged in successfully');
             }
             router.push('/mr-build');
         } catch (err) {
+            console.error('Authentication error:', err);
             alert(err.message);
         } finally {
             setLoading(false);
@@ -47,10 +54,15 @@ export default function BuildLogin() {
     const handleGoogle = async () => {
         setLoading(true);
         try {
-            await signInWithPopup(auth, new GoogleAuthProvider());
+            console.log('Attempting Google authentication');
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+            console.log('Google auth successful');
             router.push('/mr-build');
         } catch (err) {
-            alert(err.message);
+            console.error('Google auth error:', err);
+            alert('Authentication failed: ' + err.message);
+        } finally {
             setLoading(false);
         }
     };
