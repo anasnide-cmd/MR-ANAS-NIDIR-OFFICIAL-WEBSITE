@@ -25,7 +25,13 @@ export default function UserSiteClient() {
                 const q = query(collection(db, 'user_sites'), where('slug', '==', slug));
                 const snap = await getDocs(q);
                 if (!snap.empty) {
-                    setSite(snap.docs[0].data());
+                    const siteData = snap.docs[0].data();
+                    // Only show public sites
+                    if (siteData.status === 'public') {
+                        setSite(siteData);
+                    } else {
+                        setSite(null);
+                    }
                 }
             } catch (err) {
                 console.error('Error fetching site:', err);

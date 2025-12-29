@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { auth, db } from '../../../lib/firebase';
-import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import Link from 'next/link';
@@ -21,7 +21,8 @@ function MrBuildEditorContent() {
             twitter: ''
         },
         customHtml: '',
-        customCss: ''
+        customCss: '',
+        status: 'draft' // public, draft, private
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -63,7 +64,8 @@ function MrBuildEditorContent() {
                             theme: data.theme || 'dark-nebula',
                             socials: data.socials || { instagram: '', tiktok: '', twitter: '' },
                             customHtml: data.customHtml || '',
-                            customCss: data.customCss || ''
+                            customCss: data.customCss || '',
+                            status: data.status || 'draft'
                         });
                     }
                 } catch (err) {
@@ -130,6 +132,28 @@ function MrBuildEditorContent() {
         }
     };
 
+    const handleDelete = async () => {
+        if (!siteId) return;
+        
+        const confirmed = confirm(`Are you sure you want to delete "${siteData.name || siteData.title}"? This action cannot be undone and your site will be permanently removed.`);
+        if (!confirmed) return;
+
+        setSaving(true);
+        try {
+            await deleteDoc(doc(db, 'user_sites', siteId));
+            setSuccess('Site deleted successfully!');
+            // Redirect after a short delay
+            setTimeout(() => {
+                router.push('/mr-build');
+            }, 2000);
+        } catch (err) {
+            console.error('Error deleting site:', err);
+            setError('Error deleting site: ' + err.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const handleSave = async (e) => {
         e.preventDefault();
         setError('');
@@ -168,6 +192,7 @@ function MrBuildEditorContent() {
                 },
                 customHtml: siteData.customHtml.trim(),
                 customCss: siteData.customCss.trim(),
+                status: siteData.status,
                 userId: user.uid,
                 updatedAt: new Date().toISOString()
             };
@@ -328,6 +353,30 @@ function MrBuildEditorContent() {
                                     rows={4}
                                 />
                             </div>
+
+                            <div className="divider"></div>
+
+                            <h3>Publication Status</h3>
+                            <div className="status-selector">
+                                <button type="button"
+                                    className={`status-btn ${siteData.status === 'draft' ? 'active' : ''}`}
+                                    onClick={() => setSiteData({ ...siteData, status: 'draft' })}
+                                >
+                                    📝 Draft
+                                </button>
+                                <button type="button"
+                                    className={`status-btn ${siteData.status === 'private' ? 'active' : ''}`}
+                                    onClick={() => setSiteData({ ...siteData, status: 'private' })}
+                                >
+                                    🔒 Private
+                                </button>
+                                <button type="button"
+                                    className={`status-btn ${siteData.status === 'public' ? 'active' : ''}`}
+                                    onClick={() => setSiteData({ ...siteData, status: 'public' })}
+                                >
+                                    🌐 Public
+                                </button>
+                            </div>
                         </div>
                     )}
 
@@ -449,13 +498,19 @@ function MrBuildEditorContent() {
                                         theme: 'dark-nebula',
                                         socials: { instagram: '', tiktok: '', twitter: '' },
                                         customHtml: '',
-                                        customCss: ''
+                                        customCss: '',
+                                        status: 'draft'
                                     });
                                     setSlugError('');
                                 }
                             }} className="btn-modern danger full-width">
                                 🔄 Reset Form
                             </button>
+                            {siteId && (
+                                <button type="button" onClick={handleDelete} className="btn-modern danger full-width">
+                                    🗑️ Delete Site
+                                </button>
+                            )}
                         </div>
 
                         <div className="glass card status-panel">
@@ -464,6 +519,12 @@ function MrBuildEditorContent() {
                                 <span className="status-label">Configuration:</span>
                                 <span className={`status-value ${siteData.title && siteData.slug ? 'ready' : 'pending'}`}>
                                     {siteData.title && siteData.slug ? '✅ Complete' : '⏳ In Progress'}
+                                </span>
+                            </div>
+                            <div className="status-item">
+                                <span className="status-label">Status:</span>
+                                <span className={`status-value ${siteData.status === 'public' ? 'ready' : siteData.status === 'private' ? 'warning' : 'pending'}`}>
+                                    {siteData.status === 'public' ? '🌐 Public' : siteData.status === 'private' ? '🔒 Private' : '📝 Draft'}
                                 </span>
                             </div>
                             <div className="status-item">
