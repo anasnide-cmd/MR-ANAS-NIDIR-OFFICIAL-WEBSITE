@@ -299,9 +299,10 @@ function MrBuildEditorContent() {
 
             <div className="editor-container">
                 <form onSubmit={handleSave} className="editor-layout">
-                    {activeTab === 'basic' && (
-                        <div className="main-config glass card">
-                            <h3>General Configuration</h3>
+                    <div className="tab-content">
+                        {activeTab === 'basic' && (
+                            <div className="main-config glass card reveal-on-scroll">
+                                <h3>General Configuration</h3>
                             <div className="input-group">
                                 <label>Internal Node Name (Reference only)</label>
                                 <input
@@ -359,29 +360,32 @@ function MrBuildEditorContent() {
                             <h3>Publication Status</h3>
                             <div className="status-selector">
                                 <button type="button"
-                                    className={`status-btn ${siteData.status === 'draft' ? 'active' : ''}`}
+                                    className={`status-btn draft ${siteData.status === 'draft' ? 'active' : ''}`}
                                     onClick={() => setSiteData({ ...siteData, status: 'draft' })}
                                 >
                                     📝 Draft
+                                    <span className="status-desc">Work in progress</span>
                                 </button>
                                 <button type="button"
-                                    className={`status-btn ${siteData.status === 'private' ? 'active' : ''}`}
+                                    className={`status-btn private ${siteData.status === 'private' ? 'active' : ''}`}
                                     onClick={() => setSiteData({ ...siteData, status: 'private' })}
                                 >
                                     🔒 Private
+                                    <span className="status-desc">Owner only</span>
                                 </button>
                                 <button type="button"
-                                    className={`status-btn ${siteData.status === 'public' ? 'active' : ''}`}
+                                    className={`status-btn public ${siteData.status === 'public' ? 'active' : ''}`}
                                     onClick={() => setSiteData({ ...siteData, status: 'public' })}
                                 >
                                     🌐 Public
+                                    <span className="status-desc">Live & visible</span>
                                 </button>
                             </div>
                         </div>
                     )}
 
                     {activeTab === 'appearance' && (
-                        <div className="main-config glass card">
+                        <div className="main-config glass card reveal-on-scroll">
                             <h3>Visual Theme</h3>
                             <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
                                 Choose a theme that matches your digital aesthetic.
@@ -410,7 +414,7 @@ function MrBuildEditorContent() {
                     )}
 
                     {activeTab === 'social' && (
-                        <div className="main-config glass card">
+                        <div className="main-config glass card reveal-on-scroll">
                             <h3>Social Connectivity</h3>
                             <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
                                 Link your social platforms for easy access.
@@ -449,7 +453,7 @@ function MrBuildEditorContent() {
                     )}
 
                     {activeTab === 'code' && (
-                        <div className="main-config glass card">
+                        <div className="main-config glass card reveal-on-scroll">
                             <h3>Custom Code (Advanced)</h3>
                             <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
                                 Override the default template with your own HTML and CSS. Leave blank to use the standard design.
@@ -476,9 +480,10 @@ function MrBuildEditorContent() {
                             </div>
                         </div>
                     )}
+                    </div>
 
                     <div className="sidebar-actions">
-                        <div className="glass card actions-panel">
+                        <div className="glass card actions-panel reveal-on-scroll">
                             <h3>Quick Actions</h3>
                             <button type="submit" className="btn-modern glow-blue full-width" disabled={saving}>
                                 {saving ? '⏳ Synchronizing...' : (siteId ? '💾 Update Node' : '🚀 Deploy Node')}
@@ -513,7 +518,7 @@ function MrBuildEditorContent() {
                             )}
                         </div>
 
-                        <div className="glass card status-panel">
+                        <div className="glass card status-panel reveal-on-scroll">
                             <h3>System Status</h3>
                             <div className="status-item">
                                 <span className="status-label">Configuration:</span>
@@ -600,12 +605,22 @@ function MrBuildEditorContent() {
                     flex-direction: column;
                     gap: 30px;
                 }
+
+                .tab-content {
+                    transition: all 0.3s ease;
+                }
                 .card {
                     padding: 40px;
                     border-radius: 30px;
                     background: rgba(255, 255, 255, 0.03);
                     backdrop-filter: blur(10px);
                     border: 1px solid rgba(255, 255, 255, 0.1);
+                    transition: all 0.3s ease;
+                }
+                .card:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-color: rgba(255, 255, 255, 0.2);
+                    transform: translateY(-2px);
                 }
                 h3 {
                     font-family: var(--font-orbitron);
@@ -729,6 +744,12 @@ function MrBuildEditorContent() {
                     border-color: #00f0ff;
                     background: rgba(0, 240, 255, 0.1);
                     color: #00f0ff;
+                    animation: pulse 2s infinite;
+                }
+
+                @keyframes pulse {
+                    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.4); }
+                    50% { box-shadow: 0 0 0 10px rgba(0, 240, 255, 0); }
                 }
 
                 .btn-modern {
@@ -815,6 +836,7 @@ function MrBuildEditorContent() {
                     background: rgba(0, 240, 255, 0.1);
                     border-color: #00f0ff;
                     color: #00f0ff;
+                    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
                 }
 
                 .sidebar-actions {
@@ -844,7 +866,7 @@ function MrBuildEditorContent() {
                 .status-value.ready {
                     color: #00f0ff;
                 }
-                .status-value.pending {
+                .status-value.warning {
                     color: #ffa500;
                 }
 
@@ -852,6 +874,81 @@ function MrBuildEditorContent() {
                     display: grid;
                     grid-template-columns: 1fr;
                     gap: 10px;
+                }
+
+                .status-selector {
+                    display: flex;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                }
+                .status-btn {
+                    padding: 12px 20px;
+                    border-radius: 12px;
+                    background: rgba(255, 255, 255, 0.02);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    color: #fff;
+                    cursor: pointer;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    transition: all 0.3s;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 5px;
+                    min-width: 100px;
+                }
+                .status-btn:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                }
+                .status-btn.active {
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                }
+                .status-btn.draft.active {
+                    border-color: #ffa500;
+                    background: rgba(255, 165, 0, 0.1);
+                    color: #ffa500;
+                }
+                .status-btn.private.active {
+                    border-color: #ff3232;
+                    background: rgba(255, 50, 50, 0.1);
+                    color: #ff3232;
+                }
+                .status-btn.public.active {
+                    border-color: #00ff88;
+                    background: rgba(0, 255, 136, 0.1);
+                    color: #00ff88;
+                }
+                .status-desc {
+                    font-size: 0.7rem;
+                    opacity: 0.6;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .reveal-on-scroll {
+                    opacity: 0;
+                    transform: translateY(30px);
+                    animation: reveal 0.8s ease-out forwards;
+                }
+                .reveal-on-scroll:nth-child(1) { animation-delay: 0.1s; }
+                .reveal-on-scroll:nth-child(2) { animation-delay: 0.2s; }
+                .reveal-on-scroll:nth-child(3) { animation-delay: 0.3s; }
+                .reveal-on-scroll:nth-child(4) { animation-delay: 0.4s; }
+                .reveal-on-scroll:nth-child(5) { animation-delay: 0.5s; }
+
+                @keyframes reveal {
+                    from {
+                        opacity: 0;
+                        transform: translateY(30px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
                 }
 
                 .divider {
