@@ -114,6 +114,17 @@ export default function BuildDashboard() {
                                     <span className="label">Architecture:</span>
                                     <span className="value">{site.theme ? site.theme.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Default'}</span>
                                 </div>
+                                <div className="meta-row">
+                                    <span className="label">Status:</span>
+                                    <span className={`value status-indicator ${site.status === 'public' ? 'public' : site.status === 'private' ? 'private' : 'draft'}`}>
+                                        {site.status === 'public' ? '🌐 Public' : site.status === 'private' ? '🔒 Private' : '📝 Draft'}
+                                    </span>
+                                </div>
+                                {site.status !== 'public' && site.slug && (
+                                    <div className="visibility-warning">
+                                        ⚠️ Your page is <strong>not visible</strong> to visitors. Set status to <strong>Public</strong> in the editor to make it live.
+                                    </div>
+                                )}
                                 <div className="site-actions-row">
                                     <Link href="/mr-build/editor" className="btn-action primary">OPTIMIZE CORE</Link>
                                     {site.slug && (
@@ -263,6 +274,20 @@ export default function BuildDashboard() {
                 .meta-row .label { opacity: 0.4; font-weight: 700; width: 100px; }
                 .meta-row .value { font-weight: 800; color: #00f0ff; }
                 .value.slug { text-transform: lowercase; }
+                .status-indicator.public { color: #00ff88; }
+                .status-indicator.private { color: #ff3232; }
+                .status-indicator.draft { color: #ffa500; }
+                .visibility-warning {
+                    background: rgba(255, 165, 0, 0.1);
+                    border: 1px solid rgba(255, 165, 0, 0.3);
+                    color: #ffa500;
+                    padding: 12px 15px;
+                    border-radius: 10px;
+                    margin-top: 15px;
+                    font-size: 0.85rem;
+                    line-height: 1.5;
+                }
+                .visibility-warning strong { color: #ffa500; }
 
                 .site-actions-row { display: flex; gap: 15px; margin-top: 30px; }
                 .btn-action { 

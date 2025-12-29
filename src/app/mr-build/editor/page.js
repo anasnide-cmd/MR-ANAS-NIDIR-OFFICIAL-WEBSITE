@@ -303,6 +303,13 @@ function MrBuildEditorContent() {
                 </div>
             )}
 
+            {siteData.status !== 'public' && siteData.slug && (
+                <div className="warning-banner">
+                    ⚠️ <strong>Your page is not visible!</strong> Your site is currently set to <strong>{siteData.status}</strong> status. 
+                    Set it to <strong>Public</strong> in the Basic Settings tab to make it visible at <code>/s/{siteData.slug}</code>
+                </div>
+            )}
+
             <div className="tabs-container">
                 <button type="button" className={`tab-btn ${activeTab === 'basic' ? 'active' : ''}`} onClick={() => setActiveTab('basic')}>
                     📋 Basic Settings
@@ -614,6 +621,23 @@ function MrBuildEditorContent() {
                     border-radius: 12px;
                     margin-bottom: 30px;
                     font-weight: 700;
+                }
+                .warning-banner {
+                    background: rgba(255, 165, 0, 0.1);
+                    border: 1px solid rgba(255, 165, 0, 0.3);
+                    color: #ffa500;
+                    padding: 15px 20px;
+                    border-radius: 12px;
+                    margin-bottom: 30px;
+                    font-weight: 700;
+                    line-height: 1.6;
+                }
+                .warning-banner code {
+                    background: rgba(0, 0, 0, 0.3);
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                    font-family: 'Courier New', monospace;
+                    color: #ffa500;
                 }
                 .page-header {
                     display: flex;
