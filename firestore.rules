@@ -34,16 +34,17 @@ service cloud.firestore {
       // Users can read their own profile, Admins can read all
       allow read: if isOwner(userId) || isAdmin();
       
-      // Only Admins can create/update user limits and roles
-      // We allow users to write to their own doc ONLY if they are NOT modifying protected fields (role, siteLimit)
-      // For simplicity in this iteration, we restrict writing critical fields to Admin only.
+      // Admins have full write access
       allow write: if isAdmin();
       
-      // Temporary: Allow users to create their own initial doc (e.g. on signup), but ensure default values?
-      // For now, since we don't have a signup flow creating this doc, we rely on Admin to init it
-      // OR allow simple profile updates.
-      // allow update: if isOwner(userId) && 
-      //               (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'siteLimit']));
+      // Users can create their own doc (e.g. initial setup) provided they don't set protected fields
+      allow create: if isOwner(userId) && 
+                    !('role' in request.resource.data) && 
+                    !('siteLimit' in request.resource.data);
+                    
+      // Users can update their own doc provided they don't modify protected fields
+      allow update: if isOwner(userId) && 
+                    (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'siteLimit']));
     }
 
     // User Sites

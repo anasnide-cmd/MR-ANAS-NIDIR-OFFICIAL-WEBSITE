@@ -22,7 +22,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${orbitron.variable} ${exo2.variable}`}>
+    <html lang="en" className={`${orbitron.variable} ${exo2.variable}`} suppressHydrationWarning>
       <body>
         <Navbar />
         {children}

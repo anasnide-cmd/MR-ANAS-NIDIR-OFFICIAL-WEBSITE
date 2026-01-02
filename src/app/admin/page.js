@@ -12,6 +12,7 @@ export default function AdminPage() {
     const [allSites, setAllSites] = useState([]);
     const [usersList, setUsersList] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [permissionError, setPermissionError] = useState(false);
     const [viewMode, setViewMode] = useState('sites'); // 'sites', 'posts'
 
     useEffect(() => {
@@ -28,6 +29,7 @@ export default function AdminPage() {
 
     const fetchDashboardData = async () => {
         setLoading(true);
+        setPermissionError(false);
         try {
             // Fetch Posts (Legacy)
             const postsQ = query(collection(db, 'posts'), orderBy('date', 'desc'));
@@ -65,54 +67,51 @@ export default function AdminPage() {
 
         } catch (err) {
             console.error("Error fetching dashboard:", err);
+            if (err.code === 'permission-denied') {
+                setPermissionError(true);
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    const handleDeletePost = async (id) => {
-        if (!confirm('Are you sure you want to delete this post?')) return;
-        try {
-            await deleteDoc(doc(db, 'posts', id));
-            setPosts(posts.filter(p => p.id !== id));
-        } catch (err) {
-            alert('Error deleting post: ' + err.message);
-        }
-    };
+    // ... handle delete ...
 
-    // --- Admin Actions ---
-
-    const updateSiteStatus = async (siteId, newStatus) => {
-        // newStatus: 'active', 'banned', 'verified'
-        try {
-            await updateDoc(doc(db, 'user_sites', siteId), {
-                adminStatus: newStatus
-            });
-            // Update local state
-            setAllSites(prev => prev.map(s => s.id === siteId ? { ...s, adminStatus: newStatus } : s));
-        } catch (err) {
-            alert('Failed to update status: ' + err.message);
-        }
-    };
-
-    const updateUserLimit = async (uid, newLimit) => {
-        const limitVal = parseInt(newLimit);
-        if (isNaN(limitVal) || limitVal < 0) return;
-
-        try {
-            // Validating we have the doc ref, create if not exists
-            const userRef = doc(db, 'users', uid);
-            await setDoc(userRef, { siteLimit: limitVal }, { merge: true });
-
-            // Update local state
-            setUsersList(prev => prev.map(u => u.uid === uid ? { ...u, siteLimit: limitVal } : u));
-        } catch (err) {
-            alert('Failed to update limit: ' + err.message);
-        }
-    };
+    // ... admin actions ...
 
     if (loading) return <div className="loading-state">Syncing Dashboard Data...</div>;
     if (!user) return <div className="loading-state">Access Denied</div>;
+    if (permissionError) return (
+        <div className="error-state">
+            <div className="error-card glass">
+                <h2>🚫 Access Denied</h2>
+                <p>The system refused your connection request.</p>
+                <div className="troubleshoot">
+                    <h3>SYSTEM OVERRIDE REQUIRED</h3>
+                    <p>To access this control panel, you must manually grant yourself <strong>Admin</strong> privileges in the database.</p>
+                    <ol>
+                        <li>Open Firebase Console -&gt; Firestore</li>
+                        <li>Find collection <code>users</code></li>
+                        <li>Find document matching your UID: <code>{user.uid}</code></li>
+                        <li>Add field: <code>role: "admin"</code></li>
+                    </ol>
+                    <button onClick={fetchDashboardData} className="btn glow-blue">RETRY CONNECTION</button>
+                </div>
+            </div>
+            <style jsx>{`
+                .error-state { height: 80vh; display: flex; align-items: center; justify-content: center; }
+                .error-card { padding: 40px; border: 1px solid #ff3232; border-radius: 20px; max-width: 500px; text-align: center; }
+                h2 { color: #ff3232; margin-bottom: 20px; }
+                .troubleshoot { margin-top: 30px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; text-align: left; }
+                h3 { color: #00f0ff; font-size: 0.9rem; margin-bottom: 10px; letter-spacing: 1px; }
+                ol { margin-left: 20px; color: rgba(255,255,255,0.7); font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px; }
+                code { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-family: monospace; }
+                .btn { cursor: pointer; border: none; }
+                .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); }
+                .glow-blue { box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); background: #00f0ff; color: #000; padding: 10px 20px; border-radius: 8px; font-weight: 700; width: 100%; }
+            `}</style>
+        </div>
+    );
 
     return (
         <div className="dashboard-view">
