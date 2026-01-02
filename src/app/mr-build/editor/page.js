@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { auth, db } from '../../../lib/firebase';
-import { doc, setDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { doc, setDoc, deleteDoc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import Link from 'next/link';
 
@@ -40,6 +40,9 @@ function MrBuildEditorContent() {
             .replace(/^-|-$/g, '');
     };
 
+    const searchParams = useSearchParams();
+    const querySiteId = searchParams.get('id');
+
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (u) => {
             const loadUserData = async () => {
@@ -47,26 +50,28 @@ function MrBuildEditorContent() {
                     router.push('/mr-build/login');
                     return;
                 }
-                
+
                 try {
-                    // Fetch existing site if any
-                    const q = query(collection(db, 'user_sites'), where('userId', '==', u.uid));
-                    const snap = await getDocs(q);
-                    if (!snap.empty) {
-                        const doc = snap.docs[0];
-                        const data = doc.data();
-                        setSiteId(doc.id);
-                        setSiteData({
-                            name: data.name || '',
-                            slug: data.slug || '',
-                            title: data.title || '',
-                            description: data.description || '',
-                            theme: data.theme || 'dark-nebula',
-                            socials: data.socials || { instagram: '', tiktok: '', twitter: '' },
-                            customHtml: data.customHtml || '',
-                            customCss: data.customCss || '',
-                            status: data.status || 'draft'
-                        });
+                    if (querySiteId) {
+                        const docRef = await getDoc(doc(db, 'user_sites', querySiteId));
+                        if (docRef.exists() && docRef.data().userId === u.uid) {
+                            const data = docRef.data();
+                            setSiteId(docRef.id);
+                            setSiteData({
+                                name: data.name || '',
+                                slug: data.slug || '',
+                                title: data.title || '',
+                                description: data.description || '',
+                                theme: data.theme || 'dark-nebula',
+                                socials: data.socials || { instagram: '', tiktok: '', twitter: '' },
+                                customHtml: data.customHtml || '',
+                                customCss: data.customCss || '',
+                                status: data.status || 'draft',
+                                adminStatus: data.adminStatus || 'active'
+                            });
+                        } else {
+                            router.push('/mr-build');
+                        }
                     }
                 } catch (err) {
                     console.error('Error loading site:', err);
@@ -78,7 +83,7 @@ function MrBuildEditorContent() {
             loadUserData();
         });
         return () => unsub();
-    }, [router]);
+    }, [router, querySiteId]);
 
     useEffect(() => {
         if (success) {
@@ -97,17 +102,17 @@ function MrBuildEditorContent() {
         try {
             const q = query(collection(db, 'user_sites'), where('slug', '==', slug));
             const snap = await getDocs(q);
-            
+
             // If editing and it's the same slug, it's available
             if (!snap.empty && currentSiteId && snap.docs[0].id === currentSiteId) {
                 return { available: true };
             }
-            
+
             // If not empty and not our site, it's taken
             if (!snap.empty) {
                 return { available: false, error: 'This slug is already taken' };
             }
-            
+
             return { available: true };
         } catch (err) {
             console.error('Error checking slug:', err);
@@ -134,7 +139,7 @@ function MrBuildEditorContent() {
 
     const handleDelete = async () => {
         if (!siteId) return;
-        
+
         const confirmed = confirm(`Are you sure you want to delete "${siteData.name || siteData.title}"? This action cannot be undone and your site will be permanently removed.`);
         if (!confirmed) return;
 
@@ -163,6 +168,33 @@ function MrBuildEditorContent() {
         if (!user) {
             router.push('/mr-build/login');
             return;
+        }
+
+        // Check if site is banned
+        if (siteId && siteData.adminStatus === 'banned') {
+            setError('This site has been suspended by the administrator. Contact support.');
+            return;
+        }
+
+        // Check limits for new sites
+        if (!siteId) {
+            try {
+                // Fetch fresh count and limit
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                const limit = userDoc.exists() ? (userDoc.data().siteLimit || 1) : 1;
+
+                const q = query(collection(db, 'user_sites'), where('userId', '==', user.uid));
+                const snap = await getDocs(q);
+
+                if (snap.size >= limit) {
+                    setError(`Site limit reached (${limit}/${limit}). Upgrade your plan to create more.`);
+                    return;
+                }
+            } catch (err) {
+                console.error("Error checking limits:", err);
+                setError('Failed to verify site limits: ' + err.message);
+                return;
+            }
         }
 
         // Validate slug
@@ -206,14 +238,21 @@ function MrBuildEditorContent() {
                 const newDocRef = doc(collection(db, 'user_sites'));
                 await setDoc(newDocRef, {
                     ...finalData,
+                    adminStatus: 'active', // Default status
                     createdAt: new Date().toISOString()
                 });
                 setSiteId(newDocRef.id);
                 setSuccess('Site deployed successfully!');
             }
             setError('');
-            
-            router.push('/mr-build');
+
+            // Stay on page to allow further edits, or redirect if needed? 
+            // Original code redirected. Let's redirect but maybe wait?
+            // Actually original code redirected immediately.
+            setTimeout(() => {
+                router.push('/mr-build');
+            }, 1000);
+
         } catch (err) {
             console.error('Error saving site:', err);
             setError('Error saving site: ' + err.message);
@@ -267,7 +306,7 @@ function MrBuildEditorContent() {
                             <a href={`/s/${siteData.slug}`} target="_blank" rel="noopener noreferrer" className="btn-modern outline">
                                 👁️ Preview
                             </a>
-                            <button 
+                            <button
                                 onClick={() => {
                                     const url = `${window.location.origin}/s/${siteData.slug}`;
                                     navigator.clipboard.writeText(url).then(() => {
@@ -305,7 +344,7 @@ function MrBuildEditorContent() {
 
             {siteData.status !== 'public' && siteData.slug && (
                 <div className="warning-banner">
-                    ⚠️ <strong>Your page is not visible!</strong> Your site is currently set to <strong>{siteData.status}</strong> status. 
+                    ⚠️ <strong>Your page is not visible!</strong> Your site is currently set to <strong>{siteData.status}</strong> status.
                     Set it to <strong>Public</strong> in the Basic Settings tab to make it visible at <code>/s/{siteData.slug}</code>
                 </div>
             )}
@@ -331,183 +370,183 @@ function MrBuildEditorContent() {
                         {activeTab === 'basic' && (
                             <div className="main-config glass card reveal-on-scroll">
                                 <h3>General Configuration</h3>
-                            <div className="input-group">
-                                <label>Internal Node Name (Reference only)</label>
-                                <input
-                                    value={siteData.name}
-                                    onChange={e => setSiteData({ ...siteData, name: e.target.value })}
-                                    placeholder="My Cyber Portfolio"
-                                    className="modern-input"
-                                    required
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label>Access Slug (URL identifier)</label>
-                                <div className="slug-input-wrapper">
+                                <div className="input-group">
+                                    <label>Internal Node Name (Reference only)</label>
                                     <input
-                                        value={siteData.slug}
-                                        onChange={handleSlugChange}
-                                        placeholder="my-alias"
-                                        className={`modern-input ${slugError ? 'error' : ''}`}
+                                        value={siteData.name}
+                                        onChange={e => setSiteData({ ...siteData, name: e.target.value })}
+                                        placeholder="My Cyber Portfolio"
+                                        className="modern-input"
                                         required
                                     />
-                                    <span className="slug-suffix">/s/</span>
                                 </div>
-                                {slugError && (
-                                    <span className="field-error">{slugError}</span>
-                                )}
-                                <span className="field-hint">Only lowercase letters, numbers, and hyphens. 3-30 characters.</span>
-                            </div>
+                                <div className="input-group">
+                                    <label>Access Slug (URL identifier)</label>
+                                    <div className="slug-input-wrapper">
+                                        <input
+                                            value={siteData.slug}
+                                            onChange={handleSlugChange}
+                                            placeholder="my-alias"
+                                            className={`modern-input ${slugError ? 'error' : ''}`}
+                                            required
+                                        />
+                                        <span className="slug-suffix">/s/</span>
+                                    </div>
+                                    {slugError && (
+                                        <span className="field-error">{slugError}</span>
+                                    )}
+                                    <span className="field-hint">Only lowercase letters, numbers, and hyphens. 3-30 characters.</span>
+                                </div>
 
-                            <div className="divider"></div>
+                                <div className="divider"></div>
 
-                            <h3>On-Page Identity</h3>
-                            <div className="input-group">
-                                <label>Public Title</label>
-                                <input
-                                    value={siteData.title}
-                                    onChange={e => setSiteData({ ...siteData, title: e.target.value })}
-                                    placeholder="THE ARCHITECT"
-                                    className="modern-input"
-                                    required
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label>Short Bio/Description</label>
-                                <textarea
-                                    value={siteData.description}
-                                    onChange={e => setSiteData({ ...siteData, description: e.target.value })}
-                                    placeholder="Building the future of the web..."
-                                    className="modern-input"
-                                    rows={4}
-                                />
-                            </div>
+                                <h3>On-Page Identity</h3>
+                                <div className="input-group">
+                                    <label>Public Title</label>
+                                    <input
+                                        value={siteData.title}
+                                        onChange={e => setSiteData({ ...siteData, title: e.target.value })}
+                                        placeholder="THE ARCHITECT"
+                                        className="modern-input"
+                                        required
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>Short Bio/Description</label>
+                                    <textarea
+                                        value={siteData.description}
+                                        onChange={e => setSiteData({ ...siteData, description: e.target.value })}
+                                        placeholder="Building the future of the web..."
+                                        className="modern-input"
+                                        rows={4}
+                                    />
+                                </div>
 
-                            <div className="divider"></div>
+                                <div className="divider"></div>
 
-                            <h3>Publication Status</h3>
-                            <div className="status-selector">
-                                <button type="button"
-                                    className={`status-btn draft ${siteData.status === 'draft' ? 'active' : ''}`}
-                                    onClick={() => setSiteData({ ...siteData, status: 'draft' })}
-                                >
-                                    📝 Draft
-                                    <span className="status-desc">Work in progress</span>
-                                </button>
-                                <button type="button"
-                                    className={`status-btn private ${siteData.status === 'private' ? 'active' : ''}`}
-                                    onClick={() => setSiteData({ ...siteData, status: 'private' })}
-                                >
-                                    🔒 Private
-                                    <span className="status-desc">Owner only</span>
-                                </button>
-                                <button type="button"
-                                    className={`status-btn public ${siteData.status === 'public' ? 'active' : ''}`}
-                                    onClick={() => setSiteData({ ...siteData, status: 'public' })}
-                                >
-                                    🌐 Public
-                                    <span className="status-desc">Live & visible</span>
-                                </button>
+                                <h3>Publication Status</h3>
+                                <div className="status-selector">
+                                    <button type="button"
+                                        className={`status-btn draft ${siteData.status === 'draft' ? 'active' : ''}`}
+                                        onClick={() => setSiteData({ ...siteData, status: 'draft' })}
+                                    >
+                                        📝 Draft
+                                        <span className="status-desc">Work in progress</span>
+                                    </button>
+                                    <button type="button"
+                                        className={`status-btn private ${siteData.status === 'private' ? 'active' : ''}`}
+                                        onClick={() => setSiteData({ ...siteData, status: 'private' })}
+                                    >
+                                        🔒 Private
+                                        <span className="status-desc">Owner only</span>
+                                    </button>
+                                    <button type="button"
+                                        className={`status-btn public ${siteData.status === 'public' ? 'active' : ''}`}
+                                        onClick={() => setSiteData({ ...siteData, status: 'public' })}
+                                    >
+                                        🌐 Public
+                                        <span className="status-desc">Live & visible</span>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {activeTab === 'appearance' && (
-                        <div className="main-config glass card reveal-on-scroll">
-                            <h3>Visual Theme</h3>
-                            <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
-                                Choose a theme that matches your digital aesthetic.
-                            </p>
-                            <div className="theme-grid">
-                                <button type="button"
-                                    className={`theme-btn ${siteData.theme === 'dark-nebula' ? 'active' : ''}`}
-                                    onClick={() => setSiteData({ ...siteData, theme: 'dark-nebula' })}
-                                >
-                                    🌌 Dark Nebula
-                                </button>
-                                <button type="button"
-                                    className={`theme-btn ${siteData.theme === 'cyber-grid' ? 'active' : ''}`}
-                                    onClick={() => setSiteData({ ...siteData, theme: 'cyber-grid' })}
-                                >
-                                    ⚡ Cyber Grid
-                                </button>
-                                <button type="button"
-                                    className={`theme-btn ${siteData.theme === 'liquid-gold' ? 'active' : ''}`}
-                                    onClick={() => setSiteData({ ...siteData, theme: 'liquid-gold' })}
-                                >
-                                    💎 Liquid Gold
-                                </button>
+                        {activeTab === 'appearance' && (
+                            <div className="main-config glass card reveal-on-scroll">
+                                <h3>Visual Theme</h3>
+                                <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
+                                    Choose a theme that matches your digital aesthetic.
+                                </p>
+                                <div className="theme-grid">
+                                    <button type="button"
+                                        className={`theme-btn ${siteData.theme === 'dark-nebula' ? 'active' : ''}`}
+                                        onClick={() => setSiteData({ ...siteData, theme: 'dark-nebula' })}
+                                    >
+                                        🌌 Dark Nebula
+                                    </button>
+                                    <button type="button"
+                                        className={`theme-btn ${siteData.theme === 'cyber-grid' ? 'active' : ''}`}
+                                        onClick={() => setSiteData({ ...siteData, theme: 'cyber-grid' })}
+                                    >
+                                        ⚡ Cyber Grid
+                                    </button>
+                                    <button type="button"
+                                        className={`theme-btn ${siteData.theme === 'liquid-gold' ? 'active' : ''}`}
+                                        onClick={() => setSiteData({ ...siteData, theme: 'liquid-gold' })}
+                                    >
+                                        💎 Liquid Gold
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {activeTab === 'social' && (
-                        <div className="main-config glass card reveal-on-scroll">
-                            <h3>Social Connectivity</h3>
-                            <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
-                                Link your social platforms for easy access.
-                            </p>
-                            <div className="input-group">
-                                <label>Instagram URL</label>
-                                <input
-                                    type="url"
-                                    value={siteData.socials?.instagram || ''}
-                                    onChange={e => setSiteData({ ...siteData, socials: { ...siteData.socials, instagram: e.target.value } })}
-                                    placeholder="https://instagram.com/username"
-                                    className="modern-input"
-                                />
+                        {activeTab === 'social' && (
+                            <div className="main-config glass card reveal-on-scroll">
+                                <h3>Social Connectivity</h3>
+                                <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
+                                    Link your social platforms for easy access.
+                                </p>
+                                <div className="input-group">
+                                    <label>Instagram URL</label>
+                                    <input
+                                        type="url"
+                                        value={siteData.socials?.instagram || ''}
+                                        onChange={e => setSiteData({ ...siteData, socials: { ...siteData.socials, instagram: e.target.value } })}
+                                        placeholder="https://instagram.com/username"
+                                        className="modern-input"
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>TikTok URL</label>
+                                    <input
+                                        type="url"
+                                        value={siteData.socials?.tiktok || ''}
+                                        onChange={e => setSiteData({ ...siteData, socials: { ...siteData.socials, tiktok: e.target.value } })}
+                                        placeholder="https://tiktok.com/@username"
+                                        className="modern-input"
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>Twitter/X URL (Optional)</label>
+                                    <input
+                                        type="url"
+                                        value={siteData.socials?.twitter || ''}
+                                        onChange={e => setSiteData({ ...siteData, socials: { ...siteData.socials, twitter: e.target.value } })}
+                                        placeholder="https://twitter.com/username"
+                                        className="modern-input"
+                                    />
+                                </div>
                             </div>
-                            <div className="input-group">
-                                <label>TikTok URL</label>
-                                <input
-                                    type="url"
-                                    value={siteData.socials?.tiktok || ''}
-                                    onChange={e => setSiteData({ ...siteData, socials: { ...siteData.socials, tiktok: e.target.value } })}
-                                    placeholder="https://tiktok.com/@username"
-                                    className="modern-input"
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label>Twitter/X URL (Optional)</label>
-                                <input
-                                    type="url"
-                                    value={siteData.socials?.twitter || ''}
-                                    onChange={e => setSiteData({ ...siteData, socials: { ...siteData.socials, twitter: e.target.value } })}
-                                    placeholder="https://twitter.com/username"
-                                    className="modern-input"
-                                />
-                            </div>
-                        </div>
-                    )}
+                        )}
 
-                    {activeTab === 'code' && (
-                        <div className="main-config glass card reveal-on-scroll">
-                            <h3>Custom Code (Advanced)</h3>
-                            <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
-                                Override the default template with your own HTML and CSS. Leave blank to use the standard design.
-                            </p>
-                            <div className="input-group">
-                                <label>Custom HTML</label>
-                                <textarea
-                                    value={siteData.customHtml}
-                                    onChange={e => setSiteData({ ...siteData, customHtml: e.target.value })}
-                                    placeholder="<div>Hello World</div>"
-                                    className="code-textarea"
-                                    rows={15}
-                                />
+                        {activeTab === 'code' && (
+                            <div className="main-config glass card reveal-on-scroll">
+                                <h3>Custom Code (Advanced)</h3>
+                                <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
+                                    Override the default template with your own HTML and CSS. Leave blank to use the standard design.
+                                </p>
+                                <div className="input-group">
+                                    <label>Custom HTML</label>
+                                    <textarea
+                                        value={siteData.customHtml}
+                                        onChange={e => setSiteData({ ...siteData, customHtml: e.target.value })}
+                                        placeholder="<div>Hello World</div>"
+                                        className="code-textarea"
+                                        rows={15}
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>Custom CSS</label>
+                                    <textarea
+                                        value={siteData.customCss}
+                                        onChange={e => setSiteData({ ...siteData, customCss: e.target.value })}
+                                        placeholder="body { background: red; }"
+                                        className="code-textarea"
+                                        rows={15}
+                                    />
+                                </div>
                             </div>
-                            <div className="input-group">
-                                <label>Custom CSS</label>
-                                <textarea
-                                    value={siteData.customCss}
-                                    onChange={e => setSiteData({ ...siteData, customCss: e.target.value })}
-                                    placeholder="body { background: red; }"
-                                    className="code-textarea"
-                                    rows={15}
-                                />
-                            </div>
-                        </div>
-                    )}
+                        )}
                     </div>
 
                     <div className="sidebar-actions">
@@ -521,7 +560,7 @@ function MrBuildEditorContent() {
                                     <a href={`/s/${siteData.slug}`} target="_blank" rel="noopener noreferrer" className="btn-modern outline full-width">
                                         👁️ Preview Site
                                     </a>
-                                    <button type="button" 
+                                    <button type="button"
                                         onClick={() => {
                                             const url = `${window.location.origin}/s/${siteData.slug}`;
                                             navigator.clipboard.writeText(url).then(() => {

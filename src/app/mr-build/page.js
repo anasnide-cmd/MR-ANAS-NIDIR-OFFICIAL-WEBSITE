@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -9,18 +9,28 @@ import Link from 'next/link';
 export default function BuildDashboard() {
     const router = useRouter();
     const [user, setUser] = useState(null);
-    const [site, setSite] = useState(null);
+    const [sites, setSites] = useState([]);
+    const [userLimit, setUserLimit] = useState(1);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const checkUser = onAuthStateChanged(auth, async (u) => {
             if (u) {
                 setUser(u);
+
+                // Fetch User Config (Limit)
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', u.uid));
+                    if (userDoc.exists()) {
+                        setUserLimit(userDoc.data().siteLimit || 1);
+                    }
+                } catch (err) {
+                    console.error("Error fetching user config:", err);
+                }
+
                 const q = query(collection(db, 'user_sites'), where('userId', '==', u.uid));
                 const snap = await getDocs(q);
-                if (!snap.empty) {
-                    setSite({ id: snap.docs[0].id, ...snap.docs[0].data() });
-                }
+                setSites(snap.docs.map(d => ({ id: d.id, ...d.data() })));
             }
             setLoading(false);
             if (!u) {
@@ -88,78 +98,48 @@ export default function BuildDashboard() {
                 <div className="status-card glass site-card animate-reveal-delay">
                     <div className="card-header">
                         <h3>ACTIVE DEPLOYMENTS</h3>
-                        <span className="status-badge pulse">LIVE</span>
+                        <div className="header-badges">
+                            <span className="status-badge pulse">LIVE</span>
+                        </div>
                     </div>
-                    {site ? (
-                        <div className="site-details">
-                            <div className="site-preview-container">
-                                <div className="site-preview glass">
-                                    <div className="preview-content">
+
+                    {sites.length > 0 ? (
+                        <div className="sites-grid-list">
+                            {sites.map(site => (
+                                <div key={site.id} className={`site-item-card glass ${site.adminStatus === 'banned' ? 'banned' : ''}`}>
+                                    <div className="site-mini-preview">
                                         <span className="preview-logo">{site.name?.charAt(0) || 'N'}</span>
-                                        <div className="preview-lines">
-                                            <div className="p-line"></div>
-                                            <div className="p-line short"></div>
+                                    </div>
+                                    <div className="site-info-col">
+                                        <h4 className="site-name">{site.name || site.title || 'Untitled'}</h4>
+                                        <div className="site-meta-row">
+                                            <span className="slug-tag">/s/{site.slug}</span>
+                                            <span className={`status-pill ${site.status}`}>
+                                                {site.status === 'public' ? '🌐' : site.status === 'private' ? '🔒' : '📝'}
+                                            </span>
+                                            {site.adminStatus === 'banned' && <span className="banned-pill">SUSPENDED</span>}
+                                        </div>
+                                        <div className="site-actions-row small">
+                                            <Link href={`/mr-build/editor?id=${site.id}`} className="btn-action primary compact">MANAGE</Link>
+                                            {site.slug && site.adminStatus !== 'banned' && (
+                                                <Link href={`/s/${site.slug}`} target="_blank" className="btn-action secondary compact">VIEW</Link>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className="scan-line"></div>
                                 </div>
-                            </div>
-                            <div className="site-meta">
-                                <h4 className="site-name">{site.name || site.title || 'Untitled Discovery'}</h4>
-                                <div className="meta-row">
-                                    <span className="label">Endpoint:</span>
-                                    <span className="value slug">{site.slug ? `/s/${site.slug}` : 'Not set'}</span>
-                                </div>
-                                <div className="meta-row">
-                                    <span className="label">Architecture:</span>
-                                    <span className="value">{site.theme ? site.theme.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Default'}</span>
-                                </div>
-                                <div className="meta-row">
-                                    <span className="label">Status:</span>
-                                    <span className={`value status-indicator ${site.status === 'public' ? 'public' : site.status === 'private' ? 'private' : 'draft'}`}>
-                                        {site.status === 'public' ? '🌐 Public' : site.status === 'private' ? '🔒 Private' : '📝 Draft'}
-                                    </span>
-                                </div>
-                                {site.status !== 'public' && site.slug && (
-                                    <div className="visibility-warning">
-                                        ⚠️ Your page is <strong>not visible</strong> to visitors. Set status to <strong>Public</strong> in the editor to make it live.
-                                    </div>
-                                )}
-                                <div className="site-actions-row">
-                                    <Link href="/mr-build/editor" className="btn-action primary">OPTIMIZE CORE</Link>
-                                    {site.slug && (
-                                        <>
-                                            <Link href={`/s/${site.slug}`} target="_blank" className="btn-action secondary">VIEW LIVE</Link>
-                                            <button 
-                                                onClick={() => {
-                                                    const url = `${window.location.origin}/s/${site.slug}`;
-                                                    navigator.clipboard.writeText(url).then(() => {
-                                                        // Show success feedback
-                                                        const btn = event.target;
-                                                        const originalText = btn.textContent;
-                                                        btn.textContent = '✅ COPIED!';
-                                                        btn.style.background = '#00ff88';
-                                                        setTimeout(() => {
-                                                            btn.textContent = originalText;
-                                                            btn.style.background = '';
-                                                        }, 2000);
-                                                    });
-                                                }}
-                                                className="btn-action share"
-                                            >
-                                                📤 SHARE LINK
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     ) : (
                         <div className="no-site">
                             <div className="construct-icon">🏗️</div>
-                            <h3>No Active Node Found</h3>
-                            <p>Initialize your first digital architecture on the Mr Build network.</p>
-                            <Link href="/mr-build/editor" className="btn-construct">INITIATE CONSTRUCTION</Link>
+                            <h3>No Active Nodes</h3>
+                            <p>Initialize your first digital architecture.</p>
+                        </div>
+                    )}
+
+                    {sites.length < userLimit && (
+                        <div className="add-site-container">
+                            <Link href="/mr-build/editor" className="btn-construct small">+ NEW DEPLOYMENT</Link>
                         </div>
                     )}
                 </div>
@@ -169,10 +149,10 @@ export default function BuildDashboard() {
                     <div className="resource-item">
                         <div className="res-header">
                             <span>Node Quota</span>
-                            <span>{site ? '1/1' : '0/1'}</span>
+                            <span>{sites.length}/{userLimit}</span>
                         </div>
                         <div className="res-bar">
-                            <div className="res-fill" style={{ width: site ? '100%' : '0%' }}></div>
+                            <div className="res-fill" style={{ width: `${(sites.length / userLimit) * 100}%` }}></div>
                         </div>
                     </div>
                     <div className="resource-item">
@@ -187,17 +167,16 @@ export default function BuildDashboard() {
                     <div className="resource-item">
                         <div className="res-header">
                             <span>Security Level</span>
-                            <span>MAX</span>
+                            <span>{sites.some(s => s.adminStatus === 'banned') ? 'CRITICAL' : 'MAX'}</span>
                         </div>
                         <div className="res-bar">
-                            <div className="res-fill shield" style={{ width: '100%' }}></div>
+                            <div className={`res-fill ${sites.some(s => s.adminStatus === 'banned') ? 'danger' : 'shield'}`} style={{ width: '100%' }}></div>
                         </div>
                     </div>
 
                     <div className="billing-box glass">
-                        <p>Current Protocol: <strong>TRIAL-X</strong></p>
+                        <p>Current Protocol: <strong>{userLimit > 1 ? 'PREMIUM-X' : 'TRIAL-X'}</strong></p>
                         <button className="btn-upgrade" disabled>EXPAND FLEET (UPGRADE)</button>
-                        <span className="note">Commercial expansions launching soon.</span>
                     </div>
                 </div>
             </div>
@@ -307,6 +286,7 @@ export default function BuildDashboard() {
                 .res-fill { height: 100%; background: #00f0ff; border-radius: 10px; }
                 .res-fill.glow { box-shadow: 0 0 10px #00f0ff; }
                 .res-fill.shield { background: #7000ff; box-shadow: 0 0 10px #7000ff; }
+                .res-fill.danger { background: #ff3232; box-shadow: 0 0 10px #ff3232; }
 
                 .billing-box { margin-top: 40px; padding: 25px; border-radius: 20px; text-align: center; }
                 .billing-box p { font-size: 0.9rem; margin-bottom: 15px; }
@@ -331,12 +311,31 @@ export default function BuildDashboard() {
                 .animate-reveal-delay-2 { animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s backwards; }
                 @keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
+                .sites-grid-list { display: grid; gap: 15px; margin-top: 20px; }
+                .site-item-card { 
+                    padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px;
+                    border: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;
+                }
+                .site-item-card:hover { background: rgba(255,255,255,0.05); }
+                .site-item-card.banned { border-color: #ff3232; background: rgba(255,50,50,0.05); }
+                
+                .site-mini-preview { 
+                    width: 50px; height: 50px; background: linear-gradient(135deg,rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+                    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+                }
+                .site-info-col { flex: 1; }
+                .site-meta-row { display: flex; gap: 10px; align-items: center; margin: 5px 0 10px; }
+                .slug-tag { font-family: monospace; opacity: 0.5; font-size: 0.8rem; }
+                .status-pill { font-size: 0.8rem; }
+                .banned-pill { background: #ff3232; color: #fff; font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 800; }
+                
+                .site-actions-row.small { display: flex; gap: 10px; }
+                .btn-action.compact { padding: 6px 15px; font-size: 0.75rem; }
+                .add-site-container { margin-top: 20px; text-align: center; }
+                .btn-construct.small { padding: 10px 20px; font-size: 0.8rem; }
+                
                 @media (max-width: 1024px) {
                     .status-grid { grid-template-columns: 1fr; }
-                    .site-details { grid-template-columns: 1fr; text-align: center; }
-                    .site-preview-container { width: 100%; max-width: 400px; margin: 0 auto; }
-                    .meta-row { justify-content: center; }
-                    .site-actions-row { justify-content: center; }
                 }
             `}</style>
         </div>
