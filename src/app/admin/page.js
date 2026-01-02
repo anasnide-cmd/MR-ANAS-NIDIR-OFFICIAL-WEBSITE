@@ -57,7 +57,8 @@ export default function AdminPage() {
                 const config = usersConfig[uid] || {};
                 return {
                     uid,
-                    email: config.email || userSites[0]?.userEmail || 'Unknown User', // fallback
+                    email: config.email || userSites[0]?.userEmail || 'Unknown User',
+                    displayName: config.displayName || 'Architect',
                     siteLimit: config.siteLimit || 1, // Default limit
                     sites: userSites,
                     role: config.role || 'user'
@@ -75,9 +76,46 @@ export default function AdminPage() {
         }
     };
 
-    // ... handle delete ...
+    const handleDeletePost = async (id) => {
+        if (!confirm('Are you sure you want to delete this post?')) return;
+        try {
+            await deleteDoc(doc(db, 'posts', id));
+            setPosts(posts.filter(p => p.id !== id));
+        } catch (err) {
+            alert('Error deleting post: ' + err.message);
+        }
+    };
 
-    // ... admin actions ...
+    // --- Admin Actions ---
+
+    const updateSiteStatus = async (siteId, newStatus) => {
+        // newStatus: 'active', 'banned', 'verified'
+        try {
+            await updateDoc(doc(db, 'user_sites', siteId), {
+                adminStatus: newStatus
+            });
+            // Update local state
+            setAllSites(prev => prev.map(s => s.id === siteId ? { ...s, adminStatus: newStatus } : s));
+        } catch (err) {
+            alert('Failed to update status: ' + err.message);
+        }
+    };
+
+    const updateUserLimit = async (uid, newLimit) => {
+        const limitVal = parseInt(newLimit);
+        if (isNaN(limitVal) || limitVal < 0) return;
+
+        try {
+            // Validating we have the doc ref, create if not exists
+            const userRef = doc(db, 'users', uid);
+            await setDoc(userRef, { siteLimit: limitVal }, { merge: true });
+
+            // Update local state
+            setUsersList(prev => prev.map(u => u.uid === uid ? { ...u, siteLimit: limitVal } : u));
+        } catch (err) {
+            alert('Failed to update limit: ' + err.message);
+        }
+    };
 
     if (loading) return <div className="loading-state">Syncing Dashboard Data...</div>;
     if (!user) return <div className="loading-state">Access Denied</div>;
@@ -180,7 +218,11 @@ export default function AdminPage() {
                                 {usersList.map(u => (
                                     <tr key={u.uid} className="user-row">
                                         <td className="user-cell">
-                                            <div className="uid-tag" title={u.uid}>{u.uid.substring(0, 8)}...</div>
+                                            <div className="user-identity">
+                                                <span className="user-name">{u.displayName || 'Unknown'}</span>
+                                                <span className="user-email">{u.email}</span>
+                                                <div className="uid-tag" title={u.uid}>{u.uid.substring(0, 8)}...</div>
+                                            </div>
                                         </td>
                                         <td>
                                             <div className="limit-control">
@@ -291,7 +333,10 @@ export default function AdminPage() {
                 .admin-table th { text-align: left; padding: 15px; opacity: 0.5; font-size: 0.8rem; text-transform: uppercase; }
                 .admin-table td { padding: 15px; border-top: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
                 
-                .uid-tag { font-family: monospace; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; display: inline-block; }
+                .user-identity { display: flex; flex-direction: column; gap: 4px; }
+                .user-name { font-weight: 700; color: #fff; font-size: 0.95rem; }
+                .user-email { font-size: 0.8rem; opacity: 0.6; }
+                .uid-tag { font-family: monospace; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; display: inline-block; font-size: 0.7rem; width: fit-content; }
                 
                 .limit-control { display: flex; align-items: center; gap: 8px; }
                 .limit-input { 

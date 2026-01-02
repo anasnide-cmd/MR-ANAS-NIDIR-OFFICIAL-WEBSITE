@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -18,14 +18,28 @@ export default function BuildDashboard() {
             if (u) {
                 setUser(u);
 
-                // Fetch User Config (Limit)
+                // Fetch User Config (Limit) & Sync Profile
                 try {
-                    const userDoc = await getDoc(doc(db, 'users', u.uid));
+                    const userRef = doc(db, 'users', u.uid);
+                    const userDoc = await getDoc(userRef);
+
+                    // Sync basic profile data (safe fields)
+                    const profileUpdate = {
+                        email: u.email,
+                        displayName: u.displayName || u.email?.split('@')[0] || 'Anonymous',
+                        lastActive: new Date().toISOString()
+                    };
+
                     if (userDoc.exists()) {
                         setUserLimit(userDoc.data().siteLimit || 1);
+                        // Update profile if changed (merge)
+                        await setDoc(userRef, profileUpdate, { merge: true });
+                    } else {
+                        // Create initial doc (rules allow this for safe fields)
+                        await setDoc(userRef, profileUpdate);
                     }
                 } catch (err) {
-                    console.error("Error fetching user config:", err);
+                    console.error("Error syncing user profile:", err);
                 }
 
                 const q = query(collection(db, 'user_sites'), where('userId', '==', u.uid));
