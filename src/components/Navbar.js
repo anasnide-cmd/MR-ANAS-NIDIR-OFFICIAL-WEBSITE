@@ -8,8 +8,11 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeHash, setActiveHash] = useState('');
-  const [hoveredLink, setHoveredLink] = useState(null);
   const pathname = usePathname();
+
+  // Hide Navbar on user sites
+  if (pathname?.startsWith('/s/')) return null;
+  const [hoveredLink, setHoveredLink] = useState(null);
   const navbarRef = useRef(null);
   const lastScrollY = useRef(0);
   const [navHidden, setNavHidden] = useState(false);

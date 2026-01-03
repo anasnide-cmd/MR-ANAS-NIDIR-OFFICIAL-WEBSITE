@@ -123,7 +123,9 @@ export default function UserSiteClient() {
             </main>
 
             <footer className="site-footer">
-                <p>Architected via <strong>MR BUILD PRO</strong></p>
+                <a href="https://anasnidir.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                    Powered by <strong>MR ANAS NIDIR</strong>
+                </a>
             </footer>
 
             <style jsx>{`
