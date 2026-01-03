@@ -4,6 +4,7 @@ import { auth, db } from '../../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import NotificationCenter from '../../components/NotificationCenter';
 
 export default function BuildLayout({ children }) {
     const [user, setUser] = useState(null);
@@ -58,6 +59,7 @@ export default function BuildLayout({ children }) {
                     {user ? (
                         <>
                             <span className="user-email">{user.email}</span>
+                            <NotificationCenter />
                             <button onClick={() => auth.signOut()} className="btn-sm btn-outline">Sign Out</button>
                         </>
                     ) : (

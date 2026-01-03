@@ -72,5 +72,15 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid || isAdmin()
       );
     }
+
+    // Messaging System
+    match /messages/{messageId} {
+      allow read: if request.auth != null && (
+        resource.data.type == 'broadcast' || 
+        resource.data.targetUserId == request.auth.uid ||
+        isAdmin()
+      );
+      allow write: if isAdmin();
+    }
   }
 }
