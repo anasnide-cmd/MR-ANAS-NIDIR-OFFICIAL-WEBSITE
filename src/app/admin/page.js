@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
+import Loader from '../../components/Loader';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, orderBy, getDocs, deleteDoc, doc, updateDoc, setDoc, where } from 'firebase/firestore';
 import Link from 'next/link';
@@ -120,7 +121,7 @@ export default function AdminPage() {
         }
     };
 
-    if (loading) return <div className="loading-state">Syncing Dashboard Data...</div>;
+    if (loading) return <Loader text="Syncing Dashboard..." />;
     if (!user) return <div className="loading-state">Access Denied</div>;
     if (permissionError) return (
         <div className="error-state">

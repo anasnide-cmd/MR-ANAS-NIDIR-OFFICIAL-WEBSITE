@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, doc, getDoc, setDoc } from 'firebase
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Loader from '../../components/Loader';
 
 export default function BuildDashboard() {
     const router = useRouter();
@@ -54,34 +55,7 @@ export default function BuildDashboard() {
         return () => checkUser();
     }, []);
 
-    if (loading) return (
-        <div className="loading-screen">
-            <div className="scanner"></div>
-            <p>Scanning Identity...</p>
-            <style jsx>{`
-                .loading-screen {
-                    height: 80vh;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    color: #00f0ff;
-                }
-                .scanner {
-                    width: 200px;
-                    height: 2px;
-                    background: #00f0ff;
-                    box-shadow: 0 0 20px #00f0ff;
-                    margin-bottom: 20px;
-                    animation: scan 2s infinite ease-in-out;
-                }
-                @keyframes scan {
-                    0%, 100% { transform: translateY(-50px); opacity: 0; }
-                    50% { transform: translateY(50px); opacity: 1; }
-                }
-            `}</style>
-        </div>
-    );
+    if (loading) return <Loader text="Accessing Builder..." />;
 
     if (!user) {
         return null;

@@ -4,6 +4,8 @@ import { useParams } from 'next/navigation';
 import { db } from '../../../lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, increment } from 'firebase/firestore';
 
+import Loader from '../../../components/Loader';
+
 export default function UserSiteClient() {
     const params = useParams();
     const slug = params?.slug || '';

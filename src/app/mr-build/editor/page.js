@@ -5,6 +5,7 @@ import { doc, setDoc, deleteDoc, collection, query, where, getDocs, getDoc } fro
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import Link from 'next/link';
+import Loader from '../../../components/Loader';
 
 function MrBuildEditorContent() {
     const router = useRouter();
@@ -261,36 +262,7 @@ function MrBuildEditorContent() {
         }
     };
 
-    if (loading) return (
-        <div className="loading-state">
-            <div className="scanner"></div>
-            Initializing Neural Interface...
-            <style jsx>{`
-                .loading-state {
-                    height: 60vh;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    color: #00f0ff;
-                    font-weight: 900;
-                    letter-spacing: 2px;
-                }
-                .scanner {
-                    width: 200px;
-                    height: 2px;
-                    background: #00f0ff;
-                    box-shadow: 0 0 20px #00f0ff;
-                    margin-bottom: 20px;
-                    animation: scan 2s infinite ease-in-out;
-                }
-                @keyframes scan {
-                    0%, 100% { transform: translateY(-50px); opacity: 0; }
-                    50% { transform: translateY(50px); opacity: 1; }
-                }
-            `}</style>
-        </div>
-    );
+    if (loading) return <Loader text="Initializing Neural Interface..." />;
 
     return (
         <div className="editor-view">

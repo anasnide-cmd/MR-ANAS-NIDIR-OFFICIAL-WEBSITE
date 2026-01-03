@@ -4,6 +4,7 @@ import { auth, db } from '../../../lib/firebase';
 import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Loader from '../../../components/Loader';
 
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -59,7 +60,7 @@ function EditorContent() {
         router.push('/admin');
     };
 
-    if (loading) return <div className="loading-state">Initializing Editor...</div>;
+    if (loading) return <Loader text="Initializing Editor..." />;
 
     return (
         <div className="editor-view">

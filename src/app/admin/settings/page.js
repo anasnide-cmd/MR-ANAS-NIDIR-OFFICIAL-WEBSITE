@@ -5,6 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Loader from '../../../components/Loader';
 
 export default function SettingsPage() {
     const [user, setUser] = useState(null);
@@ -74,7 +75,7 @@ export default function SettingsPage() {
         }
     };
 
-    if (loading) return <div className="loading-state">Initializing Dashboard...</div>;
+    if (loading) return <Loader text="Initializing Config..." />;
 
     const tabs = [
         { id: 'general', label: 'General Info', icon: '🏠' },
