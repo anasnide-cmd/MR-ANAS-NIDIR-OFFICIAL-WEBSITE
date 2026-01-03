@@ -298,11 +298,11 @@ export default function Navbar() {
           left: 0;
           right: 0;
           height: 90px;
-          z-index: 2000;
+          z-index: 10000; /* Maximum z-index */
           transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1);
           background: rgba(8, 8, 12, 0);
           border-bottom: 1px solid transparent;
-          overflow: hidden;
+          overflow: visible; /* Allow drop shadows/glows to be seen */
         }
 
         .navbar-bg-effect {
@@ -316,6 +316,7 @@ export default function Navbar() {
           opacity: 0;
           transition: opacity 0.5s ease;
           z-index: -1;
+          pointer-events: none; /* CRITICAL: Do not catch clicks */
         }
 
         .navbar.scrolled {
@@ -349,6 +350,7 @@ export default function Navbar() {
           justify-content: space-between;
           padding: 0 2.5rem;
           position: relative;
+          z-index: 2;
         }
 
         /* Logo with 3D Effect */
@@ -357,8 +359,10 @@ export default function Navbar() {
           align-items: center;
           gap: 1.25rem;
           text-decoration: none;
-          z-index: 2001;
+          z-index: 2003;
           position: relative;
+          pointer-events: auto;
+          cursor: pointer;
         }
 
         .logo-3d {
@@ -501,6 +505,7 @@ export default function Navbar() {
           position: relative;
           z-index: 2;
           border: 1px solid transparent;
+          cursor: pointer;
         }
 
         .nav-link:hover {
@@ -562,6 +567,7 @@ export default function Navbar() {
           opacity: 0;
           transition: opacity 0.3s ease;
           z-index: 1;
+          pointer-events: none; /* Do not block clicks */
         }
 
         .nav-hover-effect.visible {
@@ -590,6 +596,7 @@ export default function Navbar() {
           position: relative;
           overflow: hidden;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          cursor: pointer;
         }
 
         .cta-button:hover {
@@ -756,10 +763,12 @@ export default function Navbar() {
           bottom: 0;
           z-index: 2000;
           pointer-events: none;
+          visibility: hidden; /* Ensure it's hidden from interactivity */
         }
 
         .mobile-menu-container.open {
           pointer-events: all;
+          visibility: visible;
         }
 
         .mobile-menu-glass {
