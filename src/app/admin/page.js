@@ -61,7 +61,10 @@ export default function AdminPage() {
                     displayName: config.displayName || 'Architect',
                     siteLimit: config.siteLimit || 1, // Default limit
                     sites: userSites,
-                    role: config.role || 'user'
+                    sites: userSites,
+                    role: config.role || 'user',
+                    lastActive: config.lastActive || null,
+                    totalViews: userSites.reduce((acc, s) => acc + (s.views || 0), 0)
                 };
             });
             setUsersList(synthesizedUsers);
@@ -209,6 +212,7 @@ export default function AdminPage() {
                             <thead>
                                 <tr>
                                     <th>User ID / UUID</th>
+                                    <th>Analytics</th>
                                     <th>Limit</th>
                                     <th>Deployed Sites</th>
                                     <th>Actions</th>
@@ -222,6 +226,18 @@ export default function AdminPage() {
                                                 <span className="user-name">{u.displayName || 'Unknown'}</span>
                                                 <span className="user-email">{u.email}</span>
                                                 <div className="uid-tag" title={u.uid}>{u.uid.substring(0, 8)}...</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="analytics-col">
+                                                <div className="stat-row">
+                                                    <span className="label">Views:</span>
+                                                    <span className="value highlight">{u.totalViews}</span>
+                                                </div>
+                                                <div className="stat-row">
+                                                    <span className="label">Last Seen:</span>
+                                                    <span className="value">{u.lastActive ? new Date(u.lastActive).toLocaleDateString() : 'Never'}</span>
+                                                </div>
                                             </div>
                                         </td>
                                         <td>
@@ -370,6 +386,12 @@ export default function AdminPage() {
                     background: rgba(112, 0, 255, 0.2); color: #bc00ff; 
                     padding: 4px 10px; border-radius: 100px; font-size: 0.7rem; font-weight: 800; 
                 }
+
+                .analytics-col { font-size: 0.8rem; }
+                .stat-row { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+                .stat-row .label { opacity: 0.5; }
+                .stat-row .value { font-weight: 700; color: #fff; }
+                .stat-row .value.highlight { color: #00f0ff; }
 
                 /* Reuse existing styles */
                 .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); }

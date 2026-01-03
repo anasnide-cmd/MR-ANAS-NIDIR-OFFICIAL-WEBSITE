@@ -128,6 +128,7 @@ export default function BuildDashboard() {
                                         <h4 className="site-name">{site.name || site.title || 'Untitled'}</h4>
                                         <div className="site-meta-row">
                                             <span className="slug-tag">/s/{site.slug}</span>
+                                            <span className="views-tag" title="Total Views">👁️ {site.views || 0}</span>
                                             <span className={`status-pill ${site.status}`}>
                                                 {site.status === 'public' ? '🌐' : site.status === 'private' ? '🔒' : '📝'}
                                             </span>

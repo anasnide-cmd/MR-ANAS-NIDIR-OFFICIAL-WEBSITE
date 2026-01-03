@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { db } from '../../../lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, increment } from 'firebase/firestore';
 
 export default function UserSiteClient() {
     const params = useParams();
@@ -29,6 +29,15 @@ export default function UserSiteClient() {
                     // Only show public sites
                     if (siteData.status === 'public') {
                         setSite(siteData);
+                        // Increment View Count
+                        try {
+                            const siteRef = doc(db, 'user_sites', snap.docs[0].id);
+                            updateDoc(siteRef, {
+                                views: increment(1)
+                            });
+                        } catch (e) {
+                            console.error("Analytics Error:", e);
+                        }
                     } else {
                         setSite(null);
                     }
