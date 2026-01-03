@@ -19,16 +19,28 @@ export default function Navbar() {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 
+      // Only hide navbar on mobile/tablet (less than 1024px)
       if (window.innerWidth < 1024) {
         if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
           setNavHidden(true);
         } else {
           setNavHidden(false);
         }
+      } else {
+        // Always show navbar on desktop
+        setNavHidden(false);
       }
 
       lastScrollY.current = currentScrollY;
       setScrolled(currentScrollY > 20);
+    };
+
+    // Handle resize to reset state
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setNavHidden(false);
+        setIsOpen(false);
+      }
     };
 
     let ticking = false;
@@ -43,7 +55,15 @@ export default function Navbar() {
     };
 
     window.addEventListener('scroll', throttledScroll, { passive: true });
-    return () => window.removeEventListener('scroll', throttledScroll);
+    window.addEventListener('resize', handleResize);
+
+    // Initial check
+    handleResize();
+
+    return () => {
+      window.removeEventListener('scroll', throttledScroll);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Handle hash changes
