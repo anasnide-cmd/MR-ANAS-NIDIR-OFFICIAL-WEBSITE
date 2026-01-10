@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { db } from '../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import ShinyText from '../components/ReactBits/ShinyText';
+import RetroGrid from '../components/ReactBits/RetroGrid';
 
 export default function Home() {
   const sectionsRef = useRef([]);
@@ -74,9 +76,7 @@ export default function Home() {
       {/* HERO */}
       <header className="hero" id="home">
         <div className="hero-bg">
-          <div className="orb orb-1"></div>
-          <div className="orb orb-2"></div>
-          <div className="orb orb-3"></div>
+          <RetroGrid />
           <div className="grid-overlay"></div>
         </div>
 
@@ -88,7 +88,7 @@ export default function Home() {
             </div>
           </div>
           <h1 className="hero-title animate-reveal">
-            <span className="gradient-text">{settings.heroTitle}</span>
+            <ShinyText text={settings.heroTitle} speed={3} className="custom-shiny-text" />
           </h1>
           <p className="hero-subtitle animate-reveal-delay">{settings.heroSubtitle}</p>
           <div className="hero-buttons animate-reveal-delay-2">
