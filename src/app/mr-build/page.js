@@ -6,6 +6,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Loader from '../../components/Loader';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 export default function BuildDashboard() {
     const router = useRouter();
@@ -55,11 +56,14 @@ export default function BuildDashboard() {
         return () => checkUser();
     }, []);
 
-    if (loading) return <Loader text="Accessing Builder..." />;
-
-    if (!user) {
-        return null;
-    }
+    // InitialAuth Loader before we even know if we are logged in
+    // However, we want to show the dashboard skeleton if we are just fetching data.
+    // user state is null initially, so we need to be careful.
+    // If loading is true, we might return null or the skeleton structure if we want a skeleton dashboard.
+    // Use standard Loader only for initial auth check if needed, but here we want skeleton inside the layout.
+    
+    if (loading && !user) return <Loader text="Authenticating..." />; 
+    if (!user) return null;
 
     return (
         <div className="dashboard-container">
@@ -91,7 +95,19 @@ export default function BuildDashboard() {
                         </div>
                     </div>
 
-                    {sites.length > 0 ? (
+                    {loading ? (
+                         <div className="sites-grid-list">
+                            {Array(3).fill(0).map((_, i) => (
+                                <div key={i} className="site-item-card glass skeleton-card" style={{height: '110px', display: 'flex', alignItems: 'center', gap: '15px'}}>
+                                    <SkeletonLoader height={50} width={50} style={{borderRadius: '10px'}} />
+                                    <div style={{flex: 1}}>
+                                        <SkeletonLoader height={24} width="60%" style={{marginBottom: '8px'}} />
+                                        <SkeletonLoader height={14} width="40%" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : sites.length > 0 ? (
                         <div className="sites-grid-list">
                             {sites.map(site => (
                                 <div key={site.id} className={`site-item-card glass ${site.adminStatus === 'banned' ? 'banned' : ''}`}>
@@ -126,7 +142,8 @@ export default function BuildDashboard() {
                         </div>
                     )}
 
-                    {sites.length < userLimit && (
+                    {/* Only show 'New Deployment' button if not loading strings attached */}
+                    {!loading && sites.length < userLimit && (
                         <div className="add-site-container">
                             <Link href="/mr-build/editor" className="btn-construct small">+ NEW DEPLOYMENT</Link>
                         </div>
@@ -138,10 +155,14 @@ export default function BuildDashboard() {
                     <div className="resource-item">
                         <div className="res-header">
                             <span>Node Quota</span>
-                            <span>{sites.length}/{userLimit}</span>
+                            {loading ? <SkeletonLoader width={40} /> : <span>{sites.length}/{userLimit}</span>}
                         </div>
                         <div className="res-bar">
-                            <div className="res-fill" style={{ width: `${(sites.length / userLimit) * 100}%` }}></div>
+                            {loading ? (
+                                <SkeletonLoader height={4} />
+                            ) : (
+                                <div className="res-fill" style={{ width: `${(sites.length / userLimit) * 100}%` }}></div>
+                            )}
                         </div>
                     </div>
                     <div className="resource-item">
@@ -150,19 +171,10 @@ export default function BuildDashboard() {
                             <span>Optimal</span>
                         </div>
                         <div className="res-bar">
-                            <div className="res-fill glow" style={{ width: '85%' }}></div>
+                             <div className="res-fill glow" style={{ width: '85%' }}></div>
                         </div>
                     </div>
-                    <div className="resource-item">
-                        <div className="res-header">
-                            <span>Security Level</span>
-                            <span>{sites.some(s => s.adminStatus === 'banned') ? 'CRITICAL' : 'MAX'}</span>
-                        </div>
-                        <div className="res-bar">
-                            <div className={`res-fill ${sites.some(s => s.adminStatus === 'banned') ? 'danger' : 'shield'}`} style={{ width: '100%' }}></div>
-                        </div>
-                    </div>
-
+                    
                     <div className="billing-box glass">
                         <p>Current Protocol: <strong>{userLimit > 1 ? 'PREMIUM-X' : 'TRIAL-X'}</strong></p>
                         <button className="btn-upgrade" disabled>EXPAND FLEET (UPGRADE)</button>
@@ -216,58 +228,28 @@ export default function BuildDashboard() {
                     padding: 4px 10px; border-radius: 100px; box-shadow: 0 0 15px #00f0ff;
                 }
 
-                .site-details { display: grid; grid-template-columns: 320px 1fr; gap: 40px; align-items: center; }
-                .site-preview-container { perspective: 1000px; }
-                .site-preview { 
-                    height: 200px; border-radius: 20px; position: relative; overflow: hidden;
-                    background: rgba(255, 255, 255, 0.02);
-                    display: flex; align-items: center; justify-content: center;
-                    transition: transform 0.5s;
+                .sites-grid-list { display: grid; gap: 15px; margin-top: 20px; }
+                .site-item-card { 
+                    padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px;
+                    border: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;
                 }
-                .site-preview:hover { transform: rotateY(-10deg) rotateX(5deg); }
-                .preview-content { text-align: center; }
-                .preview-logo { font-size: 3rem; font-weight: 950; opacity: 0.1; }
-                .preview-lines { margin-top: 15px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
-                .p-line { width: 40px; height: 2px; background: rgba(0, 240, 255, 0.2); border-radius: 1px; }
-                .p-line.short { width: 20px; }
-                .scan-line {
-                    position: absolute; top: 0; left: 0; right: 0; height: 1px;
-                    background: #00f0ff; box-shadow: 0 0 10px #00f0ff;
-                    animation: scan 3s infinite linear;
+                .site-item-card:hover { background: rgba(255,255,255,0.05); }
+                .site-item-card.banned { border-color: #ff3232; background: rgba(255,50,50,0.05); }
+                
+                .site-mini-preview { 
+                    width: 50px; height: 50px; background: linear-gradient(135deg,rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+                    border-radius: 10px; display: flex; align-items: center; justify-content: center;
                 }
-                @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
-
-                .site-name { font-size: 1.8rem; font-weight: 900; margin-bottom: 20px; }
-                .meta-row { display: flex; gap: 15px; margin-bottom: 12px; font-size: 0.9rem; }
-                .meta-row .label { opacity: 0.4; font-weight: 700; width: 100px; }
-                .meta-row .value { font-weight: 800; color: #00f0ff; }
-                .value.slug { text-transform: lowercase; }
-                .status-indicator.public { color: #00ff88; }
-                .status-indicator.private { color: #ff3232; }
-                .status-indicator.draft { color: #ffa500; }
-                .visibility-warning {
-                    background: rgba(255, 165, 0, 0.1);
-                    border: 1px solid rgba(255, 165, 0, 0.3);
-                    color: #ffa500;
-                    padding: 12px 15px;
-                    border-radius: 10px;
-                    margin-top: 15px;
-                    font-size: 0.85rem;
-                    line-height: 1.5;
-                }
-                .visibility-warning strong { color: #ffa500; }
-
-                .site-actions-row { display: flex; gap: 15px; margin-top: 30px; }
-                .btn-action { 
-                    padding: 12px 25px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; 
-                    text-decoration: none; transition: all 0.3s;
-                }
-                .btn-action.primary { background: #00f0ff; color: #000; box-shadow: 0 5px 15px rgba(0, 240, 255, 0.2); }
-                .btn-action.primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 240, 255, 0.4); }
-                .btn-action.secondary { border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; }
-                .btn-action.secondary:hover { background: rgba(255, 255, 255, 0.05); }
-                .btn-action.share { border: 1px solid rgba(112, 0, 255, 0.3); color: #7000ff; background: rgba(112, 0, 255, 0.05); }
-                .btn-action.share:hover { background: rgba(112, 0, 255, 0.1); border-color: #7000ff; }
+                .site-info-col { flex: 1; }
+                .site-meta-row { display: flex; gap: 10px; align-items: center; margin: 5px 0 10px; }
+                .slug-tag { font-family: monospace; opacity: 0.5; font-size: 0.8rem; }
+                .status-pill { font-size: 0.8rem; }
+                .banned-pill { background: #ff3232; color: #fff; font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 800; }
+                
+                .site-actions-row.small { display: flex; gap: 10px; }
+                .btn-action.compact { padding: 6px 15px; font-size: 0.75rem; }
+                .add-site-container { margin-top: 20px; text-align: center; }
+                .btn-construct.small { padding: 10px 20px; font-size: 0.8rem; }
 
                 .resource-item { margin-bottom: 30px; }
                 .res-header { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; margin-bottom: 10px; color: rgba(255, 255, 255, 0.5); }
@@ -299,29 +281,6 @@ export default function BuildDashboard() {
                 .animate-reveal-delay { animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards; }
                 .animate-reveal-delay-2 { animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s backwards; }
                 @keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-                .sites-grid-list { display: grid; gap: 15px; margin-top: 20px; }
-                .site-item-card { 
-                    padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px;
-                    border: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;
-                }
-                .site-item-card:hover { background: rgba(255,255,255,0.05); }
-                .site-item-card.banned { border-color: #ff3232; background: rgba(255,50,50,0.05); }
-                
-                .site-mini-preview { 
-                    width: 50px; height: 50px; background: linear-gradient(135deg,rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
-                    border-radius: 10px; display: flex; align-items: center; justify-content: center;
-                }
-                .site-info-col { flex: 1; }
-                .site-meta-row { display: flex; gap: 10px; align-items: center; margin: 5px 0 10px; }
-                .slug-tag { font-family: monospace; opacity: 0.5; font-size: 0.8rem; }
-                .status-pill { font-size: 0.8rem; }
-                .banned-pill { background: #ff3232; color: #fff; font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 800; }
-                
-                .site-actions-row.small { display: flex; gap: 10px; }
-                .btn-action.compact { padding: 6px 15px; font-size: 0.75rem; }
-                .add-site-container { margin-top: 20px; text-align: center; }
-                .btn-construct.small { padding: 10px 20px; font-size: 0.8rem; }
                 
                 @media (max-width: 1024px) {
                     .status-grid { grid-template-columns: 1fr; }

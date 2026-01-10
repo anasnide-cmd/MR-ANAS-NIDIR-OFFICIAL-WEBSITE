@@ -12,13 +12,15 @@
     "deploy:rules": "firebase deploy --only firestore:rules"
   },
   "dependencies": {
+    "@heroui/user": "^2.2.24",
     "firebase": "^12.7.0",
     "framer-motion": "^12.25.0",
     "gsap": "^3.14.2",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "react-loading-skeleton": "^3.5.0"
   },
   "devDependencies": {
     "eslint": "^9",
