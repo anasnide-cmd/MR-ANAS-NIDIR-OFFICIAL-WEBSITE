@@ -177,7 +177,7 @@ export default function BuildDashboard() {
                     
                     <div className="billing-box glass">
                         <p>Current Protocol: <strong>{userLimit > 1 ? 'PREMIUM-X' : 'TRIAL-X'}</strong></p>
-                        <button className="btn-upgrade" disabled>EXPAND FLEET (UPGRADE)</button>
+                        <Link href="/mr-build/subscription" className="btn-upgrade">EXPAND FLEET (UPGRADE)</Link>
                     </div>
                 </div>
             </div>
@@ -264,8 +264,15 @@ export default function BuildDashboard() {
                 .btn-upgrade { 
                     width: 100%; padding: 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.03);
                     border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.2);
-                    font-weight: 800; font-size: 0.75rem; letter-spacing: 1px; cursor: not-allowed;
+                    font-weight: 800; font-size: 0.75rem; letter-spacing: 1px; cursor: pointer;
+                    transition: all 0.3s;
+                    text-decoration: none; display: block;
                     margin-bottom: 10px;
+                }
+                .btn-upgrade:hover {
+                    background: rgba(0, 240, 255, 0.1);
+                    color: #00f0ff;
+                    border-color: #00f0ff;
                 }
                 .note { font-size: 0.7rem; opacity: 0.3; }
 
