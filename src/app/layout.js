@@ -1,7 +1,6 @@
 import { Orbitron, Exo_2 } from 'next/font/google';
 import './globals.css';
-import CardNav from '../components/ReactBits/CardNav';
-import Footer from '../components/Footer';
+import ClientLayout from '../components/ClientLayout';
 
 const orbitron = Orbitron({
   subsets: ['latin'],
@@ -55,9 +54,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${orbitron.variable} ${exo2.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <CardNav items={navItems} />
-        {children}
-        <Footer />
+        <ClientLayout navItems={navItems}>
+            {children}
+        </ClientLayout>
       </body>
     </html>
   );
