@@ -152,8 +152,8 @@ const CardNav = ({
     if (el) cardsRef.current[i] = el;
   };
 
-  // Hide on user sites or admin pages
-  if (pathname?.startsWith('/s/') || pathname?.startsWith('/admin')) return null;
+  // Hide on user sites, admin pages, or SavoirPedia (Wiki)
+  if (pathname?.startsWith('/s/') || pathname?.startsWith('/admin') || pathname?.startsWith('/blog')) return null;
 
   return (
     <div className={`card-nav-container ${className}`}>

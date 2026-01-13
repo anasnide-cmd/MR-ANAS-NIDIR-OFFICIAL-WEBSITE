@@ -5,87 +5,232 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-// Emails that get verified badge
-const VERIFIED_EMAILS = ['anasnide@gmail.com', 'ceo@anasnidir.com'];
-
-function PostContent() {
+function WikiArticle() {
     const searchParams = useSearchParams();
     const slug = searchParams.get('slug');
-    const [post, setPost] = useState(null);
+    const [article, setArticle] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchPost = async () => {
+        const fetchArticle = async () => {
             try {
                 const q = query(collection(db, 'posts'), where('slug', '==', slug));
                 const snap = await getDocs(q);
                 if (!snap.empty) {
                     const doc = snap.docs[0];
-                    setPost({ id: doc.id, ...doc.data() });
+                    setArticle({ id: doc.id, ...doc.data() });
                 }
             } catch (err) {
-                console.error("Error fetching post:", err);
+                console.error("Error fetching article:", err);
             } finally {
                 setLoading(false);
             }
         };
-        if (slug) fetchPost();
+        if (slug) fetchArticle();
         else setLoading(false);
     }, [slug]);
 
-    if (loading) return <div className="section">Loading...</div>;
+    if (loading) return <div className="wiki-loading">Loading Article...</div>;
 
-    if (!post) {
+    if (!article) {
         return (
-            <div className="section" style={{ textAlign: 'center' }}>
-                <h1>Post Not Found</h1>
-                <p>The post you're looking for doesn't exist.</p>
-                <Link href="/blog" className="btn glow">Back to Blog</Link>
+            <div className="wiki-error">
+                <h1>Article Not Found</h1>
+                <p>The requested page does not exist in this database.</p>
+                <Link href="/blog">Return to Main Page</Link>
             </div>
         );
     }
 
+    // Determine category or type (Mock logic or from data)
+    const category = article.category || "Documentation";
+    const author = article.author || "System Admin";
+
     return (
-        <main className="section" style={{ maxWidth: 800, margin: '0 auto', padding: '20px' }}>
-            <Link href="/blog" style={{ color: '#00f0ff', marginBottom: 20, display: 'inline-block' }}>← Back to Blog</Link>
+        <article className="wiki-article-container">
+            <header className="article-header">
+                <h1 className="article-title">{article.title}</h1>
+                <div className="article-subtitle">From SavoirPedia, the free encyclopedia</div>
+            </header>
 
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {post.title}
-                {VERIFIED_EMAILS.includes(post.author) && (
-                    <svg title="Verified Admin" style={{ width: 24, height: 24 }} viewBox="0 0 84 84" xmlns="http://www.w3.org/2000/svg">
-                        <path fill="#0064e0" fillRule="evenodd" d="m50.4.47c1.79-.97,4.02-.37,5.08,1.36l4.99,8.17,9.57.24c2.03.05,3.67,1.69,3.72,3.72l.24,9.57,8.17,4.99c1.74,1.06,2.34,3.3,1.36,5.08l-4.58,8.4,4.58,8.4c.97,1.79.37,4.02-1.36,5.08l-8.17,4.99-.24,9.57c-.05,2.03-1.69,3.67-3.72,3.72l-9.57.24-4.99,8.17c-1.06,1.74-3.3,2.34-5.08,1.36l-8.4-4.58-8.4,4.58c-1.79.97-4.02.37-5.08-1.36l-4.99-8.17-9.57-.24c-2.03-.05-3.67-1.69-3.72-3.72l-.24-9.57-8.17-4.99c-1.74-1.06-2.34-3.3-1.36-5.08l4.58-8.4L.47,33.6c-.97-1.79-.37-4.02,1.36-5.08l8.17-4.99.24-9.57c.05-2.03,1.69-3.67,3.72-3.72l9.57-.24L28.51,1.83c1.06-1.74,3.3-2.34,5.08-1.36l8.4,4.58L50.4.47Zm9.31,34.92c1.62-1.35,1.84-3.76.49-5.38-1.35-1.62-3.76-1.84-5.38-.49l-.26.21c-6.64,5.54-12.84,11.59-18.52,18.1l-6.62-6.62c-1.49-1.49-3.91-1.49-5.4,0-1.49,1.49-1.49,3.91,0,5.4l9.55,9.55c.76.76,1.8,1.16,2.87,1.11,1.07-.05,2.07-.55,2.76-1.37l.21-.26c6.06-7.27,12.77-13.98,20.04-20.04l.26-.21Z" />
-                    </svg>
-                )}
-            </h1>
+            <div className="article-body-layout">
+                <div className="main-text">
+                    {/* Infobox for Mobile/Tablet if needed, usually right floated */}
+                    
+                    <div className="wiki-infobox">
+                        <div className="infobox-header">{article.title}</div>
+                        <img src="/assets/logo.jpg" alt="Featured" className="infobox-image" onError={(e) => e.target.style.display='none'} />
+                        <table className="infobox-data">
+                            <tbody>
+                                <tr>
+                                    <th>Author</th>
+                                    <td>{author}</td>
+                                </tr>
+                                <tr>
+                                    <th>Category</th>
+                                    <td>{category}</td>
+                                </tr>
+                                <tr>
+                                    <th>Published</th>
+                                    <td>{new Date(article.date).toLocaleDateString()}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status</th>
+                                    <td><span className="status-badge">Verified</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-            <p style={{ color: '#9aa0a6', marginBottom: 30 }}>
-                {new Date(post.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                })}
-                {post.author && <span> • By {post.author}</span>}
-            </p>
+                    <div className="toc-container">
+                        <div className="toc-title">Contents</div>
+                        <ul className="toc-list">
+                            <li><a href="#overview">1 Overview</a></li>
+                            <li><a href="#content">2 Content</a></li>
+                            <li><a href="#references">3 References</a></li>
+                        </ul>
+                    </div>
 
-            <article
-                className="post-content"
-                style={{ lineHeight: 1.8, fontSize: '1.1rem' }}
-                dangerouslySetInnerHTML={{ __html: post.content }}
-            />
+                    <div id="overview" className="wiki-content-block">
+                        <p className="lead-paragraph">
+                            <strong>{article.title}</strong> is a documented entry in the system archives, written by {author}. 
+                            It serves as a primary source of information regarding the topic of {category.toLowerCase()}.
+                        </p>
+                    </div>
 
-            <style jsx>{`
-                .post-content :global(h2) { margin-top: 2em; }
-                .post-content :global(p) { margin-bottom: 1em; }
-                .post-content :global(code) { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }
+                    <div id="content" className="wiki-content-render" dangerouslySetInnerHTML={{ __html: article.content }} />
+
+                    <div id="references" className="wiki-references">
+                        <h2>References</h2>
+                        <ol className="refs-list">
+                            <li>^ Original entry by {author}, {new Date(article.date).getFullYear()}.</li>
+                            <li>^ System logs and verify hashes.</li>
+                        </ol>
+                    </div>
+
+                    <div className="last-edited">
+                        This page was last edited on {new Date(article.date).toLocaleString()}.
+                    </div>
+                </div>
+            </div>
+
+            <style jsx global>{`
+                /* Wiki Content Typo */
+                .wiki-content-render h2 {
+                    font-family: 'Georgia', serif;
+                    font-size: 1.5rem;
+                    border-bottom: 1px solid #333;
+                    padding-bottom: 5px;
+                    margin-top: 30px;
+                    margin-bottom: 15px;
+                    color: #fff;
+                }
+                .wiki-content-render p { margin-bottom: 15px; line-height: 1.6; }
+                .wiki-content-render ul { margin-bottom: 15px; margin-left: 20px; }
+                
+                /* Media Styles */
+                .wiki-image { max-width: 100%; height: auto; border: 1px solid #333; margin: 10px 0; display: block; }
+                .wiki-video { max-width: 100%; width: 100%; margin: 10px 0; }
+                .wiki-video-wrapper {
+                    position: relative; padding-bottom: 56.25%; /* 16:9 ratio */
+                    height: 0; margin: 10px 0; overflow: hidden;
+                    border: 1px solid #333;
+                }
+                .wiki-video-wrapper iframe {
+                    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                }
             `}</style>
-        </main>
+            <style jsx>{`
+                .wiki-article-container {
+                    max-width: 1000px;
+                    margin: 20px auto;
+                    padding: 30px;
+                    background: #1a1a1a;
+                    color: #e0e0e0;
+                    border: 1px solid #333;
+                    min-height: 100vh;
+                }
+                .article-header {
+                    border-bottom: 1px solid #333;
+                    margin-bottom: 20px;
+                }
+                .article-title {
+                    font-family: 'Georgia', serif;
+                    font-size: 2.5rem;
+                    margin: 0;
+                    font-weight: normal;
+                    color: #fff;
+                }
+                .article-subtitle { font-size: 0.9rem; color: #888; margin-top: 5px; margin-bottom: 10px; }
+
+                .article-body-layout { position: relative; }
+
+                .wiki-infobox {
+                    float: right;
+                    width: 300px;
+                    background: #222;
+                    border: 1px solid #333;
+                    margin: 0 0 20px 20px;
+                    padding: 5px;
+                }
+                .infobox-header {
+                    background: #333;
+                    text-align: center;
+                    font-weight: bold;
+                    padding: 5px;
+                    margin-bottom: 5px;
+                }
+                .infobox-image { width: 100%; display: block; margin-bottom: 5px; } /* Placeholder */
+                .infobox-data { width: 100%; font-size: 0.9rem; border-collapse: collapse; }
+                .infobox-data th { text-align: left; padding: 5px; width: 40%; vertical-align: top; }
+                .infobox-data td { padding: 5px; }
+
+                .toc-container {
+                    background: #222;
+                    border: 1px solid #333;
+                    padding: 10px 20px;
+                    display: inline-block;
+                    margin-bottom: 20px;
+                    min-width: 200px;
+                }
+                .toc-title { font-weight: bold; text-align: center; margin-bottom: 10px; }
+                .toc-list { list-style: none; padding: 0; margin: 0; }
+                .toc-list li { margin-bottom: 5px; }
+                .toc-list a { color: #00f0ff; text-decoration: none; font-size: 0.95rem; }
+
+                .lead-paragraph { font-size: 1.1rem; margin-bottom: 20px; }
+
+                .wiki-references {
+                    margin-top: 50px;
+                    border-top: 1px solid #333;
+                    padding-top: 20px;
+                    font-size: 0.9rem;
+                }
+                .wiki-references h2 { font-size: 1.2rem; font-family: serif; border: none; margin-top: 0; }
+                .refs-list { padding-left: 20px; color: #888; }
+
+                .last-edited {
+                    margin-top: 40px;
+                    font-size: 0.8rem;
+                    color: #666;
+                    font-style: italic;
+                }
+
+                @media (max-width: 768px) {
+                    .wiki-infobox { float: none; width: 100%; margin: 0 0 20px 0; }
+                    .wiki-article-container { padding: 15px; }
+                }
+
+                .status-badge { background: #0064e0; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
+            `}</style>
+        </article>
     );
 }
 
-export default function PostPage() {
+export default function WikiPostPage() {
     return (
-        <Suspense fallback={<div className="section">Loading...</div>}>
-            <PostContent />
+        <Suspense fallback={<div>Loading Wiki...</div>}>
+            <WikiArticle />
         </Suspense>
     );
 }
