@@ -41,7 +41,7 @@ export default function SubscriptionPage() {
             });
 
             alert('Upgrade Successful! Deploying additional fleet capacity...');
-            router.push('/mr-build');
+            router.push('/mr-build/dashboard');
         } catch (error) {
             console.error("Error updating profile:", error);
             alert('Payment successful but failed to update profile. Please contact support.');
@@ -56,7 +56,7 @@ export default function SubscriptionPage() {
     return (
         <div className="sub-container animate-reveal">
             <header className="sub-header">
-                <Link href="/mr-build" className="btn-back">← BACK TO COMMAND</Link>
+                <Link href="/mr-build/dashboard" className="btn-back">← BACK TO COMMAND</Link>
                 <h1>PROTOCOL UPGRADE</h1>
                 <p>Expand your digital dominion. Unlock advanced capabilities.</p>
             </header>

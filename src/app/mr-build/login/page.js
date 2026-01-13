@@ -22,7 +22,7 @@ export default function BuildLogin() {
         const unsub = onAuthStateChanged(auth, (user) => {
             if (user) {
                 console.log('User already logged in:', user.email);
-                router.push('/mr-build');
+                router.push('/mr-build/dashboard');
             } else {
                 console.log('No user logged in');
             }
@@ -42,7 +42,7 @@ export default function BuildLogin() {
                 await signInWithEmailAndPassword(auth, email, password);
                 console.log('User logged in successfully');
             }
-            router.push('/mr-build');
+            router.push('/mr-build/dashboard');
         } catch (err) {
             console.error('Authentication error:', err);
             alert(err.message);
@@ -58,7 +58,7 @@ export default function BuildLogin() {
             const provider = new GoogleAuthProvider();
             await signInWithPopup(auth, provider);
             console.log('Google auth successful');
-            router.push('/mr-build');
+            router.push('/mr-build/dashboard');
         } catch (err) {
             console.error('Google auth error:', err);
             alert('Authentication failed: ' + err.message);

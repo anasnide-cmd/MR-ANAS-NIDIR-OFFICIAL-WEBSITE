@@ -1,296 +1,226 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { auth, db } from '../../lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Loader from '../../components/Loader';
-import SkeletonLoader from '../../components/SkeletonLoader';
 
-export default function BuildDashboard() {
-    const router = useRouter();
-    const [user, setUser] = useState(null);
-    const [sites, setSites] = useState([]);
-    const [userLimit, setUserLimit] = useState(1);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const checkUser = onAuthStateChanged(auth, async (u) => {
-            if (u) {
-                setUser(u);
-
-                // Fetch User Config (Limit) & Sync Profile
-                try {
-                    const userRef = doc(db, 'users', u.uid);
-                    const userDoc = await getDoc(userRef);
-
-                    // Sync basic profile data (safe fields)
-                    const profileUpdate = {
-                        email: u.email,
-                        displayName: u.displayName || u.email?.split('@')[0] || 'Anonymous',
-                        lastActive: new Date().toISOString()
-                    };
-
-                    if (userDoc.exists()) {
-                        setUserLimit(userDoc.data().siteLimit || 1);
-                        // Update profile if changed (merge)
-                        await setDoc(userRef, profileUpdate, { merge: true });
-                    } else {
-                        // Create initial doc (rules allow this for safe fields)
-                        await setDoc(userRef, profileUpdate);
-                    }
-                } catch (err) {
-                    console.error("Error syncing user profile:", err);
-                }
-
-                const q = query(collection(db, 'user_sites'), where('userId', '==', u.uid));
-                const snap = await getDocs(q);
-                setSites(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-            }
-            setLoading(false);
-            if (!u) {
-                router.push('/mr-build/login');
-            }
-        });
-        return () => checkUser();
-    }, []);
-
-    // InitialAuth Loader before we even know if we are logged in
-    // However, we want to show the dashboard skeleton if we are just fetching data.
-    // user state is null initially, so we need to be careful.
-    // If loading is true, we might return null or the skeleton structure if we want a skeleton dashboard.
-    // Use standard Loader only for initial auth check if needed, but here we want skeleton inside the layout.
-    
-    if (loading && !user) return <Loader text="Authenticating..." />; 
-    if (!user) return null;
-
+export default function BuildLandingPage() {
     return (
-        <div className="dashboard-container">
-            <header className="dashboard-header animate-reveal">
-                <div className="user-persona">
-                    <div className="avatar-glow">
-                        <span className="avatar-initial">{user.email?.charAt(0).toUpperCase()}</span>
-                    </div>
-                    <div className="welcome-text">
-                        <span className="protocol-tag">AUTHORIZED ARCHITECT</span>
-                        <h1>Command Center</h1>
-                        <p>Welcome back, {user.email?.split('@')[0]}. System status is optimal.</p>
-                    </div>
-                </div>
-                <div className="header-actions">
-                    <button onClick={async () => {
-                        await signOut(auth);
-                        router.push('/mr-build/login');
-                    }} className="btn-signout">Terminate Session</button>
-                </div>
-            </header>
-
-            <div className="status-grid">
-                <div className="status-card glass site-card animate-reveal-delay">
-                    <div className="card-header">
-                        <h3>ACTIVE DEPLOYMENTS</h3>
-                        <div className="header-badges">
-                            <span className="status-badge pulse">LIVE</span>
-                        </div>
-                    </div>
-
-                    {loading ? (
-                         <div className="sites-grid-list">
-                            {Array(3).fill(0).map((_, i) => (
-                                <div key={i} className="site-item-card glass skeleton-card" style={{height: '110px', display: 'flex', alignItems: 'center', gap: '15px'}}>
-                                    <SkeletonLoader height={50} width={50} style={{borderRadius: '10px'}} />
-                                    <div style={{flex: 1}}>
-                                        <SkeletonLoader height={24} width="60%" style={{marginBottom: '8px'}} />
-                                        <SkeletonLoader height={14} width="40%" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : sites.length > 0 ? (
-                        <div className="sites-grid-list">
-                            {sites.map(site => (
-                                <div key={site.id} className={`site-item-card glass ${site.adminStatus === 'banned' ? 'banned' : ''}`}>
-                                    <div className="site-mini-preview">
-                                        <span className="preview-logo">{site.name?.charAt(0) || 'N'}</span>
-                                    </div>
-                                    <div className="site-info-col">
-                                        <h4 className="site-name">{site.name || site.title || 'Untitled'}</h4>
-                                        <div className="site-meta-row">
-                                            <span className="slug-tag">/s/{site.slug}</span>
-                                            <span className="views-tag" title="Total Views">👁️ {site.views || 0}</span>
-                                            <span className={`status-pill ${site.status}`}>
-                                                {site.status === 'public' ? '🌐' : site.status === 'private' ? '🔒' : '📝'}
-                                            </span>
-                                            {site.adminStatus === 'banned' && <span className="banned-pill">SUSPENDED</span>}
-                                        </div>
-                                        <div className="site-actions-row small">
-                                            <Link href={`/mr-build/editor?id=${site.id}`} className="btn-action primary compact">MANAGE</Link>
-                                            {site.slug && site.adminStatus !== 'banned' && (
-                                                <Link href={`/s/${site.slug}`} target="_blank" className="btn-action secondary compact">VIEW</Link>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="no-site">
-                            <div className="construct-icon">🏗️</div>
-                            <h3>No Active Nodes</h3>
-                            <p>Initialize your first digital architecture.</p>
-                        </div>
-                    )}
-
-                    {/* Only show 'New Deployment' button if not loading strings attached */}
-                    {!loading && sites.length < userLimit && (
-                        <div className="add-site-container">
-                            <Link href="/mr-build/editor" className="btn-construct small">+ NEW DEPLOYMENT</Link>
-                        </div>
-                    )}
-                </div>
-
-                <div className="status-card glass quota-card animate-reveal-delay-2">
-                    <h3>SYSTEM RESOURCES</h3>
-                    <div className="resource-item">
-                        <div className="res-header">
-                            <span>Node Quota</span>
-                            {loading ? <SkeletonLoader width={40} /> : <span>{sites.length}/{userLimit}</span>}
-                        </div>
-                        <div className="res-bar">
-                            {loading ? (
-                                <SkeletonLoader height={4} />
-                            ) : (
-                                <div className="res-fill" style={{ width: `${(sites.length / userLimit) * 100}%` }}></div>
-                            )}
-                        </div>
-                    </div>
-                    <div className="resource-item">
-                        <div className="res-header">
-                            <span>Bandwidth</span>
-                            <span>Optimal</span>
-                        </div>
-                        <div className="res-bar">
-                             <div className="res-fill glow" style={{ width: '85%' }}></div>
-                        </div>
-                    </div>
-                    
-                    <div className="billing-box glass">
-                        <p>Current Protocol: <strong>{userLimit > 1 ? 'PREMIUM-X' : 'TRIAL-X'}</strong></p>
-                        <Link href="/mr-build/subscription" className="btn-upgrade">EXPAND FLEET (UPGRADE)</Link>
+        <div className="landing-container">
+            <section className="hero-section">
+                <div className="hero-content">
+                    <div className="badge-pill">v2.0 PROTOCOL ONLINE</div>
+                    <h1 className="glitch-text" data-text="BUILD THE IMPOSSIBLE">BUILD THE IMPOSSIBLE</h1>
+                    <p className="hero-desc">
+                        The next-generation site construction protocol. 
+                        Deploy reactive, high-performance digital architectures in seconds.
+                        No compiling. No waiting. Just efficient code.
+                    </p>
+                    <div className="hero-actions">
+                        <Link href="/mr-build/dashboard" className="btn-primary">
+                            INITIALIZE SYSTEM
+                        </Link>
+                        <Link href="#features" className="btn-secondary">
+                            READ DOCS
+                        </Link>
                     </div>
                 </div>
-            </div>
+                <div className="hero-visual">
+                    <div className="code-block glass">
+                        <div className="window-bar">
+                            <span className="dot red"></span>
+                            <span className="dot yellow"></span>
+                            <span className="dot green"></span>
+                        </div>
+                        <pre>
+                            <code>
+<span className="keyword">deploy</span> <span className="string">"my-super-site"</span><br/>
+<span className="comment">// Initializing quantum render...</span><br/>
+<span className="success">✓ Core Loaded (0.2s)</span><br/>
+<span className="success">✓ Assets Optimized</span><br/>
+<span className="highlight">&gt;&gt; SITE LIVE AT /s/my-super-site</span>
+                            </code>
+                        </pre>
+                    </div>
+                </div>
+            </section>
+
+            <section className="features-section" id="features">
+                <div className="feature-card glass">
+                    <div className="f-icon">⚡</div>
+                    <h3>Instant Propagation</h3>
+                    <p>Changes go live globally in sub-millisecond time. Powered by our proprietary edge network.</p>
+                </div>
+                <div className="feature-card glass">
+                    <div className="f-icon">🏗️</div>
+                    <h3>Visual Architect</h3>
+                    <p>Drag, drop, and configure complex components. React-based architecture under the hood.</p>
+                </div>
+                <div className="feature-card glass">
+                    <div className="f-icon">🛡️</div>
+                    <h3>Enterprise Security</h3>
+                    <p>Built-in firewalls, DDOS protection, and automated SSL certification for every node.</p>
+                </div>
+            </section>
+
+            <section className="stats-section">
+                <div className="stat">
+                    <h2>100%</h2>
+                    <span>Uptime</span>
+                </div>
+                <div className="stat">
+                    <h2>0.1s</h2>
+                    <span>Latency</span>
+                </div>
+                <div className="stat">
+                    <h2>∞</h2>
+                    <span>Scale</span>
+                </div>
+            </section>
+
+            <section className="cta-section">
+                <h2>READY TO DEPLOY?</h2>
+                <Link href="/mr-build/login" className="btn-glow-large">GRANT ACCESS</Link>
+            </section>
 
             <style jsx>{`
-                .dashboard-container { max-width: 1200px; margin: 0 auto; padding-bottom: 100px; }
+                .landing-container {
+                    color: #fff;
+                }
                 
-                .dashboard-header { 
-                    display: flex; 
-                    justify-content: space-between; 
-                    align-items: center; 
-                    margin-bottom: 60px;
+                /* Hero */
+                .hero-section {
+                    min-height: 80vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 50px;
                     padding: 40px 0;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
                 }
-                .user-persona { display: flex; align-items: center; gap: 25px; }
-                .avatar-glow {
-                    width: 70px; height: 70px;
-                    background: linear-gradient(135deg, #00f0ff 0%, #0064e0 100%);
-                    border-radius: 20px;
-                    display: flex; align-items: center; justify-content: center;
-                    box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
-                }
-                .avatar-initial { font-size: 2rem; font-weight: 900; color: #fff; }
-                .protocol-tag { font-size: 0.65rem; color: #00f0ff; letter-spacing: 2px; font-weight: 800; }
-                .welcome-text h1 { font-family: var(--font-orbitron); font-size: 2.2rem; margin: 5px 0; }
-                .welcome-text p { opacity: 0.5; font-size: 0.95rem; }
-
-                .btn-signout {
-                    background: rgba(255, 50, 50, 0.1);
-                    color: #ff3232;
-                    border: 1px solid rgba(255, 50, 50, 0.2);
-                    padding: 10px 20px;
-                    border-radius: 10px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                }
-                .btn-signout:hover { background: #ff3232; color: #fff; }
-
-                .status-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 40px; }
-                .status-card { padding: 40px; border-radius: 35px; border: 1px solid rgba(255, 255, 255, 0.05); }
-                
-                .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-                .card-header h3 { font-family: var(--font-orbitron); font-size: 1rem; letter-spacing: 2px; opacity: 0.7; }
-                .status-badge { 
-                    font-size: 0.6rem; font-weight: 900; background: #00f0ff; color: #000; 
-                    padding: 4px 10px; border-radius: 100px; box-shadow: 0 0 15px #00f0ff;
-                }
-
-                .sites-grid-list { display: grid; gap: 15px; margin-top: 20px; }
-                .site-item-card { 
-                    padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px;
-                    border: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;
-                }
-                .site-item-card:hover { background: rgba(255,255,255,0.05); }
-                .site-item-card.banned { border-color: #ff3232; background: rgba(255,50,50,0.05); }
-                
-                .site-mini-preview { 
-                    width: 50px; height: 50px; background: linear-gradient(135deg,rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
-                    border-radius: 10px; display: flex; align-items: center; justify-content: center;
-                }
-                .site-info-col { flex: 1; }
-                .site-meta-row { display: flex; gap: 10px; align-items: center; margin: 5px 0 10px; }
-                .slug-tag { font-family: monospace; opacity: 0.5; font-size: 0.8rem; }
-                .status-pill { font-size: 0.8rem; }
-                .banned-pill { background: #ff3232; color: #fff; font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 800; }
-                
-                .site-actions-row.small { display: flex; gap: 10px; }
-                .btn-action.compact { padding: 6px 15px; font-size: 0.75rem; }
-                .add-site-container { margin-top: 20px; text-align: center; }
-                .btn-construct.small { padding: 10px 20px; font-size: 0.8rem; }
-
-                .resource-item { margin-bottom: 30px; }
-                .res-header { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; margin-bottom: 10px; color: rgba(255, 255, 255, 0.5); }
-                .res-bar { height: 4px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden; }
-                .res-fill { height: 100%; background: #00f0ff; border-radius: 10px; }
-                .res-fill.glow { box-shadow: 0 0 10px #00f0ff; }
-                .res-fill.shield { background: #7000ff; box-shadow: 0 0 10px #7000ff; }
-                .res-fill.danger { background: #ff3232; box-shadow: 0 0 10px #ff3232; }
-
-                .billing-box { margin-top: 40px; padding: 25px; border-radius: 20px; text-align: center; }
-                .billing-box p { font-size: 0.9rem; margin-bottom: 15px; }
-                .btn-upgrade { 
-                    width: 100%; padding: 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.2);
-                    font-weight: 800; font-size: 0.75rem; letter-spacing: 1px; cursor: pointer;
-                    transition: all 0.3s;
-                    text-decoration: none; display: block;
-                    margin-bottom: 10px;
-                }
-                .btn-upgrade:hover {
+                .hero-content { flex: 1; }
+                .badge-pill {
+                    display: inline-block;
                     background: rgba(0, 240, 255, 0.1);
                     color: #00f0ff;
-                    border-color: #00f0ff;
+                    padding: 5px 15px;
+                    border-radius: 20px;
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                    margin-bottom: 20px;
+                    border: 1px solid rgba(0, 240, 255, 0.2);
                 }
-                .note { font-size: 0.7rem; opacity: 0.3; }
-
-                .no-site { text-align: center; padding: 40px 0; }
-                .construct-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.5; }
-                .btn-construct { 
-                    display: inline-block; background: #00f0ff; color: #000; text-decoration: none;
-                    padding: 16px 35px; border-radius: 14px; font-weight: 900; margin-top: 25px;
-                    box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+                h1 {
+                    font-family: var(--font-orbitron);
+                    font-size: 3.5rem;
+                    line-height: 1.1;
+                    margin-bottom: 20px;
+                    background: linear-gradient(to right, #fff, #aaa);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
                 }
+                .hero-desc {
+                    font-size: 1.1rem;
+                    opacity: 0.7;
+                    line-height: 1.6;
+                    margin-bottom: 40px;
+                    max-width: 500px;
+                }
+                .hero-actions { display: flex; gap: 20px; }
+                .btn-primary {
+                    padding: 15px 30px;
+                    background: #00f0ff;
+                    color: #000;
+                    font-weight: 800;
+                    text-decoration: none;
+                    border-radius: 10px;
+                    box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+                    transition: transform 0.2s;
+                }
+                .btn-primary:hover { transform: translateY(-2px); }
+                .btn-secondary {
+                    padding: 15px 30px;
+                    background: transparent;
+                    color: #fff;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    font-weight: 700;
+                    text-decoration: none;
+                    border-radius: 10px;
+                    transition: all 0.2s;
+                }
+                .btn-secondary:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
 
-                .animate-reveal { animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-                .animate-reveal-delay { animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards; }
-                .animate-reveal-delay-2 { animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s backwards; }
-                @keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-                
+                /* Visual */
+                .hero-visual { flex: 1; display: flex; justify-content: center; }
+                .code-block {
+                    background: rgba(10, 10, 10, 0.8);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 15px;
+                    padding: 20px;
+                    width: 100%;
+                    max-width: 450px;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                    transform: rotateY(-10deg) rotateX(5deg);
+                    transform-style: preserve-3d;
+                }
+                .window-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+                .dot { width: 12px; height: 12px; border-radius: 50%; }
+                .red { background: #ff5f56; } .yellow { background: #ffbd2e; } .green { background: #27c93f; }
+                pre { font-family: monospace; font-size: 0.9rem; line-height: 1.5; color: #ccc; }
+                .keyword { color: #c678dd; } .string { color: #98c379; } .comment { color: #5c6370; }
+                .success { color: #00f0ff; } .highlight { color: #e5c07b; }
+
+                /* Features */
+                .features-section {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 30px;
+                    margin: 80px 0;
+                }
+                .feature-card {
+                    padding: 30px;
+                    border-radius: 20px;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    transition: transform 0.3s;
+                }
+                .feature-card:hover { transform: translateY(-10px); background: rgba(255, 255, 255, 0.05); }
+                .f-icon { font-size: 2.5rem; margin-bottom: 20px; }
+                .feature-card h3 { margin-bottom: 10px; font-family: var(--font-orbitron); }
+                .feature-card p { opacity: 0.6; font-size: 0.9rem; line-height: 1.6; }
+
+                /* Stats */
+                .stats-section {
+                    display: flex;
+                    justify-content: space-around;
+                    padding: 60px 0;
+                    border-top: 1px solid rgba(255,255,255,0.05);
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                }
+                .stat { text-align: center; }
+                .stat h2 { font-size: 3rem; font-weight: 900; color: #00f0ff; margin: 0; }
+                .stat span { opacity: 0.5; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; }
+
+                /* CTA */
+                .cta-section {
+                    text-align: center;
+                    padding: 100px 0;
+                }
+                .cta-section h2 { font-size: 2.5rem; font-family: var(--font-orbitron); margin-bottom: 40px; }
+                .btn-glow-large {
+                    padding: 20px 50px;
+                    font-size: 1.2rem;
+                    background: #00f0ff;
+                    color: #000;
+                    text-decoration: none;
+                    font-weight: 900;
+                    border-radius: 50px;
+                    box-shadow: 0 0 40px rgba(0, 240, 255, 0.4);
+                    transition: all 0.3s;
+                }
+                .btn-glow-large:hover { box-shadow: 0 0 80px rgba(0, 240, 255, 0.6); transform: scale(1.05); }
+
                 @media (max-width: 1024px) {
-                    .status-grid { grid-template-columns: 1fr; }
+                    .hero-section { flex-direction: column-reverse; text-align: center; }
+                    .hero-visual { width: 100%; }
+                    .hero-actions { justify-content: center; }
+                    .features-section { grid-template-columns: 1fr; }
                 }
             `}</style>
         </div>

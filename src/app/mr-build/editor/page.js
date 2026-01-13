@@ -71,7 +71,7 @@ function MrBuildEditorContent() {
                                 adminStatus: data.adminStatus || 'active'
                             });
                         } else {
-                            router.push('/mr-build');
+                            router.push('/mr-build/dashboard');
                         }
                     }
                 } catch (err) {
@@ -150,7 +150,7 @@ function MrBuildEditorContent() {
             setSuccess('Site deleted successfully!');
             // Redirect after a short delay
             setTimeout(() => {
-                router.push('/mr-build');
+                router.push('/mr-build/dashboard');
             }, 2000);
         } catch (err) {
             console.error('Error deleting site:', err);
@@ -251,7 +251,7 @@ function MrBuildEditorContent() {
             // Original code redirected. Let's redirect but maybe wait?
             // Actually original code redirected immediately.
             setTimeout(() => {
-                router.push('/mr-build');
+                router.push('/mr-build/dashboard');
             }, 1000);
 
         } catch (err) {
@@ -268,7 +268,7 @@ function MrBuildEditorContent() {
         <div className="editor-view">
             <header className="page-header">
                 <div className="header-info">
-                    <Link href="/mr-build" className="back-link">← Return to Command Center</Link>
+                    <Link href="/mr-build/dashboard" className="back-link">← Return to Command Center</Link>
                     <h1>{siteId ? 'Optimize Core Architecture' : 'Initialize New Deployment'}</h1>
                     <p className="subtitle">Configure your digital node on the Mr Build network.</p>
                 </div>

@@ -20,45 +20,21 @@ export default function BuildLayout({ children }) {
         return () => unsub();
     }, []);
 
-    if (loading) return (
-        <div className="loading-screen">
-            <div className="scanner"></div>
-            <p>Scanning Identity...</p>
-            <style jsx>{`
-                .loading-screen {
-                    height: 100vh;
-                    background: #020202;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    color: #00f0ff;
-                }
-                .scanner {
-                    width: 200px;
-                    height: 2px;
-                    background: #00f0ff;
-                    box-shadow: 0 0 20px #00f0ff;
-                    animation: scan 2s infinite ease-in-out;
-                }
-                @keyframes scan {
-                    0%, 100% { transform: translateY(-50px); opacity: 0; }
-                    50% { transform: translateY(50px); opacity: 1; }
-                }
-            `}</style>
-        </div>
-    );
-
+    // Non-blocking layout: We render children immediately.
+    // Auth state is used for the Header.
+    
     return (
         <div className="builder-layout">
             <header className="builder-header glass">
-                <Link href="/mr-build" className="builder-logo">
+                <Link href={user ? "/mr-build/dashboard" : "/mr-build"} className="builder-logo">
                     MR BUILD <sup>PRO</sup>
                 </Link>
                 <nav className="builder-nav">
-                    {user ? (
+                    {loading ? (
+                        <div className="skeleton-auth" style={{width: 100, height: 30, background: 'rgba(255,255,255,0.1)', borderRadius: 8}}></div>
+                    ) : user ? (
                         <>
-                            <span className="user-email">{user.email}</span>
+                            <Link href="/mr-build/dashboard" className="user-email">{user.email}</Link>
                             <NotificationCenter />
                             <button onClick={() => auth.signOut()} className="btn-sm btn-outline">Sign Out</button>
                         </>

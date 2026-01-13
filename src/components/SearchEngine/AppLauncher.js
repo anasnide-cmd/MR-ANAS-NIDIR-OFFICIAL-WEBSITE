@@ -6,14 +6,14 @@ export default function AppLauncher() {
     const [isOpen, setIsOpen] = useState(false);
 
     const apps = [
-        { name: 'Account', icon: '👤', url: '/mr-build' }, // Redirect to dashboard as "Account"
+        { name: 'Account', icon: '👤', url: '/mr-build/dashboard' }, // Redirect to dashboard as "Account"
         { name: 'Search', icon: '🔍', url: '/mr-search' },
-        { name: 'Mr Build', icon: '🏗️', url: '/mr-build' },
+        { name: 'Mr Build', icon: '🏗️', url: '/mr-build/dashboard' },
         { name: 'Portfolio', icon: '🌐', url: '/' },
         { name: 'Blog', icon: '📰', url: '/blog' },
         { name: 'Admin', icon: '🛡️', url: '/admin' },
         { name: 'Analytics', icon: '📈', url: '/#stats' }, // Anchor on home
-        { name: 'Cloud', icon: '☁️', url: '/mr-build' }, // Placeholder
+        { name: 'Cloud', icon: '☁️', url: '/mr-build/dashboard' }, // Placeholder
         { name: 'Contact', icon: '✉️', url: '/#contact' },
     ];
 
