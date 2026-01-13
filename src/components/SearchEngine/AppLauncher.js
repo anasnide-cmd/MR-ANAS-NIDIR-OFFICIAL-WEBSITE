@@ -12,6 +12,7 @@ export default function AppLauncher() {
         { name: 'Portfolio', icon: '🌐', url: '/' },
         { name: 'Blog', icon: '📰', url: '/blog' },
         { name: 'Admin', icon: '🛡️', url: '/admin' },
+        { name: 'Games', icon: '🎮', url: '/mr-games' },
         { name: 'Analytics', icon: '📈', url: '/#stats' }, // Anchor on home
         { name: 'Cloud', icon: '☁️', url: '/mr-build/dashboard' }, // Placeholder
         { name: 'Contact', icon: '✉️', url: '/#contact' },

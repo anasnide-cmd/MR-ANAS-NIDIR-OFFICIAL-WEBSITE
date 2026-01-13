@@ -117,10 +117,36 @@ const CardNav = ({
   useEffect(() => {
       if (isExpanded) {
           setIsHamburgerOpen(false);
-          tlRef.current?.reverse();
-          tlRef.current?.eventCallback('onReverseComplete', () => setIsExpanded(false));
+          const tl = tlRef.current;
+          if (tl) {
+              tl.reverse();
+              tl.eventCallback('onReverseComplete', () => setIsExpanded(false));
+          } else {
+              setIsExpanded(false);
+          }
       }
   }, [pathname]);
+
+  // Close on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isExpanded && navRef.current && !navRef.current.contains(event.target)) {
+        setIsHamburgerOpen(false);
+        const tl = tlRef.current;
+        if (tl) {
+            tl.reverse();
+            tl.eventCallback('onReverseComplete', () => setIsExpanded(false));
+        } else {
+            setIsExpanded(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isExpanded]);
 
   const setCardRef = i => el => {
     if (el) cardsRef.current[i] = el;
