@@ -77,6 +77,11 @@ export default function UserSiteClient() {
         <div className={`site-wrapper theme-${site.theme}`}>
             <div className="grid-overlay"></div>
 
+            {/* Monetization / AdSense */}
+            {site.monetization?.enabled && site.monetization?.publisherId && (
+                <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${site.monetization.publisherId}`} crossOrigin="anonymous"></script>
+            )}
+
             <header className="site-header">
                 <div className="logo-circ">
                     <span>{site.title?.charAt(0)}</span>

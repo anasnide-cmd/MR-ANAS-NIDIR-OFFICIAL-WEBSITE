@@ -23,7 +23,13 @@ function MrBuildEditorContent() {
         },
         customHtml: '',
         customCss: '',
-        status: 'draft' // public, draft, private
+        customHtml: '',
+        customCss: '',
+        status: 'draft', // public, draft, private
+        monetization: {
+            enabled: false,
+            publisherId: ''
+        }
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -106,8 +112,11 @@ function MrBuildEditorContent() {
                                 socials: data.socials || { instagram: '', tiktok: '', twitter: '' },
                                 customHtml: data.customHtml || '',
                                 customCss: data.customCss || '',
+                                customHtml: data.customHtml || '',
+                                customCss: data.customCss || '',
                                 status: data.status || 'draft',
-                                adminStatus: data.adminStatus || 'active'
+                                adminStatus: data.adminStatus || 'active',
+                                monetization: data.monetization || { enabled: false, publisherId: '' }
                             });
                         } else {
                             router.push('/mr-build/dashboard');
@@ -265,6 +274,7 @@ function MrBuildEditorContent() {
                 customHtml: siteData.customHtml.trim(),
                 customCss: siteData.customCss.trim(),
                 status: siteData.status,
+                monetization: siteData.monetization || { enabled: false, publisherId: '' },
                 userId: user.uid,
                 updatedAt: new Date().toISOString()
             };
@@ -369,6 +379,9 @@ function MrBuildEditorContent() {
                 </button>
                 <button type="button" className={`tab-btn ${activeTab === 'social' ? 'active' : ''}`} onClick={() => setActiveTab('social')}>
                     🔗 Social Links
+                </button>
+                <button type="button" className={`tab-btn ${activeTab === 'monetization' ? 'active' : ''}`} onClick={() => setActiveTab('monetization')}>
+                    💰 Monetize
                 </button>
                 <button type="button" className={`tab-btn ${activeTab === 'templates' ? 'active' : ''}`} onClick={() => setActiveTab('templates')}>
                     🧩 Templates
@@ -531,6 +544,49 @@ function MrBuildEditorContent() {
                                     />
                                 </div>
                             </div>
+
+                        )}
+
+                        {activeTab === 'monetization' && (
+                            <div className="main-config glass card reveal-on-scroll">
+                                <h3>Monetization & Ads</h3>
+                                <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
+                                    Earn revenue by displaying ads on your site.
+                                </p>
+                                
+                                <label className="toggle-switch" style={{display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px', cursor: 'pointer'}}>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={siteData.monetization?.enabled || false} 
+                                        onChange={(e) => setSiteData({
+                                            ...siteData, 
+                                            monetization: { ...siteData.monetization, enabled: e.target.checked }
+                                        })}
+                                        style={{width: '20px', height: '20px'}}
+                                    />
+                                    <span style={{fontSize: '1.1rem', fontWeight: 'bold', color: siteData.monetization?.enabled ? '#00f0ff' : '#fff'}}>
+                                        Enable AdSense Ads
+                                    </span>
+                                </label>
+
+                                {siteData.monetization?.enabled && (
+                                    <div className="input-group animate-fade-in">
+                                        <label>Google AdSense Publisher ID</label>
+                                        <input
+                                            value={siteData.monetization?.publisherId || ''}
+                                            onChange={e => setSiteData({
+                                                ...siteData,
+                                                monetization: { ...siteData.monetization, publisherId: e.target.value }
+                                            })}
+                                            placeholder="pub-xxxxxxxxxxxxxxxx"
+                                            className="modern-input"
+                                        />
+                                        <p style={{fontSize: '0.8rem', opacity: 0.5, marginTop: '5px'}}>
+                                            Find this in your Google AdSense account settings.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         )}
 
                         {activeTab === 'templates' && (
@@ -623,6 +679,7 @@ function MrBuildEditorContent() {
                                         description: '',
                                         theme: 'dark-nebula',
                                         socials: { instagram: '', tiktok: '', twitter: '' },
+                                        monetization: { enabled: false, publisherId: '' },
                                         customHtml: '',
                                         customCss: '',
                                         status: 'draft'
@@ -661,6 +718,12 @@ function MrBuildEditorContent() {
                                 <span className="status-label">Social Links:</span>
                                 <span className={`status-value ${Object.values(siteData.socials || {}).some(v => v) ? 'ready' : 'pending'}`}>
                                     {Object.values(siteData.socials || {}).filter(v => v).length} Connected
+                                </span>
+                            </div>
+                            <div className="status-item">
+                                <span className="status-label">Monetization:</span>
+                                <span className={`status-value ${siteData.monetization?.enabled && siteData.monetization?.publisherId ? 'ready' : 'pending'}`}>
+                                    {siteData.monetization?.enabled ? (siteData.monetization?.publisherId ? '💰 Active' : '⚠️ Missing ID') : 'Off'}
                                 </span>
                             </div>
                             <div className="status-item">
