@@ -10,7 +10,7 @@ export default function AppLauncher() {
         { name: 'Search', icon: '🔍', url: '/mr-search' },
         { name: 'Mr Build', icon: '🏗️', url: '/mr-build/dashboard' },
         { name: 'Portfolio', icon: '🌐', url: '/' },
-        { name: 'SavoirPedia', icon: '📰', url: '/blog' },
+        { name: 'SavoirPedia', icon: '📰', url: '/savoirpedia' },
         { name: 'Admin', icon: '🛡️', url: '/admin' },
         { name: 'Games', icon: '🎮', url: '/mr-games' },
         { name: 'Analytics', icon: '📈', url: '/#stats' }, // Anchor on home

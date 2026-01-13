@@ -36,7 +36,7 @@ export default function RootLayout({ children }) {
       bgColor: '#161616',
       textColor: '#00f0ff',
       links: [
-        { label: 'SavoirPedia', href: '/blog', ariaLabel: 'Read SavoirPedia' },
+        { label: 'SavoirPedia', href: '/savoirpedia', ariaLabel: 'Read SavoirPedia' },
         { label: 'Mr Build', href: '/mr-build', ariaLabel: 'Mr Build Dashboard' },
         { label: 'Games', href: '/mr-games', ariaLabel: 'Mr Arcade Games' }
       ]

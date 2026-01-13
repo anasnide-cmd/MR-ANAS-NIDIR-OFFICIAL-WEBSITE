@@ -153,7 +153,7 @@ const CardNav = ({
   };
 
   // Hide on user sites, admin pages, or SavoirPedia (Wiki)
-  if (pathname?.startsWith('/s/') || pathname?.startsWith('/admin') || pathname?.startsWith('/blog')) return null;
+  if (pathname?.startsWith('/s/') || pathname?.startsWith('/admin') || pathname?.startsWith('/savoirpedia')) return null;
 
   return (
     <div className={`card-nav-container ${className}`}>

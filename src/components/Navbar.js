@@ -127,7 +127,7 @@ export default function Navbar() {
     { href: '/', label: 'Home', icon: '🏠' },
     { href: '/#projects', label: 'Projects', icon: '🚀' },
     { href: '/#products', label: 'Products', icon: '🛍️' },
-    { href: '/blog', label: 'Blog', icon: '📝' },
+    { href: '/savoirpedia', label: 'SavoirPedia', icon: '📝' },
     { href: '/mr-build', label: 'Mr Build', icon: '🔨' },
     { href: '/#contact', label: 'Contact', icon: '📧' },
   ];
