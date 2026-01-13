@@ -148,6 +148,9 @@ export default function BuildDashboard() {
                             <Link href="/mr-build/editor" className="btn-construct small">+ NEW DEPLOYMENT</Link>
                         </div>
                     )}
+                     <div style={{marginTop: '20px', textAlign: 'center'}}>
+                        <Link href="/mr-build/analytics" className="btn-text-link">📊 VIEW SYSTEM ANALYTICS</Link>
+                    </div>
                 </div>
 
                 <div className="status-card glass quota-card animate-reveal-delay-2">
@@ -283,6 +286,11 @@ export default function BuildDashboard() {
                     padding: 16px 35px; border-radius: 14px; font-weight: 900; margin-top: 25px;
                     box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
                 }
+                .btn-text-link {
+                    display: inline-block; color: rgba(255,255,255,0.5); text-decoration: none; 
+                    font-size: 0.8rem; font-weight: 700; transition: color 0.3s; margin-top: 10px;
+                }
+                .btn-text-link:hover { color: #00f0ff; }
 
                 .animate-reveal { animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
                 .animate-reveal-delay { animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards; }

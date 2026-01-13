@@ -32,6 +32,45 @@ function MrBuildEditorContent() {
     const [slugError, setSlugError] = useState('');
     const [activeTab, setActiveTab] = useState('basic');
 
+    const templates = [
+        {
+            id: 'portfolio',
+            name: 'Dev Portfolio',
+            icon: '👨‍💻',
+            desc: 'Minimalist dark-mode portfolio for developers.',
+            html: '<div class="hero">\n  <h1>Enter Your Name</h1>\n  <p>Full Stack Developer</p>\n</div>\n<div class="projects">\n  <div class="card">Project 1</div>\n  <div class="card">Project 2</div>\n</div>',
+            css: 'body { background: #111; color: #fff; font-family: sans-serif; }\n.hero { text-align: center; padding: 100px 20px; }\nh1 { font-size: 3rem; margin-bottom: 10px; color: #00f0ff; }\n.projects { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 800px; margin: 0 auto; }\n.card { padding: 30px; background: #222; border-radius: 10px; }'
+        },
+        {
+            id: 'linkbio',
+            name: 'Link In Bio',
+            icon: '🔗',
+            desc: 'Mobile-first link hub for social media.',
+            html: '<div class="profile">\n  <div class="avatar"></div>\n  <h2>@username</h2>\n</div>\n<div class="links">\n  <a href="#" class="link-btn">My Website</a>\n  <a href="#" class="link-btn">Latest Video</a>\n  <a href="#" class="link-btn">Contact Me</a>\n</div>',
+            css: 'body { background: linear-gradient(45deg, #12c2e9, #c471ed); color: #fff; text-align: center; font-family: sans-serif; min-height: 100vh; }\n.profile { padding: 40px 20px; }\n.avatar { width: 100px; height: 100px; background: #fff; border-radius: 50%; margin: 0 auto 20px; }\n.links { max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; padding: 20px; }\n.link-btn { display: block; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 30px; color: #fff; text-decoration: none; backdrop-filter: blur(5px); font-weight: bold; transition: transform 0.2s; }\n.link-btn:hover { transform: scale(1.02); background: rgba(255,255,255,0.3); }'
+        },
+        {
+            id: 'landing',
+            name: 'Product Landing',
+            icon: '🚀',
+            desc: 'High-conversion landing page structure.',
+            html: '<nav>Brand</nav>\n<header>\n  <h1>The Future is Here</h1>\n  <button>Get Started</button>\n</header>\n<section>Feature 1</section>\n<section>Feature 2</section>',
+            css: 'body { margin: 0; font-family: sans-serif; }\nnav { padding: 20px; background: #000; color: #fff; }\nheader { padding: 100px 20px; text-align: center; background: #f4f4f4; }\nh1 { font-size: 3rem; }\nbutton { padding: 15px 30px; background: #0070f3; color: #fff; border: none; border-radius: 5px; font-size: 1.2rem; cursor: pointer; }\nsection { padding: 50px 20px; text-align: center; border-bottom: 1px solid #eee; }'
+        }
+    ];
+
+    const applyTemplate = (tpl) => {
+        if (confirm(`Apply "${tpl.name}" template? This will overwrite your current Custom HTML and CSS.`)) {
+            setSiteData({
+                ...siteData,
+                customHtml: tpl.html,
+                customCss: tpl.css
+            });
+            setActiveTab('code'); // Switch to code tab to see results
+            setSuccess(`Template "${tpl.name}" applied successfully!`);
+        }
+    };
+
     // Sanitize slug: lowercase, alphanumeric + hyphens only
     const sanitizeSlug = (slug) => {
         return slug
@@ -331,6 +370,9 @@ function MrBuildEditorContent() {
                 <button type="button" className={`tab-btn ${activeTab === 'social' ? 'active' : ''}`} onClick={() => setActiveTab('social')}>
                     🔗 Social Links
                 </button>
+                <button type="button" className={`tab-btn ${activeTab === 'templates' ? 'active' : ''}`} onClick={() => setActiveTab('templates')}>
+                    🧩 Templates
+                </button>
                 <button type="button" className={`tab-btn ${activeTab === 'code' ? 'active' : ''}`} onClick={() => setActiveTab('code')}>
                     💻 Custom Code
                 </button>
@@ -487,6 +529,25 @@ function MrBuildEditorContent() {
                                         placeholder="https://twitter.com/username"
                                         className="modern-input"
                                     />
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'templates' && (
+                            <div className="main-config glass card reveal-on-scroll">
+                                <h3>Quick-Start Templates</h3>
+                                <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
+                                    Jumpstart your build with a pre-configured architecture.
+                                </p>
+                                <div className="templates-grid">
+                                    {templates.map(tpl => (
+                                        <div key={tpl.id} className="template-card" onClick={() => applyTemplate(tpl)}>
+                                            <div className="tpl-icon">{tpl.icon}</div>
+                                            <h4>{tpl.name}</h4>
+                                            <p>{tpl.desc}</p>
+                                            <button type="button" className="btn-use-tpl">Use Template</button>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}
@@ -969,9 +1030,47 @@ function MrBuildEditorContent() {
 
                 .status-selector {
                     display: flex;
-                    gap: 10px;
+                    gap: 15px;
                     flex-wrap: wrap;
                 }
+
+                .templates-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                    gap: 20px;
+                }
+                .template-card {
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 15px;
+                    padding: 20px;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                }
+                .template-card:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-color: #00f0ff;
+                    transform: translateY(-5px);
+                }
+                .tpl-icon { font-size: 2.5rem; margin-bottom: 10px; }
+                .template-card h4 { margin: 10px 0; color: #fff; }
+                .template-card p { font-size: 0.8rem; opacity: 0.6; margin-bottom: 15px; line-height: 1.4; }
+                .btn-use-tpl {
+                    background: transparent;
+                    border: 1px solid #00f0ff;
+                    color: #00f0ff;
+                    padding: 5px 15px;
+                    border-radius: 20px;
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .template-card:hover .btn-use-tpl {
+                    background: #00f0ff;
+                    color: #000;
+                }
+
                 .status-btn {
                     padding: 12px 20px;
                     border-radius: 12px;
