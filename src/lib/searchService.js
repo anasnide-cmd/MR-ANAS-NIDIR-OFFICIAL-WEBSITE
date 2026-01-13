@@ -57,9 +57,34 @@ export async function getSearchResults(searchQuery) {
 
         results.push(...siteResults);
 
+        // 3. Search SavoirPedia Articles (Firestore)
+        const qWiki = query(
+            collection(db, 'posts'),
+            where('status', '==', 'active')
+        );
+        const wikiSnap = await getDocs(qWiki);
+        const wikiResults = [];
+
+        wikiSnap.forEach(doc => {
+            const data = doc.data();
+            const title = (data.title || '').toLowerCase();
+            const content = (data.content || '').toLowerCase().replace(/<[^>]*>/g, '');
+            
+            if (title.includes(normalizedQuery) || content.includes(normalizedQuery)) {
+                wikiResults.push({
+                    id: `wiki-${doc.id}`,
+                    title: data.title || 'Untitled Article',
+                    url: `/savoirpedia/post?slug=${data.slug}`,
+                    snippet: content.substring(0, 160) + '...',
+                    type: 'wiki'
+                });
+            }
+        });
+
+        results.push(...wikiResults);
+
     } catch (error) {
         console.error("Error searching database:", error);
-        // Fallback or just ignore DB errors
     }
 
     return results;

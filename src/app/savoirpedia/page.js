@@ -29,8 +29,9 @@ export default function BlogHub() {
 
     useEffect(() => {
         const results = posts.filter(post =>
-            post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            post.content.toLowerCase().includes(searchTerm.toLowerCase())
+            (post.status === 'active' || !post.status) && // Show active or legacy posts (no status)
+            (post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            post.content.toLowerCase().includes(searchTerm.toLowerCase()))
         );
         setFilteredPosts(results);
     }, [searchTerm, posts]);
@@ -46,6 +47,9 @@ export default function BlogHub() {
                     </div>
                 </div>
                 <div className="wiki-search">
+                    <Link href="/savoirpedia/dashboard" className="create-btn" style={{backgroundColor: '#333', color: '#fff', border: '1px solid #444', marginRight: '5px'}} title="My Dashboard">
+                        📊 Dashboard
+                    </Link>
                     <Link href="/savoirpedia/editor" className="create-btn" title="Contribute Article">
                         ✍️ Create
                     </Link>
@@ -66,6 +70,7 @@ export default function BlogHub() {
                         <h3>Navigation</h3>
                         <ul>
                             <li><Link href="/">Main Page</Link></li>
+                            <li><Link href="/savoirpedia/dashboard">My Dashboard</Link></li>
                             <li><Link href="/mr-build">Mr Build</Link></li>
                             <li><Link href="/mr-games">Games</Link></li>
                             <li><Link href="/#contact">Contact</Link></li>
@@ -102,21 +107,36 @@ export default function BlogHub() {
                                 </div>
                                 
                                 {filteredPosts.length > 0 ? (
-                                    <ul className="article-list">
-                                        {filteredPosts.map(post => (
-                                            <li key={post.id} className="article-item">
-                                                <Link href={`/savoirpedia/post?slug=${post.slug || '#'}`} className="article-link">
-                                                    {post.title}
-                                                </Link>
-                                                <span className="article-meta">
-                                                    last modified {new Date(post.date).toLocaleDateString()}
-                                                </span>
-                                                <p className="article-snippet">
-                                                    {post.content.replace(/<[^>]*>?/gm, '').substring(0, 150)}...
-                                                </p>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <div className="posts-grid">
+                                        {filteredPosts.map(post => {
+                                            // Extract first image
+                                            const imgMatch = post.content.match(/<img[^>]+src="([^">]+)"/);
+                                            const thumbnail = imgMatch ? imgMatch[1] : null;
+                                            
+                                            return (
+                                                <article key={post.id} className="post-card">
+                                                    {thumbnail && (
+                                                        <div className="card-image">
+                                                            <img src={thumbnail} alt={post.title} />
+                                                        </div>
+                                                    )}
+                                                    <div className="card-content">
+                                                        <Link href={`/savoirpedia/post?slug=${post.slug || '#'}`} className="card-title">
+                                                            {post.title}
+                                                        </Link>
+                                                        <div className="card-meta">
+                                                            <span>{new Date(post.date).toLocaleDateString()}</span>
+                                                            <span className="dot">•</span>
+                                                            <span>{post.category || 'General'}</span>
+                                                        </div>
+                                                        <p className="card-snippet">
+                                                            {post.content.replace(/<[^>]*>?/gm, '').substring(0, 120)}...
+                                                        </p>
+                                                    </div>
+                                                </article>
+                                            );
+                                        })}
+                                    </div>
                                 ) : (
                                     <p>No results found matching your query.</p>
                                 )}
@@ -130,6 +150,55 @@ export default function BlogHub() {
                 body { padding-top: 0 !important; }
             `}</style>
             <style jsx>{`
+                /* ... keep existing styles ... */
+                .posts-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 25px;
+                }
+                
+                .post-card {
+                    background: #222;
+                    border: 1px solid #333;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+                    display: flex; flex-direction: column;
+                }
+                .post-card:hover {
+                    transform: translateY(-5px);
+                    border-color: #00f0ff;
+                    box-shadow: 0 5px 15px rgba(0, 240, 255, 0.1);
+                }
+
+                .card-image {
+                    height: 180px;
+                    width: 100%;
+                    overflow: hidden;
+                    background: #111;
+                }
+                .card-image img {
+                    width: 100%; height: 100%; object-fit: cover;
+                }
+                
+                .card-content { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+                
+                .card-title {
+                    font-size: 1.3rem; margin-bottom: 10px;
+                    color: #fff; text-decoration: none;
+                    font-family: 'Georgia', serif; font-weight: bold;
+                    line-height: 1.3;
+                }
+                .card-title:hover { color: #00f0ff; }
+
+                .card-meta {
+                    font-size: 0.8rem; color: #888; margin-bottom: 12px;
+                    display: flex; align-items: center; gap: 8px;
+                }
+                .dot { color: #444; }
+
+                .card-snippet { font-size: 0.9rem; color: #bbb; line-height: 1.5; margin: 0; }
+
                 .wiki-container {
                     max-width: 100%;
                     width: 100%;

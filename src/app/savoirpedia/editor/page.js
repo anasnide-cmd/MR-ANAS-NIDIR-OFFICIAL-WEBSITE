@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../../lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 // PrimeReact Imports
@@ -14,46 +14,81 @@ import 'primeicons/primeicons.css';
 
 export default function PublicWikiEditor() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const editId = searchParams.get('id');
+
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const [title, setTitle] = useState('');
-    const [category, setCategory] = useState('General');
+    const [category, setCategory] = useState('');
     const [content, setContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, (u) => {
-            setUser(u);
-            setLoading(false);
-            if (!u) {
-                // Optional: Redirect
+        const unsub = onAuthStateChanged(auth, async (u) => {
+            if (u) {
+                setUser(u);
+                if (editId) {
+                    // Fetch existing post
+                    try {
+                        const docRef = doc(db, 'posts', editId);
+                        const docSnap = await getDoc(docRef);
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            // Security check: Only author or admin can edit (add admin check later if needed)
+                            if (data.authorId !== u.uid) {
+                                alert("You are not authorized to edit this article.");
+                                router.push('/savoirpedia/dashboard');
+                                return;
+                            }
+                            setTitle(data.title);
+                            setCategory(data.category);
+                            setContent(data.content);
+                        }
+                    } catch (err) {
+                        console.error("Error fetching post:", err);
+                    }
+                }
+                setLoading(false);
+            } else {
+                setLoading(false);
             }
         });
         return () => unsub();
-    }, []);
+    }, [editId]);
 
-    const handlePublish = async (e) => {
-        e.preventDefault();
-        // Validation: Check if content is empty or just has tags
+    const handlePublish = async (e, status = 'active') => {
+        if (e) e.preventDefault();
+        // Validation
         if (!title || !content || content === '<p><br></p>') return alert('Title and Content are required.');
         
         setIsSubmitting(true);
         try {
             const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-            
-            await addDoc(collection(db, 'posts'), {
+            const postData = {
                 title,
-                slug: slug + '-' + Date.now().toString().slice(-4),
                 category,
-                content, // Content is already HTML from Editor
-                author: user.email,
-                authorId: user.uid,
+                content,
+                author: user.displayName || user.email, // Use Display Name if available
+                // authorId: user.uid, // Keep original owner
                 date: new Date().toISOString(),
-                status: 'active'
-            });
+                status: status
+            };
+
+            if (editId) {
+                // Update
+                await updateDoc(doc(db, 'posts', editId), postData);
+            } else {
+                // Create
+                await addDoc(collection(db, 'posts'), {
+                    ...postData,
+                    slug: slug + '-' + Date.now().toString().slice(-4),
+                    authorId: user.uid
+                });
+            }
             
-            router.push('/savoirpedia');
+            router.push('/savoirpedia/dashboard'); // Go to dashboard after save
         } catch (err) {
             alert('Error publishing: ' + err.message);
             setIsSubmitting(false);
@@ -87,9 +122,15 @@ export default function PublicWikiEditor() {
         <div className="wiki-container">
             <style jsx global>{` body { padding-top: 0 !important; } `}</style> 
             <header className="editor-header">
-                <h1>Create New Article</h1>
+                <h1>{editId ? 'Edit Article' : 'Create New Article'}</h1>
                 <p>Contributing as <strong>{user.email}</strong></p>
             </header>
+            
+            {/* Added style override just in case PrimeReact z-index issues happen */}
+            <style jsx global>{`
+                .p-editor-toolbar { border-radius: 8px 8px 0 0; }
+                .p-editor-content { border-radius: 0 0 8px 8px; }
+            `}</style>
 
             <form onSubmit={handlePublish} className="wiki-form">
                 <div className="form-group">
@@ -126,14 +167,29 @@ export default function PublicWikiEditor() {
                 </div>
 
                 <div className="form-actions">
-                    <button type="submit" className="btn-publish" disabled={isSubmitting}>
+                    <button type="button" onClick={(e) => handlePublish(e, 'draft')} className="btn-draft" disabled={isSubmitting}>
+                        {isSubmitting ? 'Saving...' : 'Save Draft'}
+                    </button>
+                    <button type="submit" className="btn-publish" disabled={isSubmitting} onClick={(e) => handlePublish(e, 'active')}>
                         {isSubmitting ? 'Publishing...' : 'Publish Article'}
                     </button>
-                    <Link href="/savoirpedia" className="btn-cancel">Cancel</Link>
+                    <Link href="/savoirpedia/dashboard" className="btn-cancel">Cancel</Link>
                 </div>
             </form>
 
+            <style jsx global>{`
+                .p-editor-toolbar { border-radius: 8px 8px 0 0; }
+                .p-editor-content { border-radius: 0 0 8px 8px; }
+            `}</style>
+            
             <style jsx>{`
+                /* ... other styles start ... */
+                .btn-draft {
+                    background: transparent; border: 1px solid #666; color: #ccc;
+                    padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px;
+                }
+                .btn-draft:hover { border-color: #fff; color: #fff; }
+                /* ... other styles ... */
                 .wiki-container {
                     max-width: 100%;
                     width: 100%;

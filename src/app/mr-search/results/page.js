@@ -98,8 +98,8 @@ function SearchResultsContent() {
                         {results.map(res => (
                             <div key={res.id} className="res-card animate-fade-in">
                                 <div className="res-url">
-                                    <span className="globe-icon">🌐</span>
-                                    {res.url}
+                                    <span className="globe-icon">{res.type === 'wiki' ? '📚' : res.type === 'official' ? '🛡️' : '🌐'}</span>
+                                    {res.type === 'wiki' ? `SavoirPedia › ${res.url.split('slug=')[1]}` : res.url}
                                 </div>
                                 <h3><a href={res.url} target="_blank" rel="noopener noreferrer">{res.title}</a></h3>
                                 <p className="res-snippet">{res.snippet}</p>
