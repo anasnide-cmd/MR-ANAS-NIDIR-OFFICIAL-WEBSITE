@@ -126,10 +126,14 @@ export default function BlogHub() {
                 </div>
             </div>
 
+            <style jsx global>{`
+                body { padding-top: 0 !important; }
+            `}</style>
             <style jsx>{`
                 .wiki-container {
-                    max-width: 1200px;
-                    margin: 0 auto;
+                    max-width: 100%;
+                    width: 100%;
+                    margin: 0;
                     padding: 20px;
                     font-family: 'Georgia', serif; /* Classic Wiki Feel */
                     background: #f6f6f6;
@@ -189,7 +193,7 @@ export default function BlogHub() {
 
                 .wiki-layout {
                     display: grid;
-                    grid-template-columns: 200px 1fr;
+                    grid-template-columns: 250px 1fr;
                     gap: 30px;
                 }
 

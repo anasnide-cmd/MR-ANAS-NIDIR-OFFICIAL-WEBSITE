@@ -172,10 +172,14 @@ export default function PublicWikiEditor() {
                 </div>
             </form>
 
+            <style jsx global>{`
+                body { padding-top: 0 !important; }
+            `}</style>
             <style jsx>{`
                 .wiki-container {
-                    max-width: 800px;
-                    margin: 0 auto;
+                    max-width: 100%;
+                    width: 100%;
+                    margin: 0;
                     padding: 40px 20px;
                     color: #e0e0e0;
                     min-height: 100vh;

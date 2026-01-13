@@ -139,16 +139,19 @@ function WikiArticle() {
                 .wiki-video-wrapper iframe {
                     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                 }
+                body { padding-top: 0 !important; }
             `}</style>
             <style jsx>{`
                 .wiki-article-container {
-                    max-width: 1000px;
-                    margin: 20px auto;
-                    padding: 30px;
+                    max-width: 100%;
+                    width: 100%;
+                    margin: 0;
+                    padding: 40px;
                     background: #1a1a1a;
                     color: #e0e0e0;
                     border: 1px solid #333;
                     min-height: 100vh;
+                    font-size: 1.15rem;
                 }
                 .article-header {
                     border-bottom: 1px solid #333;
