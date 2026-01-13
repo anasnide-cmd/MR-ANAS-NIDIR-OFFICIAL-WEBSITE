@@ -29,7 +29,8 @@ function MrBuildEditorContent() {
         monetization: {
             enabled: false,
             publisherId: ''
-        }
+        },
+        views: 0
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -116,7 +117,9 @@ function MrBuildEditorContent() {
                                 customCss: data.customCss || '',
                                 status: data.status || 'draft',
                                 adminStatus: data.adminStatus || 'active',
-                                monetization: data.monetization || { enabled: false, publisherId: '' }
+                                adminStatus: data.adminStatus || 'active',
+                                monetization: data.monetization || { enabled: false, publisherId: '' },
+                                views: data.views || 0
                             });
                         } else {
                             router.push('/mr-build/dashboard');
@@ -554,37 +557,51 @@ function MrBuildEditorContent() {
                                     Earn revenue by displaying ads on your site.
                                 </p>
                                 
-                                <label className="toggle-switch" style={{display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px', cursor: 'pointer'}}>
-                                    <input 
-                                        type="checkbox" 
-                                        checked={siteData.monetization?.enabled || false} 
-                                        onChange={(e) => setSiteData({
-                                            ...siteData, 
-                                            monetization: { ...siteData.monetization, enabled: e.target.checked }
-                                        })}
-                                        style={{width: '20px', height: '20px'}}
-                                    />
-                                    <span style={{fontSize: '1.1rem', fontWeight: 'bold', color: siteData.monetization?.enabled ? '#00f0ff' : '#fff'}}>
-                                        Enable AdSense Ads
-                                    </span>
-                                </label>
-
-                                {siteData.monetization?.enabled && (
-                                    <div className="input-group animate-fade-in">
-                                        <label>Google AdSense Publisher ID</label>
-                                        <input
-                                            value={siteData.monetization?.publisherId || ''}
-                                            onChange={e => setSiteData({
-                                                ...siteData,
-                                                monetization: { ...siteData.monetization, publisherId: e.target.value }
-                                            })}
-                                            placeholder="pub-xxxxxxxxxxxxxxxx"
-                                            className="modern-input"
-                                        />
-                                        <p style={{fontSize: '0.8rem', opacity: 0.5, marginTop: '5px'}}>
-                                            Find this in your Google AdSense account settings.
-                                        </p>
+                                {siteData.views < 1000 ? (
+                                    <div className="locked-feature">
+                                        <div className="locked-icon">🔒</div>
+                                        <h4>Monetization Locked</h4>
+                                        <p>You need at least <strong>1,000 views</strong> to enable ads on your site.</p>
+                                        <div className="progress-container">
+                                            <div className="progress-bar" style={{ width: `${Math.min((siteData.views / 1000) * 100, 100)}%` }}></div>
+                                        </div>
+                                        <p className="progress-text">{siteData.views} / 1,000 Views</p>
                                     </div>
+                                ) : (
+                                    <>
+                                        <label className="toggle-switch" style={{display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px', cursor: 'pointer'}}>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={siteData.monetization?.enabled || false} 
+                                                onChange={(e) => setSiteData({
+                                                    ...siteData, 
+                                                    monetization: { ...siteData.monetization, enabled: e.target.checked }
+                                                })}
+                                                style={{width: '20px', height: '20px'}}
+                                            />
+                                            <span style={{fontSize: '1.1rem', fontWeight: 'bold', color: siteData.monetization?.enabled ? '#00f0ff' : '#fff'}}>
+                                                Enable AdSense Ads
+                                            </span>
+                                        </label>
+
+                                        {siteData.monetization?.enabled && (
+                                            <div className="input-group animate-fade-in">
+                                                <label>Google AdSense Publisher ID</label>
+                                                <input
+                                                    value={siteData.monetization?.publisherId || ''}
+                                                    onChange={e => setSiteData({
+                                                        ...siteData,
+                                                        monetization: { ...siteData.monetization, publisherId: e.target.value }
+                                                    })}
+                                                    placeholder="pub-xxxxxxxxxxxxxxxx"
+                                                    className="modern-input"
+                                                />
+                                                <p style={{fontSize: '0.8rem', opacity: 0.5, marginTop: '5px'}}>
+                                                    Find this in your Google AdSense account settings.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         )}
@@ -1210,6 +1227,29 @@ function MrBuildEditorContent() {
                     margin: 30px 0;
                 }
 
+                .progress-container {
+                    width: 100%;
+                    height: 10px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 5px;
+                    margin: 15px 0;
+                    overflow: hidden;
+                }
+                .progress-bar {
+                    height: 100%;
+                    background: #00f0ff;
+                    transition: width 0.5s ease;
+                }
+                .locked-feature {
+                    text-align: center;
+                    padding: 40px;
+                    background: rgba(0, 0, 0, 0.3);
+                    border-radius: 20px;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                }
+                .locked-icon { font-size: 3rem; margin-bottom: 20px; }
+                .locked-feature h4 { color: #ff3232; margin-bottom: 10px; }
+                
                 @media (max-width: 768px) {
                     .editor-layout {
                         grid-template-columns: 1fr;

@@ -121,6 +121,74 @@ export default function AdminPage() {
         }
     };
 
+    const updatePublisherId = async (siteId, currentId) => {
+        const newId = prompt("Enter AdSense Publisher ID (e.g., pub-xxxxxxxx):", currentId || '');
+        if (newId === null) return; // Cancelled
+
+        try {
+            // Need to fetch current data to preserve 'enabled' state or just merge
+            // Since we are admin, let's just merge deep
+            // Firestore merge is shallow on maps unless using dot notation for specific fields
+            // But here we want to update monetization object.
+            
+            // Let's safe update: read doc first or just assume structure
+            // Using dot notation 'monetization.publisherId' works if the map exists
+            // But if it doesn't, we need to create it.
+            
+            // Safer: update the whole object
+            await setDoc(doc(db, 'user_sites', siteId), {
+                monetization: { 
+                    publisherId: newId,
+                    // If we want to force enable it, we can. 
+                    // But let's leave 'enabled' to user preference (they enable it when ready).
+                    // However, we need to make sure we don't overwrite 'enabled' if it exists.
+                    // Actually setDoc with merge: true will merge top level fields.
+                    // To merge nested fields cleanly without reading, use updateDoc with dot notation
+                } 
+            }, { merge: true });
+
+            // Wait, setDoc with merge replaces the whole map 'monetization' if I provide it like that?
+            // No, merge: true merges fields. But 'monetization' field is a map.
+            // If I provide { monetization: { publisherId: ... } }, it might overwrite other fields in monetization map depending on depth.
+            // Firestore merge acts deeply? No, usually shallow on maps unless dot notation used in update.
+            
+            // Let's use updateDoc with dot notation which is safer for specific field update
+            await updateDoc(doc(db, 'user_sites', siteId), {
+                'monetization.publisherId': newId
+            });
+
+            // Update local state
+            setAllSites(prev => prev.map(s => {
+                if (s.id === siteId) {
+                    return {
+                        ...s,
+                        monetization: {
+                            ...(s.monetization || { enabled: false }),
+                            publisherId: newId
+                        }
+                    };
+                }
+                return s;
+            }));
+
+        } catch (err) {
+             // If document doesn't have monetization field, updateDoc 'monetization.publisherId' might fail?
+             // It creates the map if parent exists? No, dot notation requires map to exist? 
+             // Actually, simplest is just to merge with setDoc correctly.
+             
+             try {
+                 await setDoc(doc(db, 'user_sites', siteId), {
+                     monetization: { publisherId: newId }
+                 }, { merge: true });
+                 
+                 // Update local state (duplicate logic essentially)
+                 setAllSites(prev => prev.map(s => s.id === siteId ? { ...s, monetization: { ...(s.monetization || {}), publisherId: newId } } : s));
+             } catch (retryErr) {
+                 alert('Failed to set Publisher ID: ' + retryErr.message);
+             }
+        }
+    };
+
     if (loading) return <Loader text="Syncing Dashboard..." />;
     if (!user) return <div className="loading-state">Access Denied</div>;
     if (permissionError) return (
@@ -277,6 +345,16 @@ export default function AdminPage() {
                                                                 className={`tiny-btn ${site.adminStatus === 'banned' ? 'banned' : ''}`}
                                                                 title="Ban/Suspend"
                                                             >🔴</button>
+                                                        </div>
+                                                        <div style={{marginTop: '5px', textAlign: 'right'}}>
+                                                            <button 
+                                                                onClick={() => updatePublisherId(site.id, site.monetization?.publisherId)}
+                                                                className="tiny-btn active"
+                                                                style={{ fontSize: '0.7rem', width: '100%' }}
+                                                                title="Configure AdSense ID"
+                                                            >
+                                                                💰 {site.monetization?.publisherId ? 'Configured' : 'Setup Ads'}
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 ))}
