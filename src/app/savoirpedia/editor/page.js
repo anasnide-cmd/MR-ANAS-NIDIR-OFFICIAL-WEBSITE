@@ -6,6 +6,12 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// PrimeReact Imports
+import { Editor } from 'primereact/editor';
+import 'primereact/resources/themes/lara-dark-cyan/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
+
 export default function PublicWikiEditor() {
     const router = useRouter();
     const [user, setUser] = useState(null);
@@ -29,7 +35,8 @@ export default function PublicWikiEditor() {
 
     const handlePublish = async (e) => {
         e.preventDefault();
-        if (!title || !content) return alert('Title and Content are required.');
+        // Validation: Check if content is empty or just has tags
+        if (!title || !content || content === '<p><br></p>') return alert('Title and Content are required.');
         
         setIsSubmitting(true);
         try {
@@ -39,55 +46,18 @@ export default function PublicWikiEditor() {
                 title,
                 slug: slug + '-' + Date.now().toString().slice(-4),
                 category,
-                content: content.replace(/\n/g, '<br/>'),
+                content, // Content is already HTML from Editor
                 author: user.email,
                 authorId: user.uid,
                 date: new Date().toISOString(),
                 status: 'active'
             });
             
-            router.push('/blog');
+            router.push('/savoirpedia');
         } catch (err) {
             alert('Error publishing: ' + err.message);
             setIsSubmitting(false);
         }
-    };
-
-    const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        if (file.size > 1024 * 1024 * 2) { // 2MB Limit check
-             alert("File is too large (Max 2MB). Please use an external URL for large images.");
-             return;
-        }
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-             const base64data = reader.result;
-             const tag = `<img src="${base64data}" alt="Uploaded Image" class="wiki-image" />`;
-             setContent(prev => prev + '\n' + tag + '\n');
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const insertMedia = (type) => {
-        const url = prompt(`Enter ${type} URL:`);
-        if (!url) return;
-
-        let tag = '';
-        if (type === 'Image') {
-            tag = `<img src="${url}" alt="User Image" class="wiki-image" />`;
-        } else if (type === 'Video') {
-            // Simple YouTube Embed detection or direct video
-            if (url.includes('youtube.com') || url.includes('youtu.be')) {
-                 const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
-                 tag = `<div class="wiki-video-wrapper"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`;
-            } else {
-                tag = `<video src="${url}" controls class="wiki-video"></video>`;
-            }
-        }
-        setContent(prev => prev + '\n' + tag + '\n');
     };
 
     if (loading) return <div className="wiki-container">Checking credentials...</div>;
@@ -95,6 +65,7 @@ export default function PublicWikiEditor() {
     if (!user) {
         return (
             <div className="wiki-container centered">
+                <style jsx global>{` body { padding-top: 0 !important; } `}</style>
                 <div className="login-prompt">
                     <h2>Authentication Required</h2>
                     <p>You must be logged in to contribute to SavoirPedia.</p>
@@ -114,6 +85,7 @@ export default function PublicWikiEditor() {
 
     return (
         <div className="wiki-container">
+            <style jsx global>{` body { padding-top: 0 !important; } `}</style> 
             <header className="editor-header">
                 <h1>Create New Article</h1>
                 <p>Contributing as <strong>{user.email}</strong></p>
@@ -143,25 +115,14 @@ export default function PublicWikiEditor() {
                 </div>
 
                 <div className="form-group">
-                    <div className="content-toolbar">
-                        <label>Content (HTML Supported)</label>
-                        <div className="toolbar-actions">
-                            <button type="button" onClick={() => insertMedia('Image')} className="tool-btn">📷 URL</button>
-                            <label className="tool-btn" style={{cursor: 'pointer'}}>
-                                📁 Upload
-                                <input type="file" accept="image/*" onChange={handleFileUpload} style={{display: 'none'}} />
-                            </label>
-                            <button type="button" onClick={() => insertMedia('Video')} className="tool-btn">🎥 Video</button>
-                        </div>
+                    <label style={{marginBottom: '10px', display: 'block'}}>Content</label>
+                    <div className="editor-wrapper">
+                        <Editor 
+                            value={content} 
+                            onTextChange={(e) => setContent(e.htmlValue)} 
+                            style={{ height: '500px', fontSize: '1.1rem' }} 
+                        />
                     </div>
-                    <textarea 
-                        value={content}
-                        onChange={e => setContent(e.target.value)}
-                        placeholder="Write your article content here..."
-                        className="wiki-textarea"
-                        rows={15}
-                        required
-                    />
                 </div>
 
                 <div className="form-actions">
@@ -172,9 +133,6 @@ export default function PublicWikiEditor() {
                 </div>
             </form>
 
-            <style jsx global>{`
-                body { padding-top: 0 !important; }
-            `}</style>
             <style jsx>{`
                 .wiki-container {
                     max-width: 100%;
@@ -190,15 +148,21 @@ export default function PublicWikiEditor() {
                 .form-group { margin-bottom: 20px; }
                 .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #aaa; }
                 
-                .content-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-                .toolbar-actions { display: flex; gap: 10px; }
-                .tool-btn { 
-                    background: #333; color: #fff; border: 1px solid #444; padding: 4px 10px; 
-                    cursor: pointer; font-size: 0.8rem; border-radius: 4px;
+                /* Override PrimeReact Theme bits for better blend if needed */
+                .editor-wrapper :global(.p-editor-container .p-editor-toolbar) {
+                    background: #222;
+                    border-color: #333;
                 }
-                .tool-btn:hover { background: #444; }
+                .editor-wrapper :global(.p-editor-container .p-editor-content) {
+                    background: #1a1a1a;
+                    border-color: #333;
+                    color: #fff;
+                    font-family: inherit;
+                }
+                .editor-wrapper :global(.ql-snow .ql-stroke) { stroke: #ccc; }
+                .editor-wrapper :global(.ql-snow .ql-fill) { fill: #ccc; }
 
-                .wiki-input, .wiki-textarea {
+                .wiki-input {
                     width: 100%;
                     background: #222;
                     border: 1px solid #333;
@@ -207,7 +171,7 @@ export default function PublicWikiEditor() {
                     font-size: 1rem;
                     font-family: sans-serif;
                 }
-                .wiki-input:focus, .wiki-textarea:focus { border-color: #00f0ff; outline: none; }
+                .wiki-input:focus { border-color: #00f0ff; outline: none; }
 
                 .form-actions { display: flex; gap: 15px; align-items: center; margin-top: 30px; }
                 
