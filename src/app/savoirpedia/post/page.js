@@ -129,8 +129,32 @@ function WikiArticle() {
                 .wiki-content-render p { margin-bottom: 15px; line-height: 1.6; }
                 .wiki-content-render ul { margin-bottom: 15px; margin-left: 20px; }
                 
-                /* Media Styles */
-                .wiki-image { max-width: 100%; height: auto; border: 1px solid #333; margin: 10px 0; display: block; }
+                /* Media Styles - STRICT SAFEGUARDS */
+                .wiki-content-render img,
+                .wiki-image { 
+                    max-width: 100%; 
+                    height: auto; 
+                    margin: 15px auto; 
+                    display: block;
+                    border-radius: 4px;
+                    object-fit: contain; /* Ensure it never stretches weirdly */
+                }
+                
+                /* Prevent text overflow */
+                .wiki-content-render {
+                    overflow-wrap: break-word;
+                    word-wrap: break-word;
+                    word-break: break-word;
+                }
+
+                /* Responsive Tables if they exist in content */
+                .wiki-content-render table {
+                    display: block;
+                    width: 100%;
+                    overflow-x: auto;
+                    border-collapse: collapse;
+                }
+                
                 .wiki-video { max-width: 100%; width: 100%; margin: 10px 0; }
                 .wiki-video-wrapper {
                     position: relative; padding-bottom: 56.25%; /* 16:9 ratio */
