@@ -80,6 +80,30 @@ export default function BuildLayout({ children }) {
                 .btn-glow { background: #00f0ff; color: #000; border: none; box-shadow: 0 0 15px rgba(0, 240, 255, 0.3); }
                 .btn-outline { background: transparent; border: 1px solid rgba(255, 50, 50, 0.3); color: #ff3232; }
                 .builder-main { padding: 40px; }
+
+                @media (max-width: 768px) {
+                    .builder-header {
+                        padding: 15px 20px;
+                        flex-direction: column;
+                        gap: 15px;
+                        align-items: flex-start;
+                    }
+                    .builder-nav {
+                        width: 100%;
+                        justify-content: space-between;
+                        flex-wrap: wrap;
+                        gap: 10px;
+                    }
+                    .user-email { display: none; }
+                    .builder-main { padding: 20px; }
+                }
+
+                @media (max-width: 480px) {
+                    .builder-header { padding: 12px 15px; }
+                    .builder-logo { font-size: 1rem; }
+                    .btn-sm { padding: 6px 12px; font-size: 0.75rem; }
+                    .builder-main { padding: 15px; }
+                }
             `}</style>
         </div>
     );

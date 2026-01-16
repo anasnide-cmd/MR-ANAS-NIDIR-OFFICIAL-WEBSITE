@@ -9,9 +9,6 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activeHash, setActiveHash] = useState('');
   const pathname = usePathname();
-
-  // Hide Navbar on user sites
-  if (pathname?.startsWith('/s/')) return null;
   const [hoveredLink, setHoveredLink] = useState(null);
   const navbarRef = useRef(null);
   const lastScrollY = useRef(0);
@@ -112,9 +109,6 @@ export default function Navbar() {
     };
   }, [isOpen]);
 
-  // Don't show navbar on admin pages
-  if (pathname?.startsWith('/admin')) return null;
-
   const isLinkActive = (href) => {
     if (!href) return false;
     if (href === pathname) return true;
@@ -122,6 +116,10 @@ export default function Navbar() {
     if (href === '/' && pathname === '/') return true;
     return false;
   };
+
+  // Hide Navbar on user sites or admin pages
+  if (pathname?.startsWith('/s/')) return null;
+  if (pathname?.startsWith('/admin')) return null;
 
   const navLinks = [
     { href: '/', label: 'Home', icon: '🏠' },
@@ -155,8 +153,8 @@ export default function Navbar() {
               <Image
                 src="/assets/logo.jpg"
                 alt="Anas Nidir Logo"
-                width={52}
-                height={52}
+                width={64}
+                height={64}
                 className="navbar-logo"
                 priority
               />
@@ -199,7 +197,7 @@ export default function Navbar() {
           {/* CTA Button with Holographic Effect */}
           <div className="nav-cta">
             <Link href="#contact" className="cta-button" scroll={false}>
-              <span className="cta-text">Let's Connect</span>
+              <span className="cta-text">Let&apos;s Connect</span>
               <div className="cta-icon">
                 <div className="arrow-line"></div>
                 <div className="arrow-head"></div>
@@ -370,8 +368,8 @@ export default function Navbar() {
 
         .logo-3d {
           position: relative;
-          width: 52px;
-          height: 52px;
+          width: 64px;
+          height: 64px;
           transform-style: preserve-3d;
           transform: perspective(500px) rotateX(10deg);
           transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -385,7 +383,7 @@ export default function Navbar() {
           position: absolute;
           inset: 0;
           background: rgba(255, 255, 255, 0.05);
-          border-radius: 12px;
+          border-radius: 14px;
           border: 2px solid rgba(255, 255, 255, 0.1);
           display: flex;
           align-items: center;
@@ -406,7 +404,7 @@ export default function Navbar() {
           position: absolute;
           inset: 0;
           background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(0, 255, 149, 0.3));
-          border-radius: 12px;
+          border-radius: 14px;
           transform: translateZ(-5px) translateY(5px);
           filter: blur(2px);
           opacity: 0.5;
@@ -419,7 +417,7 @@ export default function Navbar() {
         }
 
         .navbar-logo {
-          border-radius: 10px;
+          border-radius: 12px;
           object-fit: cover;
           transition: all 0.3s ease;
         }
@@ -509,6 +507,7 @@ export default function Navbar() {
           z-index: 2;
           border: 1px solid transparent;
           cursor: pointer;
+          pointer-events: auto;
         }
 
         .nav-link:hover {
@@ -600,6 +599,7 @@ export default function Navbar() {
           overflow: hidden;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           cursor: pointer;
+          pointer-events: auto;
         }
 
         .cta-button:hover {

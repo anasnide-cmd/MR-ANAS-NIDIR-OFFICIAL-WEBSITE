@@ -23,8 +23,6 @@ function MrBuildEditorContent() {
         },
         customHtml: '',
         customCss: '',
-        customHtml: '',
-        customCss: '',
         status: 'draft', // public, draft, private
         monetization: {
             enabled: false,
@@ -113,10 +111,7 @@ function MrBuildEditorContent() {
                                 socials: data.socials || { instagram: '', tiktok: '', twitter: '' },
                                 customHtml: data.customHtml || '',
                                 customCss: data.customCss || '',
-                                customHtml: data.customHtml || '',
-                                customCss: data.customCss || '',
                                 status: data.status || 'draft',
-                                adminStatus: data.adminStatus || 'active',
                                 adminStatus: data.adminStatus || 'active',
                                 monetization: data.monetization || { enabled: false, publisherId: '' },
                                 views: data.views || 0

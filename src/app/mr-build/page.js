@@ -31,8 +31,8 @@ export default function BuildLandingPage() {
                         </div>
                         <pre>
                             <code>
-<span className="keyword">deploy</span> <span className="string">"my-super-site"</span><br/>
-<span className="comment">// Initializing quantum render...</span><br/>
+<span className="keyword">deploy</span> <span className="string">&quot;my-super-site&quot;</span><br/>
+<span className="comment">{'// Initializing quantum render...'}</span><br/>
 <span className="success">✓ Core Loaded (0.2s)</span><br/>
 <span className="success">✓ Assets Optimized</span><br/>
 <span className="highlight">&gt;&gt; SITE LIVE AT /s/my-super-site</span>

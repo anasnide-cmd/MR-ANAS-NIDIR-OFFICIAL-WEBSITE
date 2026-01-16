@@ -84,7 +84,7 @@ export default function Home() {
           <div className="logo-container">
             <div className="logo-pulse"></div>
             <div className="logo-glow">
-              <img src="/assets/logo.jpg" alt="Logo" className="logo" />
+              <Image src="/assets/logo.jpg" alt="Logo" width={400} height={400} className="logo" style={{ objectFit: 'contain' }} />
             </div>
           </div>
           <h1 className="hero-title animate-reveal">
@@ -182,7 +182,7 @@ export default function Home() {
             <p className="highlight">{settings.bioText1}</p>
             <p>{settings.bioText2}</p>
             <div className="quote-box">
-              <span className="quote-icon">"</span>
+              <span className="quote-icon">&quot;</span>
               <p>{settings.quote}</p>
             </div>
           </div>
@@ -269,19 +269,28 @@ export default function Home() {
         }
         .logo-glow {
           position: relative;
-          width: 320px;
-          height: auto;
+          /* Fluid responsive sizing: min 180px, preferred 25vw, max 400px */
+          width: clamp(180px, 25vw, 400px);
+          height: clamp(180px, 25vw, 400px);
           margin: 0 auto;
-          border-radius: 40px;
+          border-radius: 30px;
           overflow: hidden;
-          box-shadow: 0 0 50px rgba(0, 240, 255, 0.2);
-          border: 1px solid rgba(0, 240, 255, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
-        .logo { width: 100%; display: block; }
+        .logo { 
+          width: 100%; 
+          height: 100%; 
+          display: block; 
+          object-fit: contain;
+        }
         .logo-pulse {
           position: absolute;
           top: 50%; left: 50%;
-          width: 350px; height: 350px;
+          /* Fluid responsive: slightly larger than logo */
+          width: clamp(200px, 28vw, 450px); 
+          height: clamp(200px, 28vw, 450px);
           transform: translate(-50%, -50%);
           border: 1px solid rgba(0, 240, 255, 0.2);
           border-radius: 50px;
@@ -539,12 +548,54 @@ export default function Home() {
         }
 
         @media (max-width: 768px) {
-          .section-title { font-size: 2.2rem; }
-          .hero-title { font-size: 3.5rem; }
-          .project-grid { grid-template-columns: 1fr; }
-          .hero-buttons { flex-direction: column; }
-          .stat-circle { width: 150px; height: 150px; }
-          .stat-number { font-size: 2rem; }
+          .section { padding: 80px 20px; }
+          .section-title { font-size: 2rem; }
+          .section-header { margin-bottom: 40px; }
+          .hero-title { font-size: 2.5rem; letter-spacing: -1px; }
+          .hero-subtitle { font-size: 0.9rem; letter-spacing: 2px; margin-bottom: 30px; }
+          .project-grid { grid-template-columns: 1fr; gap: 20px; }
+          .project-card { padding: 30px; border-radius: 20px; }
+          .project-card h3 { font-size: 1.4rem; }
+          .hero-buttons { flex-direction: column; gap: 15px; }
+          .btn-premium, .btn-outline { width: 100%; text-align: center; padding: 14px 30px; }
+          .stat-circle { width: 130px; height: 130px; }
+          .stat-number { font-size: 1.8rem; }
+          .stat-label { font-size: 0.6rem; letter-spacing: 2px; }
+          .stats-section { padding: 60px 20px; }
+          .stats-container { gap: 20px; }
+          .logo-glow { width: 280px; height: 280px; }
+          .logo-pulse { width: 310px; height: 310px; }
+          .bio-container { gap: 40px; }
+          .bio-text h2 { font-size: 2.5rem; }
+          .highlight { font-size: 1.1rem; }
+          .bio-experience { bottom: -20px; right: -10px; padding: 20px; border-radius: 20px; }
+          .quote-box { padding: 25px; }
+          .quote-icon { font-size: 3rem; }
+          .contact-link { font-size: clamp(1.5rem, 6vw, 3rem); word-break: break-all; }
+          .social-wrap { flex-direction: column; gap: 15px; }
+          .asset-grid { grid-template-columns: 1fr; }
+          .asset-link { font-size: 1rem; padding: 20px; }
+        }
+
+        @media (max-width: 480px) {
+          .section { padding: 60px 15px; }
+          .section-title { font-size: 1.6rem; }
+          .hero-title { font-size: 2rem; }
+          .hero-subtitle { font-size: 0.75rem; letter-spacing: 1px; }
+          .logo-glow { width: 200px; height: 200px; }
+          .logo-pulse { width: 230px; height: 230px; }
+          .logo-container { margin-bottom: 30px; }
+          .project-card { padding: 25px; }
+          .project-card h3 { font-size: 1.2rem; }
+          .project-card p { font-size: 0.9rem; line-height: 1.6; }
+          .card-icon { font-size: 2.5rem; }
+          .stat-circle { width: 100px; height: 100px; }
+          .stat-number { font-size: 1.4rem; }
+          .stat-label { font-size: 0.5rem; }
+          .bio-text h2 { font-size: 2rem; }
+          .bio-experience { position: relative; bottom: auto; right: auto; margin-top: 20px; align-self: center; }
+          .bio-visual { display: flex; flex-direction: column; align-items: center; }
+          .scroll-indicator { display: none; }
         }
       `}</style>
     </>

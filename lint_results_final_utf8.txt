@@ -1,0 +1,72 @@
+﻿
+> temp_app@0.1.0 lint
+> eslint
+
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\_legacy_site\firebase-config.js
+  1:0  error  Parsing error: Unexpected token (1:0)
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\mr-build\dashboard\page.js
+  57:8  warning  React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\mr-build\page.js
+  35:27  error  Comments inside children section of tag should be placed inside braces  react/jsx-no-comment-textnodes
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\mr-search\results\page.js
+  28:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  26 |     useEffect(() => {
+  27 |         if (q) {
+> 28 |             setQuery(q);
+     |             ^^^^^^^^ Avoid calling setState() directly within an effect
+  29 |             setLoading(true);
+  30 |             getSearchResults(q).then(res => {
+  31 |                 setResults(res);  react-hooks/set-state-in-effect
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\savoirpedia\editor\page.js
+  68:8  warning  React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\components\NotificationCenter.js
+  49:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  47 |         );
+  48 |         if (urgent) {
+> 49 |             setActiveUrgent(urgent);
+     |             ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  50 |         } else {
+  51 |             setActiveUrgent(null);
+  52 |         }  react-hooks/set-state-in-effect
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\components\ReactBits\CardNav.js
+   77:6   warning  React Hook useLayoutEffect has a missing dependency: 'createTimeline'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+  120:11  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  118 |   useEffect(() => {
+  119 |       if (isExpanded) {
+> 120 |           setIsHamburgerOpen(prev => (prev ? false : prev));
+      |           ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  121 |           const tl = tlRef.current;
+  122 |           if (tl) {
+  123 |               tl.reverse();  react-hooks/set-state-in-effect
+  129:6   warning  React Hook useEffect has a missing dependency: 'isExpanded'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            react-hooks/exhaustive-deps
+
+Γ£û 9 problems (5 errors, 4 warnings)
+

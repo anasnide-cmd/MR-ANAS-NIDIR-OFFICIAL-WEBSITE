@@ -1,18 +1,27 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { auth, db } from '../../../lib/firebase';
 import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
-// PrimeReact Imports
-import { Editor } from 'primereact/editor';
+// PrimeReact Imports - Dynamic for Editor to avoid SSR issues
+const Editor = dynamic(() => import('primereact/editor').then(mod => mod.Editor), { ssr: false });
 import 'primereact/resources/themes/lara-dark-cyan/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 
 export default function PublicWikiEditor() {
+    return (
+        <Suspense fallback={<div className="wiki-container">Loading Editor...</div>}>
+            <PublicWikiEditorContent />
+        </Suspense>
+    );
+}
+
+function PublicWikiEditorContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const editId = searchParams.get('id');
@@ -56,7 +65,7 @@ export default function PublicWikiEditor() {
             }
         });
         return () => unsub();
-    }, [editId]);
+    }, [editId, router]);
 
     const handlePublish = async (e, status = 'active') => {
         if (e) e.preventDefault();

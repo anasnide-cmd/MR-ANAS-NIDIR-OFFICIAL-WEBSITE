@@ -17,17 +17,22 @@ function SearchResultsContent() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('all');
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [searchTime, setSearchTime] = useState('0.45');
 
     const toggleTheme = () => {
         window.dispatchEvent(new Event('mr-search-theme-toggle'));
     };
 
+    // Synchronize query state with URL if it changes (e.g. back button)
+    if (q && q !== query) {
+        setQuery(q);
+    }
+
     useEffect(() => {
         if (q) {
-            setQuery(q);
-            setLoading(true);
             getSearchResults(q).then(res => {
                 setResults(res);
+                setSearchTime(`0.${Math.floor(Math.random() * 90) + 10}`);
                 setLoading(false);
             });
         }
@@ -80,7 +85,7 @@ function SearchResultsContent() {
 
             <main className="results-main">
                 <p className="result-stats">
-                    {loading ? 'Searching cosmos...' : `About ${results.length * 142000} results (0.${Math.floor(Math.random() * 90) + 10} seconds)`}
+                    {loading ? 'Searching cosmos...' : `About ${results.length * 142000} results (${searchTime} seconds)`}
                 </p>
 
                 {loading ? (

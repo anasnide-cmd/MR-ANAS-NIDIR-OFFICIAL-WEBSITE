@@ -1,0 +1,179 @@
+﻿
+> temp_app@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.1 (Turbopack)
+
+  Creating an optimized production build ...
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files\
+nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (:String) [   
+ ], RemoteExceptio    
+n
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+> Build error occurred
+Error: Turbopack 
+build failed with 3 
+errors:
+./src/app/savoirpedia/
+page.js:1:10
+Ecmascript file had 
+an error
+[0m[31m[1m>[22m[3
+9m[90m 1 |[39m 
+[36mimport[39m { 
+useEffect[33m,[39m 
+useState } 
+[36mfrom[39m [32m'r
+eact'[39m[33m;[39m
+ [90m   |[39m       
+   [31m[1m^[22m[39
+m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m
+ [90m 2 |[39m 
+[36mimport[39m { db 
+} [36mfrom[39m [32m
+'../../lib/firebase'[
+39m[33m;[39m
+ [90m 3 |[39m 
+[36mimport[39m { 
+collection[33m,[39m 
+query[33m,[39m 
+orderBy[33m,[39m 
+getDocs } 
+[36mfrom[39m [32m'f
+irebase/firestore'[39
+m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m 
+[33mLink[39m 
+[36mfrom[39m [32m'n
+ext/link'[39m[33m;[
+39m[0m
+
+You're importing a 
+component that needs 
+`useEffect`. This 
+React Hook only works 
+in a Client 
+Component. To fix, 
+mark the file (or its 
+parent) with the 
+`"use client"` 
+directive.
+
+ Learn more: https://n
+extjs.org/docs/app/api
+-reference/directives/
+use-client
+
+
+
+
+./src/app/savoirpedia/
+page.js:1:21
+Ecmascript file had 
+an error
+[0m[31m[1m>[22m[3
+9m[90m 1 |[39m 
+[36mimport[39m { 
+useEffect[33m,[39m 
+useState } 
+[36mfrom[39m [32m'r
+eact'[39m[33m;[39m
+ [90m   |[39m       
+              [31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m
+ [90m 2 |[39m 
+[36mimport[39m { db 
+} [36mfrom[39m [32m
+'../../lib/firebase'[
+39m[33m;[39m
+ [90m 3 |[39m 
+[36mimport[39m { 
+collection[33m,[39m 
+query[33m,[39m 
+orderBy[33m,[39m 
+getDocs } 
+[36mfrom[39m [32m'f
+irebase/firestore'[39
+m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m 
+[33mLink[39m 
+[36mfrom[39m [32m'n
+ext/link'[39m[33m;[
+39m[0m
+
+You're importing a 
+component that needs 
+`useState`. This 
+React Hook only works 
+in a Client 
+Component. To fix, 
+mark the file (or its 
+parent) with the 
+`"use client"` 
+directive.
+
+ Learn more: https://n
+extjs.org/docs/app/api
+-reference/directives/
+use-client
+
+
+
+
+./src/app/savoirpedia
+Invalid import
+'client-only' cannot 
+be imported from a 
+Server Component 
+module. It should 
+only be used from a 
+Client Component.
+The error was caused 
+by using 
+'styled-jsx'. It only 
+works in a Client 
+Component but none of 
+its parents are 
+marked with "use 
+client", so they're 
+Server Components by 
+default.
+
+
+
+    at <unknown> (./sr
+c/app/savoirpedia/page
+.js:1:10)
+    at <unknown> (./sr
+c/app/savoirpedia/page
+.js:1:21)

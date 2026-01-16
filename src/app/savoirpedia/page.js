@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { db } from '../../lib/firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function BlogHub() {
     const [posts, setPosts] = useState([]);
@@ -111,15 +112,13 @@ export default function BlogHub() {
                                         {filteredPosts.map(post => {
                                             // Extract first image
                                             const imgMatch = post.content.match(/<img[^>]+src="([^">]+)"/);
-                                            const thumbnail = imgMatch ? imgMatch[1] : null;
+                                            const thumbnail = (imgMatch && imgMatch[1]) ? imgMatch[1] : '/assets/logo.jpg';
                                             
                                             return (
                                                 <article key={post.id} className="post-card">
-                                                    {thumbnail && (
                                                         <div className="card-image">
-                                                            <img src={thumbnail} alt={post.title} />
+                                                            <Image src={thumbnail} alt={post.title} width={400} height={180} />
                                                         </div>
-                                                    )}
                                                     <div className="card-content">
                                                         <Link href={`/savoirpedia/post?slug=${post.slug || '#'}`} className="card-title">
                                                             {post.title}

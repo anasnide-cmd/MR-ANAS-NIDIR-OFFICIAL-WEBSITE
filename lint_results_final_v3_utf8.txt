@@ -1,0 +1,41 @@
+﻿
+> temp_app@0.1.0 lint
+> eslint
+
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\mr-search\results\page.js
+  33:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  31 |     useEffect(() => {
+  32 |         if (q) {
+> 33 |             setLoading(true);
+     |             ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  34 |             getSearchResults(q).then(res => {
+  35 |                 setResults(res);
+  36 |                 setSearchTime(`0.${Math.floor(Math.random() * 90) + 10}`);  react-hooks/set-state-in-effect
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\components\ReactBits\CardNav.js
+  120:32  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  118 |   useLayoutEffect(() => {
+  119 |       if (isExpanded) {
+> 120 |           if (isHamburgerOpen) setIsHamburgerOpen(false);
+      |                                ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  121 |           const tl = tlRef.current;
+  122 |           if (tl) {
+  123 |               tl.reverse();  react-hooks/set-state-in-effect
+
+Γ£û 2 problems (2 errors, 0 warnings)
+

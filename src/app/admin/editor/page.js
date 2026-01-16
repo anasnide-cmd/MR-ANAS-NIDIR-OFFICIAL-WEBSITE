@@ -19,6 +19,17 @@ function EditorContent() {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
 
+    const loadPost = async (id) => {
+        const d = await getDoc(doc(db, 'posts', id));
+        if (d.exists()) {
+            const data = d.data();
+            setTitle(data.title);
+            setSlug(data.slug);
+            setContent(data.content);
+        }
+        setLoading(false);
+    };
+
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (u) => {
             setUser(u);
@@ -30,17 +41,6 @@ function EditorContent() {
         });
         return () => unsub();
     }, [editId]);
-
-    const loadPost = async (id) => {
-        const d = await getDoc(doc(db, 'posts', id));
-        if (d.exists()) {
-            const data = d.data();
-            setTitle(data.title);
-            setSlug(data.slug);
-            setContent(data.content);
-        }
-        setLoading(false);
-    };
 
     const handleSave = async (e) => {
         e.preventDefault();

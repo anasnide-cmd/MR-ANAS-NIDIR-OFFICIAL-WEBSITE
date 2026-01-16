@@ -4,6 +4,7 @@ import { db } from '../../../lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 function WikiArticle() {
     const searchParams = useSearchParams();
@@ -59,7 +60,7 @@ function WikiArticle() {
                     
                     <div className="wiki-infobox">
                         <div className="infobox-header">{article.title}</div>
-                        <img src="/assets/logo.jpg" alt="Featured" className="infobox-image" onError={(e) => e.target.style.display='none'} />
+                        <Image src="/assets/logo.jpg" alt="Featured" width={300} height={300} className="infobox-image" />
                         <table className="infobox-data">
                             <tbody>
                                 <tr>

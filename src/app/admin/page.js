@@ -203,7 +203,7 @@ export default function AdminPage() {
                         <li>Open Firebase Console -&gt; Firestore</li>
                         <li>Find collection <code>users</code></li>
                         <li>Find document matching your UID: <code>{user.uid}</code></li>
-                        <li>Add field: <code>role: "admin"</code></li>
+                        <li>Add field: <code>role: &quot;admin&quot;</code></li>
                     </ol>
                     <button onClick={fetchDashboardData} className="btn glow-blue">RETRY CONNECTION</button>
                 </div>

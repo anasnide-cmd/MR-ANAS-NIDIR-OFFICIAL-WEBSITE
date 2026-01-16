@@ -54,7 +54,7 @@ export default function BuildDashboard() {
             }
         });
         return () => checkUser();
-    }, []);
+    }, [router]);
 
     // InitialAuth Loader before we even know if we are logged in
     // However, we want to show the dashboard skeleton if we are just fetching data.
@@ -299,6 +299,46 @@ export default function BuildDashboard() {
                 
                 @media (max-width: 1024px) {
                     .status-grid { grid-template-columns: 1fr; }
+                }
+
+                @media (max-width: 768px) {
+                    .dashboard-container { padding-bottom: 60px; }
+                    .dashboard-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 20px;
+                        padding: 25px 0;
+                        margin-bottom: 40px;
+                    }
+                    .user-persona { gap: 15px; }
+                    .avatar-glow { width: 50px; height: 50px; border-radius: 15px; }
+                    .avatar-initial { font-size: 1.4rem; }
+                    .welcome-text h1 { font-size: 1.6rem; }
+                    .welcome-text p { font-size: 0.85rem; }
+                    .header-actions { width: 100%; }
+                    .btn-signout { width: 100%; }
+                    .status-card { padding: 25px; border-radius: 25px; }
+                    .card-header { margin-bottom: 25px; }
+                    .card-header h3 { font-size: 0.85rem; }
+                    .site-item-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+                    .site-mini-preview { width: 40px; height: 40px; }
+                    .site-meta-row { flex-wrap: wrap; gap: 8px; }
+                    .site-actions-row.small { width: 100%; }
+                    .btn-action.compact { flex: 1; text-align: center; }
+                    .billing-box { padding: 20px; }
+                }
+
+                @media (max-width: 480px) {
+                    .dashboard-header { padding: 20px 0; margin-bottom: 30px; }
+                    .avatar-glow { width: 45px; height: 45px; }
+                    .welcome-text h1 { font-size: 1.4rem; }
+                    .protocol-tag { font-size: 0.55rem; }
+                    .status-card { padding: 20px; border-radius: 20px; }
+                    .site-name { font-size: 0.95rem; }
+                    .slug-tag { font-size: 0.7rem; }
+                    .btn-construct.small { padding: 12px 16px; width: 100%; }
+                    .add-site-container { margin-top: 15px; }
+                    .res-header { font-size: 0.7rem; }
                 }
             `}</style>
         </div>

@@ -1,9 +1,10 @@
 'use client';
-import { useLayoutEffect, useRef, useState, useEffect } from 'react';
-import { gsap } from 'gsap';
+import { useLayoutEffect, useRef, useState, useEffect, useCallback } from 'react';
+import gsap from 'gsap';
 import { GoArrowUpRight } from 'react-icons/go';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const CardNav = ({
   logo = '/assets/logo.jpg',
@@ -22,123 +23,101 @@ const CardNav = ({
   const cardsRef = useRef([]);
   const tlRef = useRef(null);
   const pathname = usePathname();
+  const [prevPathname, setPrevPathname] = useState(pathname);
+
+  // Synchronize icon state on route change during render
+  if (pathname !== prevPathname) {
+      setPrevPathname(pathname);
+      if (isHamburgerOpen) setIsHamburgerOpen(false);
+  }
 
   const calculateHeight = () => {
     const navEl = navRef.current;
-    if (!navEl) return 260;
+    if (!navEl) return 450;
 
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
     if (isMobile) {
-      // In a real scenario, we might want to dynamically measure content.
-      // For now, returning 'auto' via GSAP can be tricky, so we estimate or use a large enough value
-      // or rely on `height: 'auto'` if GSAP supports it well in this context.
-      // simpler approach: fixed large height or simple auto calculation.
-      return 'auto';
+      return 600;
     }
-    return 300; // Increased height for desktop
+    return 450;
   };
-
-  const createTimeline = () => {
-    const navEl = navRef.current;
-    if (!navEl) return null;
-
-    // Initial states
-    gsap.set(navEl, { height: 70, overflow: 'hidden' });
-    gsap.set(cardsRef.current, { y: 50, opacity: 0 });
-
-    const tl = gsap.timeline({ paused: true });
-
-    tl.to(navEl, {
-      height: calculateHeight,
-      duration: 0.5,
-      ease
-    });
-
-    tl.to(cardsRef.current, { 
-      y: 0, 
-      opacity: 1, 
-      duration: 0.4, 
-      ease, 
-      stagger: 0.1 
-    }, '-=0.2');
-
-    return tl;
-  };
-
-  useLayoutEffect(() => {
-    const tl = createTimeline();
-    tlRef.current = tl;
-
-    return () => {
-      tl?.kill();
-      tlRef.current = null;
-    };
-  }, [ease, items]);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (!tlRef.current) return;
-      if (isExpanded) {
-        // Recalculate if open
-         const newHeight = calculateHeight();
-         gsap.set(navRef.current, { height: newHeight });
-      } else {
-         // Reset if closed
-         gsap.set(navRef.current, { height: 70 });
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isExpanded]);
+    // Initial State
+    if (navRef.current) {
+      gsap.set(navRef.current, { height: 70, overflow: 'hidden' });
+      gsap.set(cardsRef.current, { y: 50, opacity: 0 });
+    }
+  }, []);
 
   const toggleMenu = () => {
-    const tl = tlRef.current;
-    if (!tl) return;
-    
+    const navEl = navRef.current;
+    if (!navEl) return;
+
     if (!isExpanded) {
+      // OPEN
       setIsHamburgerOpen(true);
       setIsExpanded(true);
-      tl.play();
+      
+      const targetHeight = calculateHeight();
+
+      gsap.to(navEl, {
+        height: targetHeight,
+        duration: 0.5,
+        ease: ease
+      });
+
+      gsap.to(cardsRef.current, { 
+        y: 0, 
+        opacity: 1, 
+        duration: 0.4, 
+        ease: ease, 
+        stagger: 0.1,
+        delay: 0.1
+      });
+
     } else {
+      // CLOSE
       setIsHamburgerOpen(false);
-      tl.reverse();
-      // Wait for reverse to finish to set expanded false? 
-      // Actually GSAP reverse maps perfectly. 
-      // We set isExpanded to false immediately or after safely?
-      // Better to use state to track visual state.
-      // But for logical `open` class, we toggle immediately or onReverseComplete.
-      // Let's toggle immediately to match user intent, but maybe delay render logic if needed.
-      // For simplicity/safety with GSAP:
-      tl.eventCallback('onReverseComplete', () => setIsExpanded(false));
+      
+      gsap.to(navEl, {
+        height: 70,
+        duration: 0.5,
+        ease: ease,
+        onComplete: () => setIsExpanded(false)
+      });
+
+      gsap.to(cardsRef.current, { 
+        y: 50, 
+        opacity: 0, 
+        duration: 0.3, 
+        ease: ease
+      });
     }
   };
 
   // Close menu when route changes
   useEffect(() => {
-      if (isExpanded) {
-          setIsHamburgerOpen(false);
-          const tl = tlRef.current;
-          if (tl) {
-              tl.reverse();
-              tl.eventCallback('onReverseComplete', () => setIsExpanded(false));
-          } else {
-              setIsExpanded(false);
-          }
+    if (isExpanded) {
+      setIsExpanded(false);
+      setIsHamburgerOpen(false);
+      // Reset animations
+      if (navRef.current) {
+         gsap.to(navRef.current, { height: 70, duration: 0.5, ease: ease });
+         gsap.to(cardsRef.current, { y: 50, opacity: 0, duration: 0.3, ease: ease });
       }
+    }
   }, [pathname]);
 
   // Close on click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isExpanded && navRef.current && !navRef.current.contains(event.target)) {
-        setIsHamburgerOpen(false);
-        const tl = tlRef.current;
-        if (tl) {
-            tl.reverse();
-            tl.eventCallback('onReverseComplete', () => setIsExpanded(false));
-        } else {
-            setIsExpanded(false);
-        }
+         // Close logic
+         setIsExpanded(false);
+         setIsHamburgerOpen(false);
+         gsap.to(navRef.current, { height: 70, duration: 0.5, ease: ease });
+         gsap.to(cardsRef.current, { y: 50, opacity: 0, duration: 0.3, ease: ease });
       }
     };
 
@@ -172,7 +151,7 @@ const CardNav = ({
           </div>
 
           <div className="logo-container">
-            <img src={logo} alt={logoAlt} className="logo" />
+            <Image src={logo} alt={logoAlt} width={48} height={48} className="logo" priority />
             <span className="logo-text">ANAS NIDIR</span>
           </div>
 
@@ -181,7 +160,7 @@ const CardNav = ({
             className="card-nav-cta-button"
             style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
           >
-            Let's Talk
+            Let&apos;s Talk
           </Link>
         </div>
 
@@ -267,15 +246,15 @@ const CardNav = ({
             gap: 12px;
         }
         .logo {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             object-fit: cover;
         }
         .logo-text {
             font-weight: 800;
-            letter-spacing: 1px;
-            font-size: 0.9rem;
+            letter-spacing: 1.5px;
+            font-size: 1rem;
             color: #fff;
         }
 

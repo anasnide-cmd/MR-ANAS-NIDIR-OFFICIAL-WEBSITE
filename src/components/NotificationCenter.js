@@ -7,20 +7,18 @@ import { onAuthStateChanged } from 'firebase/auth';
 export default function NotificationCenter() {
     const [messages, setMessages] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
-    const [activeUrgent, setActiveUrgent] = useState(null);
-    const [dismissedMessages, setDismissedMessages] = useState([]);
+    const [dismissedMessages, setDismissedMessages] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('dismissed_messages');
+            return saved ? JSON.parse(saved) : [];
+        }
+        return [];
+    });
 
     useEffect(() => {
-        // Load dismissed messages from local storage
-        const saved = localStorage.getItem('dismissed_messages');
-        if (saved) setDismissedMessages(JSON.parse(saved));
-
         const unsubAuth = onAuthStateChanged(auth, (user) => {
             if (!user) return;
 
-            // Query Messages
-            // Note: Firestore can't do OR across collections or complex inequality easily without composite indexes
-            // We'll fetch all and filter in memory for simplicity/speed in this small scale app
             const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
             
             const unsubMsg = onSnapshot(q, (snap) => {
@@ -32,13 +30,6 @@ export default function NotificationCenter() {
                 );
 
                 setMessages(visible);
-
-                // Check for new URGENT messages that aren't dismissed
-                const urgent = visible.find(m => 
-                    m.priority === 'urgent' && 
-                    !dismissedMessages.includes(m.id)
-                );
-                if (urgent) setActiveUrgent(urgent);
             });
 
             return () => unsubMsg();
@@ -47,11 +38,15 @@ export default function NotificationCenter() {
         return () => unsubAuth();
     }, []);
 
+    const activeUrgent = messages.find(m => 
+        m.priority === 'urgent' && 
+        !dismissedMessages.includes(m.id)
+    );
+
     const dismissMessage = (id) => {
         const updated = [...dismissedMessages, id];
         setDismissedMessages(updated);
         localStorage.setItem('dismissed_messages', JSON.stringify(updated));
-        if (activeUrgent?.id === id) setActiveUrgent(null);
     };
 
     const unreadCount = messages.filter(m => !dismissedMessages.includes(m.id)).length;

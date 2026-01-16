@@ -1,0 +1,143 @@
+﻿
+> temp_app@0.1.0 lint
+> eslint
+
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\_legacy_site\firebase-config.js
+  1:0  error  Parsing error: Unexpected token (1:0)
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\admin\editor\page.js
+  26:17  error  Error: Cannot access variable before it is declared
+
+`loadPost` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  24 |             setUser(u);
+  25 |             if (editId) {
+> 26 |                 loadPost(editId);
+     |                 ^^^^^^^^ `loadPost` accessed before it is declared
+  27 |             } else {
+  28 |                 setLoading(false);
+  29 |             }
+
+  32 |     }, [editId]);
+  33 |
+> 34 |     const loadPost = async (id) => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |         const d = await getDoc(doc(db, 'posts', id));
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |         if (d.exists()) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |             const data = d.data();
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 38 |             setTitle(data.title);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 39 |             setSlug(data.slug);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |             setContent(data.content);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 41 |         }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 43 |     };
+     | ^^^^^^^ `loadPost` is declared here
+  44 |
+  45 |     const handleSave = async (e) => {
+  46 |         e.preventDefault();  react-hooks/immutability
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\admin\page.js
+  206:52  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  206:58  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\mr-build\dashboard\page.js
+  57:8  warning  React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\mr-build\login\page.js
+  102:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\mr-build\page.js
+  34:66  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`         react/no-unescaped-entities
+  34:80  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`         react/no-unescaped-entities
+  35:27  error  Comments inside children section of tag should be placed inside braces  react/jsx-no-comment-textnodes
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\mr-search\results\page.js
+  83:114  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  81 |             <main className="results-main">
+  82 |                 <p className="result-stats">
+> 83 |                     {loading ? 'Searching cosmos...' : `About ${results.length * 142000} results (0.${Math.floor(Math.random() * 90) + 10} seconds)`}
+     |                                                                                                                  ^^^^^^^^^^^^^ Cannot call impure function
+  84 |                 </p>
+  85 |
+  86 |                 {loading ? (  react-hooks/purity
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\page.js
+   87:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  185:44  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\s\[slug]\UserSiteClient.js
+  62:44  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\savoirpedia\editor\page.js
+  59:8  warning  React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\savoirpedia\page.js
+  120:61  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\app\savoirpedia\post\page.js
+  62:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\components\Navbar.js
+   15:41  error  React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render   react-hooks/rules-of-hooks
+   16:21  error  React Hook "useRef" is called conditionally. React Hooks must be called in the exact same order in every component render     react-hooks/rules-of-hooks
+   17:23  error  React Hook "useRef" is called conditionally. React Hooks must be called in the exact same order in every component render     react-hooks/rules-of-hooks
+   18:37  error  React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render   react-hooks/rules-of-hooks
+   21:3   error  React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+   73:3   error  React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+   86:3   error  React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  103:3   error  React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  202:45  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                               react/no-unescaped-entities
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\components\NotificationCenter.js
+  16:20  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  14 |         // Load dismissed messages from local storage
+  15 |         const saved = localStorage.getItem('dismissed_messages');
+> 16 |         if (saved) setDismissedMessages(JSON.parse(saved));
+     |                    ^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  17 |
+  18 |         const unsubAuth = onAuthStateChanged(auth, (user) => {
+  19 |             if (!user) return;  react-hooks/set-state-in-effect
+  48:8   warning  React Hook useEffect has a missing dependency: 'dismissedMessages'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/exhaustive-deps
+
+C:\Users\User\MR-ANAS-NIDIR-OFFICIAL-WEBSITE\src\components\ReactBits\CardNav.js
+   76:6   warning  React Hook useLayoutEffect has a missing dependency: 'createTimeline'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+  119:11  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  117 |   useEffect(() => {
+  118 |       if (isExpanded) {
+> 119 |           setIsHamburgerOpen(false);
+      |           ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  120 |           const tl = tlRef.current;
+  121 |           if (tl) {
+  122 |               tl.reverse();  react-hooks/set-state-in-effect
+  128:6   warning  React Hook useEffect has a missing dependency: 'isExpanded'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+  175:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @next/next/no-img-element
+  184:16  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+
+Γ£û 32 problems (22 errors, 10 warnings)
+

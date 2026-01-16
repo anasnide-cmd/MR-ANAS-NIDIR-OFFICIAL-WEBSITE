@@ -59,7 +59,7 @@ export default function UserSiteClient() {
     if (!site) return (
         <div className="not-found">
             <h1>404: Node Offline</h1>
-            <p>The digital architecture you're looking for is currently offline or non-existent.</p>
+            <p>The digital architecture you&apos;re looking for is currently offline or non-existent.</p>
         </div>
     );
 

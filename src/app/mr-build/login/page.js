@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { auth } from '../../../lib/firebase';
 import {
     signInWithEmailAndPassword,
@@ -99,7 +100,7 @@ export default function BuildLogin() {
                 <div className="divider"><span>OR</span></div>
 
                 <button onClick={handleGoogle} className="btn-google">
-                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="" />
+                    <Image src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" width={18} height={18} />
                     Sync Google Identity
                 </button>
 
@@ -180,6 +181,18 @@ export default function BuildLogin() {
 
                 .toggle-auth { margin-top: 30px; font-size: 0.85rem; opacity: 0.6; }
                 .toggle-auth button { background: none; border: none; color: #00f0ff; font-weight: 800; margin-left: 8px; cursor: pointer; }
+
+                @media (max-width: 480px) {
+                    .login-wrapper { height: auto; min-height: 80vh; padding: 20px; }
+                    .login-card { padding: 30px 25px; border-radius: 20px; }
+                    .shield-icon { font-size: 2.5rem; margin-bottom: 15px; }
+                    .login-header h1 { font-size: 1.4rem; }
+                    .login-header p { font-size: 0.8rem; margin-bottom: 25px; }
+                    .auth-form input { padding: 12px; font-size: 0.9rem; }
+                    .btn-primary { padding: 12px; font-size: 0.9rem; }
+                    .btn-google { padding: 10px; font-size: 0.85rem; }
+                    .toggle-auth { font-size: 0.8rem; }
+                }
             `}</style>
         </div>
     );

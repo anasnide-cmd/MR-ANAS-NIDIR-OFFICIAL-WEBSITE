@@ -85,7 +85,7 @@ export default function AnalyticsPage() {
             </div>
 
             <div className="chart-section glass">
-                <h3>Traffic Traffic (Last 7 Days)</h3>
+                <h3>Traffic (Last 7 Days)</h3>
                 <div className="bar-chart">
                     {[65, 40, 75, 50, 85, 95, 60].map((val, i) => (
                         <div key={i} className="bar-col">
