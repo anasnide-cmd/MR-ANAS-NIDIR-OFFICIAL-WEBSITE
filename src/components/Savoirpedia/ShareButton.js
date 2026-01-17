@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { 
     FaFacebook, 
     FaTwitter, 
@@ -15,13 +15,15 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 export default function ShareButton({ title }) {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
     const [isOpen, setIsOpen] = useState(false);
     const [copied, setCopied] = useState(false);
 
     // Get the base URL (handling SSR safely)
     const getShareUrl = () => {
         if (typeof window !== 'undefined') {
-            return `${window.location.origin}${pathname}`;
+            const params = searchParams.toString();
+            return `${window.location.origin}${pathname}${params ? `?${params}` : ''}`;
         }
         return '';
     };
