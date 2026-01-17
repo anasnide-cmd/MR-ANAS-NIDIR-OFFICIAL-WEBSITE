@@ -5,7 +5,15 @@ import { doc, setDoc, deleteDoc, collection, query, where, getDocs, getDoc } fro
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import Link from 'next/link';
+
 import Loader from '../../../components/Loader';
+import Editor from 'react-simple-code-editor';
+import { highlight, languages } from 'prismjs/components/prism-core';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-markup';
+import 'prismjs/themes/prism-tomorrow.css'; // Pro Dark Theme
 
 function MrBuildEditorContent() {
     const router = useRouter();
@@ -24,12 +32,15 @@ function MrBuildEditorContent() {
         customHtml: '',
         customCss: '',
         status: 'draft', // public, draft, private
+        keywords: '',
+        ogImage: '',
         monetization: {
             enabled: false,
             publisherId: ''
         },
         views: 0
     });
+    const [showPreview, setShowPreview] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -47,6 +58,30 @@ function MrBuildEditorContent() {
             css: 'body { background: #111; color: #fff; font-family: sans-serif; }\n.hero { text-align: center; padding: 100px 20px; }\nh1 { font-size: 3rem; margin-bottom: 10px; color: #00f0ff; }\n.projects { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 800px; margin: 0 auto; }\n.card { padding: 30px; background: #222; border-radius: 10px; }'
         },
         {
+            id: 'saas',
+            name: 'SaaS Startup',
+            icon: '🚀',
+            desc: 'Modern landing page for software products.',
+            html: '<nav class="navbar">\n  <div class="logo">NexusAI</div>\n  <div class="nav-links">\n    <a href="#features">Features</a>\n    <a href="#pricing">Pricing</a>\n    <button class="btn-primary">Get Started</button>\n  </div>\n</nav>\n<header class="hero">\n  <h1>Automate Your Workflow with AI</h1>\n  <p>Scale your business 10x faster with our intelligent platform.</p>\n  <div class="hero-btns">\n    <button class="btn-primary">Start Free Trial</button>\n    <button class="btn-secondary">Watch Demo</button>\n  </div>\n</header>\n<section id="features" class="features">\n  <div class="feature-card">\n    <h3>⚡ Lightning Fast</h3>\n    <p>Deploy in seconds, not minutes.</p>\n  </div>\n  <div class="feature-card">\n    <h3>🛡️ Enterprise Secure</h3>\n    <p>Bank-grade encryption by default.</p>\n  </div>\n  <div class="feature-card">\n    <h3>📊 Real-time Analytics</h3>\n    <p>Track every metric that matters.</p>\n  </div>\n</section>',
+            css: 'body { margin: 0; font-family: "Inter", sans-serif; background: #0f172a; color: #fff; }\n.navbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid rgba(255,255,255,0.1); }\n.logo { font-weight: 800; font-size: 1.5rem; color: #38bdf8; }\n.nav-links a { margin-right: 20px; color: #94a3b8; text-decoration: none; }\n.btn-primary { padding: 10px 20px; background: #38bdf8; color: #000; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }\n.btn-secondary { padding: 10px 20px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; cursor: pointer; }\n.hero { padding: 80px 20px; text-align: center; max-width: 800px; margin: 0 auto; }\nh1 { font-size: 3.5rem; margin-bottom: 20px; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }\n.hero p { font-size: 1.2rem; color: #94a3b8; margin-bottom: 40px; }\n.hero-btns { display: flex; justify-content: center; gap: 15px; }\n.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; padding: 60px 20px; max-width: 1000px; margin: 0 auto; }\n.feature-card { padding: 30px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; }'
+        },
+        {
+            id: 'restaurant',
+            name: 'Modern Restaurant',
+            icon: '🍽️',
+            desc: 'Elegant menu and reservation site.',
+            html: '<header class="hero-header">\n  <div class="overlay">\n    <h1>Lumière Bistro</h1>\n    <p>Experience the Taste of Paris</p>\n    <button class="reserve-btn">Book a Table</button>\n  </div>\n</header>\n<section class="menu">\n  <h2>Our Favorites</h2>\n  <div class="menu-item">\n    <div class="item-name">Truffle Pasta</div>\n    <div class="item-price">$24</div>\n  </div>\n  <div class="menu-item">\n    <div class="item-name">Wagyu Burger</div>\n    <div class="item-price">$28</div>\n  </div>\n  <div class="menu-item">\n    <div class="item-name">Crème Brûlée</div>\n    <div class="item-price">$12</div>\n  </div>\n</section>',
+            css: 'body { margin: 0; font-family: "Playfair Display", serif; background: #1a1a1a; color: #d4d4d4; }\n.hero-header { height: 60vh; background: url("https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80") center/cover; position: relative; }\n.overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }\nh1 { font-size: 4rem; color: #e5e5e5; margin: 0; }\np { font-style: italic; font-size: 1.5rem; margin-top: 10px; }\n.reserve-btn { margin-top: 30px; padding: 15px 40px; background: #c0a062; color: #000; border: none; font-family: sans-serif; letter-spacing: 2px; cursor: pointer; transition: background 0.3s; }\n.reserve-btn:hover { background: #d4b475; }\n.menu { padding: 80px 20px; max-width: 600px; margin: 0 auto; }\n.menu h2 { text-align: center; font-size: 2.5rem; color: #c0a062; margin-bottom: 40px; }\n.menu-item { display: flex; justify-content: space-between; border-bottom: 1px dotted #444; padding: 15px 0; margin-bottom: 10px; }\n.item-name { font-size: 1.2rem; font-weight: bold; }'
+        },
+        {
+            id: 'event',
+            name: 'Event Launch',
+            icon: '📅',
+            desc: 'Countdown and registration for events.',
+            html: '<div class="container">\n  <span class="tag">COMING SOON</span>\n  <h1>Future Tech Summit 2025</h1>\n  <div class="countdown">\n    <div class="time-box">04<span>Days</span></div>\n    <div class="time-box">12<span>Hours</span></div>\n    <div class="time-box">30<span>Mins</span></div>\n  </div>\n  <form class="signup">\n    <input type="email" placeholder="Enter your email for updates">\n    <button type="button">Notify Me</button>\n  </form>\n</div>',
+            css: 'body { margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }\n.container { text-align: center; position: relative; z-index: 1; }\n.tag { background: #ff3e3e; padding: 5px 10px; font-size: 0.8rem; letter-spacing: 2px; font-weight: bold; }\nh1 { font-size: 4rem; margin: 20px 0 40px; text-transform: uppercase; letter-spacing: -2px; }\n.countdown { display: flex; gap: 20px; justify-content: center; margin-bottom: 50px; }\n.time-box { display: flex; flex-direction: column; font-size: 3rem; font-weight: 900; line-height: 1; }\n.time-box span { font-size: 0.8rem; opacity: 0.5; font-weight: normal; margin-top: 5px; text-transform: uppercase; }\n.signup { display: flex; max-width: 400px; margin: 0 auto; gap: 10px; }\ninput { flex: 1; padding: 15px; background: #222; border: 1px solid #333; color: #fff; outline: none; }\nbutton { padding: 15px 30px; background: #fff; color: #000; font-weight: bold; border: none; cursor: pointer; }'
+        },
+        {
             id: 'linkbio',
             name: 'Link In Bio',
             icon: '🔗',
@@ -57,7 +92,7 @@ function MrBuildEditorContent() {
         {
             id: 'landing',
             name: 'Product Landing',
-            icon: '🚀',
+            icon: '📦',
             desc: 'High-conversion landing page structure.',
             html: '<nav>Brand</nav>\n<header>\n  <h1>The Future is Here</h1>\n  <button>Get Started</button>\n</header>\n<section>Feature 1</section>\n<section>Feature 2</section>',
             css: 'body { margin: 0; font-family: sans-serif; }\nnav { padding: 20px; background: #000; color: #fff; }\nheader { padding: 100px 20px; text-align: center; background: #f4f4f4; }\nh1 { font-size: 3rem; }\nbutton { padding: 15px 30px; background: #0070f3; color: #fff; border: none; border-radius: 5px; font-size: 1.2rem; cursor: pointer; }\nsection { padding: 50px 20px; text-align: center; border-bottom: 1px solid #eee; }'
@@ -114,6 +149,8 @@ function MrBuildEditorContent() {
                                 status: data.status || 'draft',
                                 adminStatus: data.adminStatus || 'active',
                                 monetization: data.monetization || { enabled: false, publisherId: '' },
+                                keywords: data.keywords || '',
+                                ogImage: data.ogImage || '',
                                 views: data.views || 0
                             });
                         } else {
@@ -273,6 +310,8 @@ function MrBuildEditorContent() {
                 customCss: siteData.customCss.trim(),
                 status: siteData.status,
                 monetization: siteData.monetization || { enabled: false, publisherId: '' },
+                keywords: (siteData.keywords || '').trim(),
+                ogImage: (siteData.ogImage || '').trim(),
                 userId: user.uid,
                 updatedAt: new Date().toISOString()
             };
@@ -444,6 +483,24 @@ function MrBuildEditorContent() {
                                         placeholder="Building the future of the web..."
                                         className="modern-input"
                                         rows={4}
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>SEO Keywords (Comma items)</label>
+                                    <input
+                                        value={siteData.keywords}
+                                        onChange={e => setSiteData({ ...siteData, keywords: e.target.value })}
+                                        placeholder="portfolio, developer, react, nextjs"
+                                        className="modern-input"
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>Social Share Image URL (OG:Image)</label>
+                                    <input
+                                        value={siteData.ogImage}
+                                        onChange={e => setSiteData({ ...siteData, ogImage: e.target.value })}
+                                        placeholder="https://example.com/my-image.jpg"
+                                        className="modern-input"
                                     />
                                 </div>
 
@@ -621,31 +678,104 @@ function MrBuildEditorContent() {
                         )}
 
                         {activeTab === 'code' && (
-                            <div className="main-config glass card reveal-on-scroll">
-                                <h3>Custom Code (Advanced)</h3>
-                                <p style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '20px' }}>
-                                    Override the default template with your own HTML and CSS. Leave blank to use the standard design.
-                                </p>
-                                <div className="input-group">
-                                    <label>Custom HTML</label>
-                                    <textarea
-                                        value={siteData.customHtml}
-                                        onChange={e => setSiteData({ ...siteData, customHtml: e.target.value })}
-                                        placeholder="<div>Hello World</div>"
-                                        className="code-textarea"
-                                        rows={15}
-                                    />
+                            <div className="main-config glass card reveal-on-scroll" style={{ maxWidth: showPreview ? '100%' : '800px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div className="code-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <h3>Advanced Engineering</h3>
+                                    <div className="toggle-wrapper">
+                                        <button 
+                                            type="button" 
+                                            className={`toggle-btn ${showPreview ? 'active' : ''}`}
+                                            onClick={() => setShowPreview(!showPreview)}
+                                        >
+                                            {showPreview ? '👁️ Hide Live Preview' : '👁️ Show Split Preview'}
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="input-group">
-                                    <label>Custom CSS</label>
-                                    <textarea
-                                        value={siteData.customCss}
-                                        onChange={e => setSiteData({ ...siteData, customCss: e.target.value })}
-                                        placeholder="body { background: red; }"
-                                        className="code-textarea"
-                                        rows={15}
-                                    />
+
+                                <div className={`code-workspace ${showPreview ? 'split-view' : ''}`}>
+                                    <div className="editors-column">
+                                        <div className="input-group">
+                                            <label className="code-label">HTML Structure <span className="lang-tag">HTML5</span></label>
+                                            <div className="editor-wrapper">
+                                                <Editor
+                                                    value={siteData.customHtml}
+                                                    onValueChange={code => setSiteData({ ...siteData, customHtml: code })}
+                                                    highlight={code => highlight(code, languages.markup)}
+                                                    padding={15}
+                                                    className="pro-editor"
+                                                    style={{
+                                                        fontFamily: '"Fira Code", "Fira Mono", monospace',
+                                                        fontSize: 14,
+                                                        backgroundColor: '#1e1e1e',
+                                                        borderRadius: '8px',
+                                                        minHeight: '200px'
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="input-group">
+                                            <label className="code-label">CSS Styling <span className="lang-tag">CSS3</span></label>
+                                            <div className="editor-wrapper">
+                                                <Editor
+                                                    value={siteData.customCss}
+                                                    onValueChange={code => setSiteData({ ...siteData, customCss: code })}
+                                                    highlight={code => highlight(code, languages.css)}
+                                                    padding={15}
+                                                    className="pro-editor"
+                                                    style={{
+                                                        fontFamily: '"Fira Code", "Fira Mono", monospace',
+                                                        fontSize: 14,
+                                                        backgroundColor: '#1e1e1e',
+                                                        borderRadius: '8px',
+                                                        minHeight: '200px'
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="block-library">
+                                            <h4>🏗️ Building Blocks</h4>
+                                            <div className="blocks-grid">
+                                                <button type="button" className="block-btn" onClick={() => setSiteData(prev => ({ ...prev, customHtml: prev.customHtml + '\n<header class="hero">\n  <h1>Hero Title</h1>\n  <p>Subtitle goes here</p>\n</header>', customCss: prev.customCss + '\n.hero { padding: 4rem 2rem; text-align: center; background: #222; }' }))}>
+                                                    Hero Section
+                                                </button>
+                                                <button type="button" className="block-btn" onClick={() => setSiteData(prev => ({ ...prev, customHtml: prev.customHtml + '\n<div class="grid-2">\n  <div>Feature 1</div>\n  <div>Feature 2</div>\n</div>', customCss: prev.customCss + '\n.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }' }))}>
+                                                    2-Col Grid
+                                                </button>
+                                                <button type="button" className="block-btn" onClick={() => setSiteData(prev => ({ ...prev, customHtml: prev.customHtml + '\n<button class="cta-btn">Click Me</button>', customCss: prev.customCss + '\n.cta-btn { padding: 10px 20px; background: #00f0ff; color: #000; border: none; border-radius: 5px; cursor: pointer; }' }))}>
+                                                    CTA Button
+                                                </button>
+                                                <button type="button" className="block-btn" onClick={() => setSiteData(prev => ({ ...prev, customHtml: prev.customHtml + '\n<footer>\n  <p>&copy; 2024 My Site</p>\n</footer>', customCss: prev.customCss + '\nfooter { padding: 20px; text-align: center; opacity: 0.7; }' }))}>
+                                                    Footer
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {showPreview && (
+                                        <div className="preview-column">
+                                            <label className="code-label">Live Output</label>
+                                            <div className="preview-frame-container">
+                                                <iframe 
+                                                    title="Live Preview"
+                                                    srcDoc={`
+                                                        <html>
+                                                            <head>
+                                                                <style>${siteData.customCss}</style>
+                                                            </head>
+                                                            <body>
+                                                                ${siteData.customHtml}
+                                                            </body>
+                                                        </html>
+                                                    `}
+                                                    className="live-preview-iframe"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
+                                
+
                             </div>
                         )}
                     </div>
@@ -1258,6 +1388,40 @@ function MrBuildEditorContent() {
                         text-align: center;
                     }
                 }
+
+                /* Code Editor & Preview Styles */
+                .code-workspace { display: flex; gap: 20px; }
+                .code-workspace.split-view .editors-column { width: 50%; }
+                .code-workspace.split-view .preview-column { width: 50%; }
+                .editors-column { width: 100%; transition: width 0.3s; }
+                .preview-column { display: flex; flex-direction: column; }
+                
+                .editor-wrapper { border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; }
+                .editor-wrapper:focus-within { border-color: #00f0ff; box-shadow: 0 0 15px rgba(0, 240, 255, 0.1); }
+                
+                .code-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 700; color: #ccc; }
+                .lang-tag { font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color: #00f0ff; }
+                
+                .toggle-btn {
+                    background: rgba(0, 240, 255, 0.1); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3);
+                    padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+                    transition: all 0.2s;
+                }
+                .toggle-btn:hover, .toggle-btn.active { background: #00f0ff; color: #000; }
+                
+                .preview-frame-container { 
+                    flex: 1; background: #fff; border-radius: 8px; overflow: hidden; 
+                    height: 600px; /* Fixed height for preview in split view */
+                }
+                .live-preview-iframe { width: 100%; height: 100%; border: none; }
+                
+                .block-library { margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+                .blocks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
+                .block-btn {
+                    padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05);
+                    color: #ccc; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;
+                }
+                .block-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; }
             `}</style>
         </div>
     );

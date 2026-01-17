@@ -118,7 +118,17 @@ export default function BuildDashboard() {
                                         <h4 className="site-name">{site.name || site.title || 'Untitled'}</h4>
                                         <div className="site-meta-row">
                                             <span className="slug-tag">/s/{site.slug}</span>
-                                            <span className="views-tag" title="Total Views">👁️ {site.views || 0}</span>
+                                            <div className="analytics-pill" title="Traffic Activity">
+                                                <span className="views-count">👁️ {site.views || 0}</span>
+                                                <svg viewBox="0 0 60 20" className="sparkline">
+                                                    <path 
+                                                        d={`M0,15 C10,15 10,${Math.max(2, 20 - ((site.views || 0) % 15))} 20,10 S40,${Math.max(2, 20 - ((site.views || 0) % 20))} 60,5`} 
+                                                        fill="none" 
+                                                        stroke="#00f0ff" 
+                                                        strokeWidth="1.5" 
+                                                    />
+                                                </svg>
+                                            </div>
                                             <span className={`status-pill ${site.status}`}>
                                                 {site.status === 'public' ? '🌐' : site.status === 'private' ? '🔒' : '📝'}
                                             </span>
@@ -246,6 +256,14 @@ export default function BuildDashboard() {
                 .site-info-col { flex: 1; }
                 .site-meta-row { display: flex; gap: 10px; align-items: center; margin: 5px 0 10px; }
                 .slug-tag { font-family: monospace; opacity: 0.5; font-size: 0.8rem; }
+                .analytics-pill {
+                    display: flex; align-items: center; gap: 8px;
+                    background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.1);
+                    padding: 2px 8px; border-radius: 6px;
+                }
+                .views-count { font-size: 0.8rem; font-weight: 600; color: #fff; }
+                .sparkline { width: 50px; height: 20px; opacity: 0.8; }
+                
                 .status-pill { font-size: 0.8rem; }
                 .banned-pill { background: #ff3232; color: #fff; font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 800; }
                 

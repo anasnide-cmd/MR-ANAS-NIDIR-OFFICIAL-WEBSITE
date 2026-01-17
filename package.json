@@ -20,12 +20,14 @@
     "next": "16.1.1",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.7",
+    "prismjs": "^1.30.0",
     "quill": "^2.0.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-icons": "^5.5.0",
     "react-loading-skeleton": "^3.5.0",
-    "react-router-dom": "^7.12.0"
+    "react-router-dom": "^7.12.0",
+    "react-simple-code-editor": "^0.14.1"
   },
   "devDependencies": {
     "eslint": "^9",
