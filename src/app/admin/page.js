@@ -3,18 +3,21 @@ import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
 import Loader from '../../components/Loader';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, query, orderBy, getDocs, deleteDoc, doc, updateDoc, setDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, limit, where } from 'firebase/firestore';
 import Link from 'next/link';
 
-export default function AdminPage() {
+export default function AdminDashboard() {
     const [user, setUser] = useState(null);
-    const [posts, setPosts] = useState([]);
-    // New state for User Management
-    const [allSites, setAllSites] = useState([]);
-    const [usersList, setUsersList] = useState([]);
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        totalSites: 0,
+        totalPosts: 0,
+        bannedSites: 0,
+        verifiedSites: 0
+    });
+    const [recentSites, setRecentSites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [permissionError, setPermissionError] = useState(false);
-    const [viewMode, setViewMode] = useState('sites'); // 'sites', 'posts'
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (u) => {
@@ -32,43 +35,25 @@ export default function AdminPage() {
         setLoading(true);
         setPermissionError(false);
         try {
-            // Fetch Posts (Legacy)
-            const postsQ = query(collection(db, 'posts'), orderBy('date', 'desc'));
-            const postsSnap = await getDocs(postsQ);
-            setPosts(postsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+            // Parallel fetching for performance
+            const [usersSnap, sitesSnap, postsSnap] = await Promise.all([
+                getDocs(collection(db, 'users')),
+                getDocs(query(collection(db, 'user_sites'), orderBy('updatedAt', 'desc'))),
+                getDocs(collection(db, 'posts'))
+            ]);
 
-            // Fetch All Sites
-            const sitesQ = query(collection(db, 'user_sites'), orderBy('updatedAt', 'desc'));
-            const sitesSnap = await getDocs(sitesQ);
-            const sitesData = sitesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-            setAllSites(sitesData);
+            const sites = sitesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-            // Fetch User Configs (Limits)
-            const usersQ = query(collection(db, 'users'));
-            const usersSnap = await getDocs(usersQ);
-            const usersConfig = {};
-            usersSnap.forEach(doc => {
-                usersConfig[doc.id] = doc.data();
+            setStats({
+                totalUsers: usersSnap.size,
+                totalSites: sitesSnap.size,
+                totalPosts: postsSnap.size,
+                bannedSites: sites.filter(s => s.adminStatus === 'banned').length,
+                verifiedSites: sites.filter(s => s.adminStatus === 'verified').length
             });
 
-            // Synthesize User List from Sites & Configs
-            const uniqueUserIds = [...new Set(sitesData.map(s => s.userId))];
-            const synthesizedUsers = uniqueUserIds.map(uid => {
-                const userSites = sitesData.filter(s => s.userId === uid);
-                const config = usersConfig[uid] || {};
-                return {
-                    uid,
-                    email: config.email || userSites[0]?.userEmail || 'Unknown User',
-                    displayName: config.displayName || 'Architect',
-                    siteLimit: config.siteLimit || 1, // Default limit
-                    sites: userSites,
-                    sites: userSites,
-                    role: config.role || 'user',
-                    lastActive: config.lastActive || null,
-                    totalViews: userSites.reduce((acc, s) => acc + (s.views || 0), 0)
-                };
-            });
-            setUsersList(synthesizedUsers);
+            // Get recent 5 sites
+            setRecentSites(sites.slice(0, 5));
 
         } catch (err) {
             console.error("Error fetching dashboard:", err);
@@ -80,117 +65,10 @@ export default function AdminPage() {
         }
     };
 
-    const handleDeletePost = async (id) => {
-        if (!confirm('Are you sure you want to delete this post?')) return;
-        try {
-            await deleteDoc(doc(db, 'posts', id));
-            setPosts(posts.filter(p => p.id !== id));
-        } catch (err) {
-            alert('Error deleting post: ' + err.message);
-        }
-    };
-
-    // --- Admin Actions ---
-
-    const updateSiteStatus = async (siteId, newStatus) => {
-        // newStatus: 'active', 'banned', 'verified'
-        try {
-            await updateDoc(doc(db, 'user_sites', siteId), {
-                adminStatus: newStatus
-            });
-            // Update local state
-            setAllSites(prev => prev.map(s => s.id === siteId ? { ...s, adminStatus: newStatus } : s));
-        } catch (err) {
-            alert('Failed to update status: ' + err.message);
-        }
-    };
-
-    const updateUserLimit = async (uid, newLimit) => {
-        const limitVal = parseInt(newLimit);
-        if (isNaN(limitVal) || limitVal < 0) return;
-
-        try {
-            // Validating we have the doc ref, create if not exists
-            const userRef = doc(db, 'users', uid);
-            await setDoc(userRef, { siteLimit: limitVal }, { merge: true });
-
-            // Update local state
-            setUsersList(prev => prev.map(u => u.uid === uid ? { ...u, siteLimit: limitVal } : u));
-        } catch (err) {
-            alert('Failed to update limit: ' + err.message);
-        }
-    };
-
-    const updatePublisherId = async (siteId, currentId) => {
-        const newId = prompt("Enter AdSense Publisher ID (e.g., pub-xxxxxxxx):", currentId || '');
-        if (newId === null) return; // Cancelled
-
-        try {
-            // Need to fetch current data to preserve 'enabled' state or just merge
-            // Since we are admin, let's just merge deep
-            // Firestore merge is shallow on maps unless using dot notation for specific fields
-            // But here we want to update monetization object.
-            
-            // Let's safe update: read doc first or just assume structure
-            // Using dot notation 'monetization.publisherId' works if the map exists
-            // But if it doesn't, we need to create it.
-            
-            // Safer: update the whole object
-            await setDoc(doc(db, 'user_sites', siteId), {
-                monetization: { 
-                    publisherId: newId,
-                    // If we want to force enable it, we can. 
-                    // But let's leave 'enabled' to user preference (they enable it when ready).
-                    // However, we need to make sure we don't overwrite 'enabled' if it exists.
-                    // Actually setDoc with merge: true will merge top level fields.
-                    // To merge nested fields cleanly without reading, use updateDoc with dot notation
-                } 
-            }, { merge: true });
-
-            // Wait, setDoc with merge replaces the whole map 'monetization' if I provide it like that?
-            // No, merge: true merges fields. But 'monetization' field is a map.
-            // If I provide { monetization: { publisherId: ... } }, it might overwrite other fields in monetization map depending on depth.
-            // Firestore merge acts deeply? No, usually shallow on maps unless dot notation used in update.
-            
-            // Let's use updateDoc with dot notation which is safer for specific field update
-            await updateDoc(doc(db, 'user_sites', siteId), {
-                'monetization.publisherId': newId
-            });
-
-            // Update local state
-            setAllSites(prev => prev.map(s => {
-                if (s.id === siteId) {
-                    return {
-                        ...s,
-                        monetization: {
-                            ...(s.monetization || { enabled: false }),
-                            publisherId: newId
-                        }
-                    };
-                }
-                return s;
-            }));
-
-        } catch (err) {
-             // If document doesn't have monetization field, updateDoc 'monetization.publisherId' might fail?
-             // It creates the map if parent exists? No, dot notation requires map to exist? 
-             // Actually, simplest is just to merge with setDoc correctly.
-             
-             try {
-                 await setDoc(doc(db, 'user_sites', siteId), {
-                     monetization: { publisherId: newId }
-                 }, { merge: true });
-                 
-                 // Update local state (duplicate logic essentially)
-                 setAllSites(prev => prev.map(s => s.id === siteId ? { ...s, monetization: { ...(s.monetization || {}), publisherId: newId } } : s));
-             } catch (retryErr) {
-                 alert('Failed to set Publisher ID: ' + retryErr.message);
-             }
-        }
-    };
-
-    if (loading) return <Loader text="Syncing Dashboard..." />;
+    if (loading) return <Loader text="Syncing Admin Core..." />;
     if (!user) return <div className="loading-state">Access Denied</div>;
+    
+    // Permission Error Component
     if (permissionError) return (
         <div className="error-state">
             <div className="error-card glass">
@@ -224,258 +102,124 @@ export default function AdminPage() {
     );
 
     return (
-        <div className="dashboard-view">
+        <div className="dashboard-overview animate-fade-in">
             <header className="page-header">
-                <div className="welcome-area">
-                    <span className="welcome-tag">SYSTEM ADMIN</span>
-                    <h1>Overseer Control</h1>
-                    <p className="subtitle">Managing {allSites.length} Active Nodes across {usersList.length} Architects</p>
+                <div>
+                    <span className="welcome-tag">SYSTEM OVERVIEW</span>
+                    <h1>Command Center</h1>
+                    <p className="subtitle">System status and key metrics</p>
                 </div>
-                <div className="view-toggles">
-                    <button
-                        className={`toggle-btn ${viewMode === 'sites' ? 'active' : ''}`}
-                        onClick={() => setViewMode('sites')}
-                    >
-                        User Nodes
-                    </button>
-                    <button
-                        className={`toggle-btn ${viewMode === 'posts' ? 'active' : ''}`}
-                        onClick={() => setViewMode('posts')}
-                    >
-                        Blog Content
-                    </button>
+                <div className="header-actions">
+                     <span className="live-indicator">● SYSTEM ONLINE</span>
                 </div>
             </header>
 
-            <section className="stats-grid">
-                <div className="stat-card glass">
-                    <div className="stat-info">
-                        <span className="stat-label">Total Sites</span>
-                        <span className="stat-value">{allSites.length}</span>
-                    </div>
-                </div>
-                <div className="stat-card glass">
+            {/* Quick Stats Row */}
+            <div className="stats-grid">
+                <Link href="/admin/users" className="stat-card glass hover-card">
+                    <div className="stat-icon">👥</div>
                     <div className="stat-info">
                         <span className="stat-label">Total Users</span>
-                        <span className="stat-value">{usersList.length}</span>
+                        <span className="stat-value">{stats.totalUsers}</span>
                     </div>
-                </div>
+                </Link>
+                <Link href="/admin/sites" className="stat-card glass hover-card">
+                    <div className="stat-icon">🌐</div>
+                    <div className="stat-info">
+                        <span className="stat-label">Total Sites</span>
+                        <span className="stat-value">{stats.totalSites}</span>
+                    </div>
+                </Link>
+                <Link href="/admin/content" className="stat-card glass hover-card">
+                    <div className="stat-icon">📝</div>
+                    <div className="stat-info">
+                        <span className="stat-label">Total Posts</span>
+                        <span className="stat-value">{stats.totalPosts}</span>
+                    </div>
+                </Link>
                 <div className="stat-card glass">
+                    <div className="stat-icon">⚠️</div>
                     <div className="stat-info">
                         <span className="stat-label">Flagged Nodes</span>
-                        <span className="stat-value warning">
-                            {allSites.filter(s => s.adminStatus === 'banned').length}
-                        </span>
+                        <span className="stat-value warning">{stats.bannedSites}</span>
                     </div>
+                </div>
+            </div>
+
+            {/* Recent Activity Section */}
+            <section className="dashboard-section glass">
+                <div className="section-header">
+                    <h2>Recent Deployments</h2>
+                    <Link href="/admin/sites" className="view-all">View All Sites →</Link>
+                </div>
+                <div className="recent-list">
+                    {recentSites.map(site => (
+                        <div key={site.id} className="recent-item">
+                            <div className="site-info">
+                                <span className="site-name">{site.title || 'Untitled Site'}</span>
+                                <span className="site-url">/s/{site.slug}</span>
+                            </div>
+                            <div className="site-meta">
+                                <span className={`status-pill ${site.adminStatus || 'active'}`}>
+                                    {site.adminStatus || 'active'}
+                                </span>
+                                <span className="time-ago">
+                                    {site.updatedAt?.seconds ? new Date(site.updatedAt.seconds * 1000).toLocaleDateString() : 'Unknown'}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                    {recentSites.length === 0 && <p className="empty-state">No recent activity detected.</p>}
                 </div>
             </section>
 
-            {viewMode === 'sites' && (
-                <section className="content-section animate-fade-in">
-                    <div className="section-bar">
-                        <h2>User & Node Management</h2>
-                    </div>
-
-                    <div className="glass table-wrapper">
-                        <table className="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>User ID / UUID</th>
-                                    <th>Analytics</th>
-                                    <th>Limit</th>
-                                    <th>Deployed Sites</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {usersList.map(u => (
-                                    <tr key={u.uid} className="user-row">
-                                        <td className="user-cell">
-                                            <div className="user-identity">
-                                                <span className="user-name">{u.displayName || 'Unknown'}</span>
-                                                <span className="user-email">{u.email}</span>
-                                                <div className="uid-tag" title={u.uid}>{u.uid.substring(0, 8)}...</div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="analytics-col">
-                                                <div className="stat-row">
-                                                    <span className="label">Views:</span>
-                                                    <span className="value highlight">{u.totalViews}</span>
-                                                </div>
-                                                <div className="stat-row">
-                                                    <span className="label">Last Seen:</span>
-                                                    <span className="value">{u.lastActive ? new Date(u.lastActive).toLocaleDateString() : 'Never'}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="limit-control">
-                                                <input
-                                                    type="number"
-                                                    value={u.siteLimit}
-                                                    onChange={(e) => updateUserLimit(u.uid, e.target.value)}
-                                                    className="limit-input"
-                                                />
-                                                <span className="limit-label">sites</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="user-sites-list">
-                                                {u.sites.map(site => (
-                                                    <div key={site.id} className={`mini-site-card ${site.adminStatus || 'active'}`}>
-                                                        <div className="site-mini-header">
-                                                            <strong>{site.title || site.name || 'Untitled'}</strong>
-                                                            <a href={`/s/${site.slug}`} target="_blank" className="tiny-link">🔗</a>
-                                                        </div>
-                                                        <div className="site-mini-slug">/s/{site.slug}</div>
-                                                        <div className="site-status-toggles">
-                                                            <button
-                                                                onClick={() => updateSiteStatus(site.id, 'active')}
-                                                                className={`tiny-btn ${!site.adminStatus || site.adminStatus === 'active' ? 'active' : ''}`}
-                                                                title="Normal"
-                                                            >🟢</button>
-                                                            <button
-                                                                onClick={() => updateSiteStatus(site.id, 'verified')}
-                                                                className={`tiny-btn ${site.adminStatus === 'verified' ? 'verified' : ''}`}
-                                                                title="Verify (Premium)"
-                                                            >💎</button>
-                                                            <button
-                                                                onClick={() => updateSiteStatus(site.id, 'banned')}
-                                                                className={`tiny-btn ${site.adminStatus === 'banned' ? 'banned' : ''}`}
-                                                                title="Ban/Suspend"
-                                                            >🔴</button>
-                                                        </div>
-                                                        <div style={{marginTop: '5px', textAlign: 'right'}}>
-                                                            <button 
-                                                                onClick={() => updatePublisherId(site.id, site.monetization?.publisherId)}
-                                                                className="tiny-btn active"
-                                                                style={{ fontSize: '0.7rem', width: '100%' }}
-                                                                title="Configure AdSense ID"
-                                                            >
-                                                                💰 {site.monetization?.publisherId ? 'Configured' : 'Setup Ads'}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {u.sites.length === 0 && <span className="no-sites">No active deployments</span>}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span className="role-badge">{u.role}</span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-            )}
-
-            {viewMode === 'posts' && (
-                <section className="content-section animate-fade-in">
-                    <div className="section-bar">
-                        <h2>Blog Content</h2>
-                        <Link href="/admin/editor/" className="btn glow-blue">+ New Post</Link>
-                    </div>
-                    {/* Reusing existing table logic simpler for now */}
-                    <div className="posts-table-wrapper card glass">
-                        <table className="posts-table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Date</th>
-                                    <th align="right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {posts.map((post) => (
-                                    <tr key={post.id} className="post-row">
-                                        <td><strong>{post.title}</strong></td>
-                                        <td><span className="date-tag">{post.date}</span></td>
-                                        <td align="right">
-                                            <button onClick={() => handleDeletePost(post.id)} className="btn-icon delete">🗑️</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-            )}
-
             <style jsx>{`
-                .loading-state { height: 60vh; display: flex; align-items: center; justify-content: center; color: #00f0ff; }
-                .dashboard-view { padding-bottom: 100px; }
-                .page-header { display: flex; justify-content: space-between; margin-bottom: 40px; align-items: flex-end; }
-                .welcome-tag { color: #00f0ff; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; }
-                h1 { margin: 5px 0; font-size: 2rem; }
-                .subtitle { opacity: 0.6; }
-
-                .view-toggles { display: flex; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 10px; }
-                .toggle-btn { 
-                    padding: 8px 20px; border-radius: 8px; border: none; background: transparent; color: #fff; cursor: pointer; font-weight: 600;
-                    transition: all 0.3s;
+                .dashboard-overview { padding-bottom: 100px; }
+                .page-header { 
+                    display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; 
                 }
-                .toggle-btn.active { background: #00f0ff; color: #000; }
+                h1 { margin: 5px 0; font-size: 2.5rem; background: linear-gradient(to right, #fff, #aaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+                .welcome-tag { color: #00f0ff; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; }
+                .subtitle { opacity: 0.6; }
+                .live-indicator { color: #00ff88; font-weight: 700; font-size: 0.8rem; border: 1px solid rgba(0, 255, 136, 0.2); padding: 5px 10px; border-radius: 20px; background: rgba(0, 255, 136, 0.1); }
 
-                .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
-                .stat-card { padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
-                .stat-value { font-size: 2rem; font-weight: 800; display: block; }
+                .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px; }
+                .stat-card { 
+                    padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); 
+                    display: flex; align-items: center; gap: 20px; text-decoration: none; color: inherit;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .hover-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+                .stat-icon { font-size: 2rem; background: rgba(255,255,255,0.05); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 15px; }
+                .stat-value { font-size: 2rem; font-weight: 800; display: block; line-height: 1; margin-top: 5px; }
+                .stat-label { font-size: 0.8rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
                 .stat-value.warning { color: #ff3232; }
 
-                .admin-table { width: 100%; border-collapse: collapse; }
-                .admin-table th { text-align: left; padding: 15px; opacity: 0.5; font-size: 0.8rem; text-transform: uppercase; }
-                .admin-table td { padding: 15px; border-top: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+                .dashboard-section { padding: 30px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.05); }
+                .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+                .section-header h2 { font-size: 1.2rem; margin: 0; }
+                .view-all { color: #00f0ff; text-decoration: none; font-size: 0.9rem; font-weight: 600; }
                 
-                .user-identity { display: flex; flex-direction: column; gap: 4px; }
-                .user-name { font-weight: 700; color: #fff; font-size: 0.95rem; }
-                .user-email { font-size: 0.8rem; opacity: 0.6; }
-                .uid-tag { font-family: monospace; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; display: inline-block; font-size: 0.7rem; width: fit-content; }
+                .recent-item { 
+                    display: flex; justify-content: space-between; align-items: center; 
+                    padding: 15px; border-radius: 12px; margin-bottom: 8px;
+                    background: rgba(255,255,255,0.02); transition: all 0.2s;
+                }
+                .recent-item:hover { background: rgba(255,255,255,0.05); }
+                .site-info { display: flex; flex-direction: column; gap: 4px; }
+                .site-name { font-weight: 700; color: #fff; }
+                .site-url { font-family: monospace; font-size: 0.8rem; opacity: 0.5; }
                 
-                .limit-control { display: flex; align-items: center; gap: 8px; }
-                .limit-input { 
-                    width: 50px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); 
-                    color: #fff; padding: 5px; border-radius: 4px; text-align: center;
-                }
+                .site-meta { display: flex; align-items: center; gap: 15px; }
+                .status-pill { font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; font-weight: 800; }
+                .status-pill.active { background: rgba(0, 255, 136, 0.1); color: #00ff88; }
+                .status-pill.banned { background: rgba(255, 50, 50, 0.1); color: #ff3232; }
+                .status-pill.verified { background: rgba(0, 240, 255, 0.1); color: #00f0ff; }
+                .time-ago { font-size: 0.8rem; opacity: 0.4; }
 
-                .user-sites-list { display: flex; flex-wrap: wrap; gap: 10px; }
-                .mini-site-card { 
-                    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); 
-                    padding: 10px; border-radius: 8px; width: 180px;
-                }
-                .mini-site-card.banned { border-color: #ff3232; background: rgba(255, 50, 50, 0.05); }
-                .mini-site-card.verified { border-color: #00ff88; box-shadow: 0 0 10px rgba(0, 255, 136, 0.1); }
-                
-                .site-mini-header { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; }
-                .site-mini-slug { font-size: 0.75rem; opacity: 0.5; margin-bottom: 8px; font-family: monospace; }
-                
-                .site-status-toggles { display: flex; gap: 5px; justify-content: flex-end; }
-                .tiny-btn { 
-                    background: rgba(255,255,255,0.05); border: none; cursor: pointer; 
-                    padding: 4px; border-radius: 4px; opacity: 0.3; transition: all 0.2s;
-                }
-                .tiny-btn:hover { opacity: 1; transform: scale(1.2); }
-                .tiny-btn.active { opacity: 1; background: rgba(255,255,255,0.1); }
-                .tiny-btn.verified { color: #00ff88; }
-                .tiny-btn.banned { color: #ff3232; }
-
-                .no-sites { opacity: 0.3; font-style: italic; font-size: 0.9rem; }
-                .role-badge { 
-                    background: rgba(112, 0, 255, 0.2); color: #bc00ff; 
-                    padding: 4px 10px; border-radius: 100px; font-size: 0.7rem; font-weight: 800; 
-                }
-
-                .analytics-col { font-size: 0.8rem; }
-                .stat-row { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
-                .stat-row .label { opacity: 0.5; }
-                .stat-row .value { font-weight: 700; color: #fff; }
-                .stat-row .value.highlight { color: #00f0ff; }
-
-                /* Reuse existing styles */
                 .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); }
-                .glow-blue { box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); background: #00f0ff; color: #000; padding: 8px 15px; border-radius: 8px; text-decoration: none; font-weight: 700; }
-                .table-wrapper { border-radius: 20px; overflow: hidden; }
+                .animate-fade-in { animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
             `}</style>
         </div>
     );

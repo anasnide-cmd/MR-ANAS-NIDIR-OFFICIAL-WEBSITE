@@ -9,7 +9,9 @@ export default function AdminSidebar({ isOpen, close, isMinimized, toggleMinimiz
 
     const menuItems = [
         { name: 'Dashboard', path: '/admin/', icon: '📊' },
-        { name: 'Site Settings', path: '/admin/settings/', icon: '⚙️' },
+        { name: 'Users', path: '/admin/users/', icon: '👥' },
+        { name: 'Sites', path: '/admin/sites/', icon: '🌐' },
+        { name: 'Content', path: '/admin/content/', icon: '📝' },
         { name: 'New Post', path: '/admin/editor/', icon: '✍️' },
         { name: 'Messages', path: '/admin/messages/', icon: '📢' },
     ];

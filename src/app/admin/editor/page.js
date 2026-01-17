@@ -57,7 +57,7 @@ function EditorContent() {
         } else {
             await addDoc(collection(db, 'posts'), postData);
         }
-        router.push('/admin');
+        router.push('/admin/content');
     };
 
     if (loading) return <Loader text="Initializing Editor..." />;
@@ -66,7 +66,7 @@ function EditorContent() {
         <div className="editor-view">
             <header className="page-header">
                 <div className="header-info">
-                    <Link href="/admin" className="back-link">← Back to Dashboard</Link>
+                    <Link href="/admin/content" className="back-link">← Back to Content</Link>
                     <h1>{editId ? 'Refine Content' : 'Draft New Article'}</h1>
                     <p className="subtitle">Crafting the future, one word at a time.</p>
                 </div>
