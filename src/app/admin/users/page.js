@@ -11,6 +11,7 @@ export default function UsersPage() {
     const [usersList, setUsersList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedUser, setSelectedUser] = useState(null); // For Modal
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (u) => {
@@ -27,7 +28,6 @@ export default function UsersPage() {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            // Fetch User Configs
             const usersQ = query(collection(db, 'users'));
             const usersSnap = await getDocs(usersQ);
             const usersConfig = {};
@@ -35,22 +35,16 @@ export default function UsersPage() {
                 usersConfig[doc.id] = doc.data();
             });
 
-            // Fetch Sites to map owners
             const sitesQ = query(collection(db, 'user_sites'));
             const sitesSnap = await getDocs(sitesQ);
-            const sitesData = sitesSnap.docs.map(d => d.data());
+            const sitesData = sitesSnap.docs.map(d => ({...d.data(), id: d.id}));
 
-            // Build User List using Configs as primary source, then enhance with site data
-            // Note: Users might not have a config doc if they haven't set preferences, 
-            // so we also check unique userIds from sites.
-            
             const uniqueIds = new Set([...Object.keys(usersConfig), ...sitesData.map(s => s.userId)]);
             
             const synthesized = Array.from(uniqueIds).map(uid => {
                 const config = usersConfig[uid] || {};
                 const userSites = sitesData.filter(s => s.userId === uid);
                 
-                // Infer email/name from sites if not in config
                 const displayEmail = config.email || userSites[0]?.userEmail || 'Unknown Email';
                 const displayName = config.displayName || 'Architect';
 
@@ -61,8 +55,19 @@ export default function UsersPage() {
                     role: config.role || 'user',
                     siteLimit: config.siteLimit || 1,
                     siteCount: userSites.length,
+                    sites: userSites,
                     totalViews: userSites.reduce((acc, s) => acc + (s.views || 0), 0),
-                    lastActive: config.lastActive || null
+                    lastActive: config.lastActive || null,
+                    // Extended Account Data
+                    bio: config.bio || '',
+                    contactEmail: config.contactEmail || '',
+                    phone: config.phone || '',
+                    jobTitle: config.jobTitle || '',
+                    location: config.location || '',
+                    dob: config.dob || '',
+                    website: config.website || '',
+                    gender: config.gender || '',
+                    fullConfig: config
                 };
             });
 
@@ -78,11 +83,9 @@ export default function UsersPage() {
     const updateUserLimit = async (uid, newLimit) => {
         const limitVal = parseInt(newLimit);
         if (isNaN(limitVal) || limitVal < 0) return;
-
         try {
             const userRef = doc(db, 'users', uid);
             await setDoc(userRef, { siteLimit: limitVal }, { merge: true });
-
             setUsersList(prev => prev.map(u => u.uid === uid ? { ...u, siteLimit: limitVal } : u));
         } catch (err) {
             alert('Failed to update limit: ' + err.message);
@@ -97,7 +100,7 @@ export default function UsersPage() {
         } catch (err) {
             alert('Failed to promote user: ' + err.message);
         }
-    }
+    };
 
     const filteredUsers = usersList.filter(u => 
         u.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -171,11 +174,16 @@ export default function UsersPage() {
                                     </div>
                                 </td>
                                 <td>
-                                    {u.role !== 'admin' && (
-                                        <button onClick={() => promoteUser(u.uid)} className="btn-small">
-                                            Make Admin
+                                    <div className="action-row">
+                                        <button onClick={() => setSelectedUser(u)} className="btn-small details" title="View Full Details">
+                                            🔍 Details
                                         </button>
-                                    )}
+                                        {u.role !== 'admin' && (
+                                            <button onClick={() => promoteUser(u.uid)} className="btn-small promote" title="Promote to Admin">
+                                                ⭐
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -183,6 +191,116 @@ export default function UsersPage() {
                 </table>
                 {filteredUsers.length === 0 && <div className="no-results">No users found matching search.</div>}
             </div>
+
+            {/* USER DETAILS MODAL */}
+            {selectedUser && (
+                <div className="modal-overlay" onClick={() => setSelectedUser(null)}>
+                    <div className="modal-content glass" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>User Profile</h2>
+                            <button className="close-btn" onClick={() => setSelectedUser(null)}>×</button>
+                        </div>
+                        
+                        <div className="modal-body">
+                            <div className="profile-header">
+                                <div className="profile-avatar">
+                                    {(selectedUser.displayName || 'U').charAt(0).toUpperCase()}
+                                </div>
+                                <div className="profile-info">
+                                    <h3>{selectedUser.displayName}</h3>
+                                    <span className="profile-email">{selectedUser.email}</span>
+                                    <code className="profile-uid">{selectedUser.uid}</code>
+                                    <div className="profile-badges">
+                                        <span className={`role-badge ${selectedUser.role}`}>{selectedUser.role.toUpperCase()}</span>
+                                        {selectedUser.lastActive && (
+                                            <span className="active-badge">Active: {new Date(selectedUser.lastActive).toLocaleDateString()}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="stats-grid-mini">
+                                <div className="stat-box">
+                                    <span className="label">Total Views</span>
+                                    <span className="value">{selectedUser.totalViews}</span>
+                                </div>
+                                <div className="stat-box">
+                                    <span className="label">Sites Owned</span>
+                                    <span className="value">{selectedUser.siteCount} / {selectedUser.siteLimit}</span>
+                                </div>
+                                <div className="stat-box">
+                                    <span className="label">Status</span>
+                                    <span className="value ok">Active</span>
+                                </div>
+                            </div>
+
+                            <div className="section-title">Personal Information</div>
+                            <div className="personal-details-grid glass">
+                                {selectedUser.bio && (
+                                    <div className="full-width-item">
+                                        <span className="p-label">Bio</span>
+                                        <p className="p-value bio-text">{selectedUser.bio}</p>
+                                    </div>
+                                )}
+                                <div className="p-item">
+                                    <span className="p-label">Job Title</span>
+                                    <span className="p-value">{selectedUser.jobTitle || 'Not Set'}</span>
+                                </div>
+                                <div className="p-item">
+                                    <span className="p-label">Location</span>
+                                    <span className="p-value">{selectedUser.location || 'Not Set'}</span>
+                                </div>
+                                <div className="p-item">
+                                    <span className="p-label">Website</span>
+                                    <span className="p-value">{selectedUser.website ? <a href={selectedUser.website} target="_blank" className="inner-link">{selectedUser.website}</a> : 'Not Set'}</span>
+                                </div>
+                                <div className="p-item">
+                                    <span className="p-label">Phone</span>
+                                    <span className="p-value">{selectedUser.phone || 'Not Set'}</span>
+                                </div>
+                                <div className="p-item">
+                                    <span className="p-label">Gender</span>
+                                    <span className="p-value">{selectedUser.gender || 'Not Set'}</span>
+                                </div>
+                                <div className="p-item">
+                                    <span className="p-label">Birth Date</span>
+                                    <span className="p-value">{selectedUser.dob || 'Not Set'}</span>
+                                </div>
+                                <div className="p-item">
+                                    <span className="p-label">Contact Email</span>
+                                    <span className="p-value">{selectedUser.contactEmail || selectedUser.email}</span>
+                                </div>
+                            </div>
+
+                            <div className="section-title">Deployed Sites ({selectedUser.siteCount})</div>
+                            <div className="sites-list-scroll">
+                                {selectedUser.sites.length > 0 ? (
+                                    selectedUser.sites.map(site => (
+                                        <div key={site.id} className="mini-site-row">
+                                            <div className="mini-site-info">
+                                                <strong>{site.title || 'Untitled'}</strong>
+                                                <small>/s/{site.slug}</small>
+                                            </div>
+                                            <div className="mini-site-meta">
+                                                <span className={`status-dot ${site.adminStatus || 'active'}`}></span>
+                                                <span className="views-count">{site.views || 0} views</span>
+                                                <a href={`/s/${site.slug}`} target="_blank" className="site-link">➜</a>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="empty-msg">No sites deployed yet.</div>
+                                )}
+                            </div>
+
+                            <details className="raw-data-details">
+                                <summary>Raw System Data</summary>
+                                <pre>{JSON.stringify(selectedUser, null, 2)}</pre>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style jsx>{`
                 .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
@@ -212,15 +330,83 @@ export default function UsersPage() {
                 
                 .limit-control { display: flex; align-items: center; gap: 8px; }
                 .limit-input { width: 60px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 5px; border-radius: 4px; text-align: center; }
-                
-                .btn-small { background: rgba(255,255,255,0.05); border: none; color: #fff; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
-                .btn-small:hover { background: #00f0ff; color: #000; }
+                .limit-label { font-size: 0.8rem; opacity: 0.6; }
+
+                .action-row { display: flex; gap: 8px; }
+                .btn-small { background: rgba(255,255,255,0.05); border: none; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; white-space: nowrap; }
+                .btn-small:hover { background: #fff; color: #000; }
+                .btn-small.details { border: 1px solid rgba(255,255,255,0.1); }
+                .btn-small.promote:hover { background: #00f0ff; color: #000; }
                 
                 .no-results { padding: 40px; text-align: center; opacity: 0.5; }
-                
                 .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
                 .animate-fade-in { animation: fadeIn 0.5s ease-out; }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+                /* MODAL STYLES */
+                .modal-overlay {
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+                    display: flex; justify-content: flex-end;
+                    z-index: 1000; animation: fadeIn 0.3s;
+                }
+                .modal-content {
+                    width: 550px; max-width: 100%; height: 100%;
+                    background: #0a0a0a; border-left: 1px solid rgba(255,255,255,0.1);
+                    padding: 30px; display: flex; flex-direction: column;
+                    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    overflow-y: auto;
+                }
+                .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                .modal-header h2 { margin: 0; font-size: 1.5rem; }
+                .close-btn { font-size: 2rem; background: none; border: none; color: #fff; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; line-height: 1; }
+                .close-btn:hover { opacity: 1; }
+
+                .profile-header { display: flex; gap: 20px; align-items: center; margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+                .profile-avatar { width: 80px; height: 80px; background: #00f0ff; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; }
+                .profile-info h3 { margin: 0 0 5px 0; font-size: 1.2rem; }
+                .profile-email { display: block; opacity: 0.7; font-size: 0.9rem; margin-bottom: 5px; }
+                .profile-uid { display: block; font-family: monospace; font-size: 0.7rem; opacity: 0.4; margin-bottom: 10px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 4px; width: fit-content; }
+                .profile-badges { display: flex; gap: 10px; }
+                .active-badge { font-size: 0.7rem; background: rgba(0, 255, 136, 0.1); color: #00ff88; padding: 2px 8px; border-radius: 10px; }
+
+                .stats-grid-mini { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 30px; }
+                .stat-box { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; text-align: center; }
+                .stat-box .label { display: block; font-size: 0.7rem; opacity: 0.5; text-transform: uppercase; margin-bottom: 5px; }
+                .stat-box .value { display: block; font-size: 1.2rem; font-weight: 700; }
+                .stat-box .value.ok { color: #00ff88; }
+
+                .section-title { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; opacity: 0.5; margin-bottom: 15px; letter-spacing: 1px; }
+
+                .personal-details-grid {
+                    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+                    padding: 20px; border-radius: 15px; margin-bottom: 30px;
+                    background: rgba(255,255,255,0.02);
+                }
+                .p-item { display: flex; flex-direction: column; gap: 4px; }
+                .full-width-item { grid-column: span 2; display: flex; flex-direction: column; gap: 8px; }
+                .p-label { font-size: 0.65rem; text-transform: uppercase; opacity: 0.4; letter-spacing: 0.5px; }
+                .p-value { font-size: 0.9rem; color: #eee; }
+                .bio-text { line-height: 1.5; opacity: 0.8; font-style: italic; }
+                .inner-link { color: #00f0ff; text-decoration: none; }
+                .inner-link:hover { text-decoration: underline; }
+                
+                .sites-list-scroll { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 30px; }
+                .mini-site-row { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+                .mini-site-info { display: flex; flex-direction: column; }
+                .mini-site-info small { opacity: 0.5; font-family: monospace; }
+                .mini-site-meta { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; }
+                .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+                .status-dot.active { background: #00ff88; }
+                .status-dot.banned { background: #ff3232; }
+                .status-dot.verified { background: #00f0ff; }
+                .site-link { color: #fff; text-decoration: none; opacity: 0.5; transition: opacity 0.2s; }
+                .site-link:hover { opacity: 1; }
+
+                .raw-data-details summary { cursor: pointer; opacity: 0.5; font-size: 0.8rem; margin-bottom: 10px; }
+                .raw-data-details pre { background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; overflow-x: auto; font-size: 0.7rem; color: #00ff88; }
+
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
             `}</style>
         </div>
     );
