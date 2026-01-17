@@ -15,8 +15,44 @@ const exo2 = Exo_2({
 });
 
 export const metadata = {
-  title: 'MR ANAS NIDIR | Official Site',
-  description: 'MR ANAS NIDIR — Entrepreneur | Visionary | Digital Innovator',
+  title: {
+    template: '%s | MR ANAS NIDIR',
+    default: 'MR ANAS NIDIR | Official Site',
+  },
+  description: 'MR ANAS NIDIR — Entrepreneur | Visionary | Digital Innovator. Building the future with NEXENGINE, NEX AI, and ANAS GPT.',
+  keywords: ['Anas Nidir', 'Tech Entrepreneur', 'AI', 'NEXENGINE', 'Savoirpedia', 'Mr Build', 'Web Development', 'Futurist'],
+  authors: [{ name: 'Mr Anas Nidir' }],
+  creator: 'Mr Anas Nidir',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://mr-anas-nidir-official-website.web.app',
+    siteName: 'MR ANAS NIDIR Official',
+    title: 'MR ANAS NIDIR | Official Site',
+    description: 'The official digital universe of Mr Anas Nidir. Explore projects, tools, and the future of tech.',
+    images: [
+      {
+        url: '/assets/logo.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Mr Anas Nidir Official Logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MR ANAS NIDIR | Official Site',
+    description: 'Entrepreneur • Visionary • Digital Innovator',
+    images: ['/assets/logo.jpg'],
+    creator: '@anasnide',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({ children }) {
