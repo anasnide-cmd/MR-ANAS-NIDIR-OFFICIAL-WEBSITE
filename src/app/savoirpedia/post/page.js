@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
+import ShareButton from '../../../components/Savoirpedia/ShareButton';
+
 function WikiArticle() {
     const searchParams = useSearchParams();
     const slug = searchParams.get('slug');
@@ -50,7 +52,10 @@ function WikiArticle() {
     return (
         <article className="wiki-article-container">
             <header className="article-header">
-                <h1 className="article-title">{article.title}</h1>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
+                    <h1 className="article-title">{article.title}</h1>
+                    <ShareButton title={article.title} />
+                </div>
                 <div className="article-subtitle">From SavoirPedia, the free encyclopedia</div>
             </header>
 
