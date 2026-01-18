@@ -7,6 +7,9 @@ import ShinyText from './ReactBits/ShinyText';
 import RetroGrid from './ReactBits/RetroGrid';
 import { db } from '../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import ActivityFeed from './ActivityFeed';
+import SystemStatus from './SystemStatus';
+
 
 export default function HomeClient() {
   const sectionsRef = useRef([]);
@@ -115,32 +118,86 @@ export default function HomeClient() {
         </div>
       </header>
 
-      {/* PROJECTS */}
+      <ActivityFeed />
+
+      {/* NEXUS AI SUITE */}
       <section id="projects" className="section reveal" ref={el => sectionsRef.current[0] = el}>
         <div className="section-header">
-          <span className="section-tag">PORTFOLIO</span>
-          <h2 className="section-title">ENGINEERED PROJECTS</h2>
+          <span className="section-tag">THE ECOSYSTEM</span>
+          <h2 className="section-title">NEXUS AI SUITE</h2>
           <div className="section-line"></div>
         </div>
 
         <div className="project-grid">
-          {settings.projects.map((proj, i) => (
-            <article key={i} className="project-card glass shadow-hover">
-              <div className="card-top">
-                <div className="card-icon-wrapper">
-                  <span className="card-icon">{proj.icon}</span>
-                  <div className="icon-glow"></div>
-                </div>
-                <span className="card-tag">{proj.tag}</span>
+          <Link href="/mr-build" className="project-card glass shadow-hover no-underline">
+            <div className="card-top">
+              <div className="card-icon-wrapper">
+                <span className="card-icon">🏗️</span>
+                <div className="icon-glow"></div>
               </div>
-              <h3>{proj.title}</h3>
-              <p>{proj.desc}</p>
-              <div className="card-footer">
-                <span className="view-link">INITIATING DATA...</span>
+              <span className="card-tag">Web Builder</span>
+            </div>
+            <h3>MR BUILD</h3>
+            <p>Deploy high-performance, SEO-optimized websites in seconds. Zero code, total control.</p>
+            <div className="card-footer">
+              <span className="view-link">LAUNCH ENGINE →</span>
+            </div>
+          </Link>
+
+          <Link href="/mr-search" className="project-card glass shadow-hover no-underline">
+            <div className="card-top">
+              <div className="card-icon-wrapper">
+                <span className="card-icon">🔍</span>
+                <div className="icon-glow"></div>
               </div>
-            </article>
-          ))}
+              <span className="card-tag">Real-time Search</span>
+            </div>
+            <h3>MR SEARCH</h3>
+            <p>Next-gen indexing technology for deep-web discovery and instant data retrieval.</p>
+            <div className="card-footer">
+              <span className="view-link">START SEARCH →</span>
+            </div>
+          </Link>
+
+          <Link href="/mr-shop" className="project-card glass shadow-hover no-underline">
+            <div className="card-top">
+              <div className="card-icon-wrapper">
+                <span className="card-icon">🛍️</span>
+                <div className="icon-glow"></div>
+              </div>
+              <span className="card-tag">Marketplace</span>
+            </div>
+            <h3>MR SHOP</h3>
+            <p>A secure digital asset exchange for futuristic tools, templates, and AI models.</p>
+            <div className="card-footer">
+              <span className="view-link">BROWSE ASSETS →</span>
+            </div>
+          </Link>
+
+          <Link href="/savoirpedia" className="project-card glass shadow-hover no-underline">
+            <div className="card-top">
+              <div className="card-icon-wrapper">
+                <span className="card-icon">📚</span>
+                <div className="icon-glow"></div>
+              </div>
+              <span className="card-tag">Knowledge Hub</span>
+            </div>
+            <h3>SAVOIRPEDIA</h3>
+            <p>The definitive archive for tech, futurism, and digital sovereignty.</p>
+            <div className="card-footer">
+              <span className="view-link">OPEN ARCHIVES →</span>
+            </div>
+          </Link>
         </div>
+      </section>
+
+      {/* SYSTEM DASHBOARD */}
+      <section className="section reveal" ref={el => sectionsRef.current[5] = el} style={{ paddingTop: '50px' }}>
+        <div className="section-header">
+          <span className="section-tag">SYSTEM STATUS</span>
+          <h2 className="section-title">GLOBAL PERFORMANCE</h2>
+        </div>
+        <SystemStatus />
       </section>
 
       {/* STATS */}
@@ -231,6 +288,10 @@ export default function HomeClient() {
           position: relative;
           overflow: hidden;
           background: #020202;
+        }
+        .no-underline {
+          text-decoration: none;
+          color: inherit;
         }
         .hero-bg {
           position: absolute;
