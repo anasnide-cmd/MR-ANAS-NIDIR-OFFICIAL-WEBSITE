@@ -12,11 +12,15 @@
     "deploy:rules": "firebase deploy --only firestore:rules"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.12",
+    "@ai-sdk/react": "^3.0.41",
     "@heroui/user": "^2.2.24",
     "@paypal/react-paypal-js": "^8.9.2",
+    "ai": "^6.0.39",
     "firebase": "^12.7.0",
-    "framer-motion": "^12.25.0",
+    "framer-motion": "^12.26.2",
     "gsap": "^3.14.2",
+    "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.7",

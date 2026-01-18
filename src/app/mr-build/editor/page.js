@@ -13,6 +13,7 @@ import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-markup';
+import AICopilot from './AICopilot';
 import 'prismjs/themes/prism-tomorrow.css'; // Pro Dark Theme
 
 function MrBuildEditorContent() {
@@ -789,11 +790,22 @@ function MrBuildEditorContent() {
                     </div>
 
                     <div className="sidebar-actions">
+                        <div className="glass card reveal-on-scroll" style={{ padding: '0', overflow: 'hidden', height: '600px' }}>
+                            <AICopilot onApplyCode={(code) => {
+                                // Smartly append or replace code based on context
+                                setSiteData(prev => ({
+                                    ...prev,
+                                    customHtml: prev.customHtml + '\n' + code
+                                }));
+                                alert('AI Magic Applied! Check the "Advanced Engineering" tab or Live Preview.');
+                            }} />
+                        </div>
                         <div className="glass card actions-panel reveal-on-scroll">
                             <h3>Quick Actions</h3>
                             <button type="submit" className="btn-modern glow-blue full-width" disabled={saving}>
                                 {saving ? '⏳ Synchronizing...' : (siteId ? '💾 Update Node' : '🚀 Deploy Node')}
                             </button>
+
                             {siteId && siteData.slug && (
                                 <>
                                     <a href={`/s/${siteData.slug}`} target="_blank" rel="noopener noreferrer" className="btn-modern outline full-width">

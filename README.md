@@ -1,3 +1,18 @@
+# MR ANAS NIDIR OFFICIAL WEBSITE
+
+The digital ecosystem for ANAS NIDIR, featuring advanced site-building tools, semantic search, and e-commerce capabilities.
+
+## 📚 Documentation
+
+Comprehensive documentation and **[User Tutorials](./docs/tutorial.md)** are available in the [docs/](./docs/index.md) directory.
+
+- [Tutorial: Getting Started](./docs/tutorial.md)
+- [Global Architecture](./docs/global-architecture.md)
+- [MR BUILD Guide](./docs/mr-build.md)
+- [MR SEARCH Guide](./docs/mr-search.md)
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
