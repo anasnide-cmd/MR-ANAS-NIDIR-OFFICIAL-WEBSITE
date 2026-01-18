@@ -48,6 +48,9 @@ export default function UsersPage() {
                 const displayEmail = config.email || userSites[0]?.userEmail || 'Unknown Email';
                 const displayName = config.displayName || 'Architect';
 
+                // Online detection: active within last 2 minutes (120000ms)
+                const isOnline = config.lastActive && (Date.now() - config.lastActive < 120000);
+
                 return {
                     uid,
                     email: displayEmail,
@@ -58,6 +61,7 @@ export default function UsersPage() {
                     sites: userSites,
                     totalViews: userSites.reduce((acc, s) => acc + (s.views || 0), 0),
                     lastActive: config.lastActive || null,
+                    isOnline,
                     // Extended Account Data
                     bio: config.bio || '',
                     contactEmail: config.contactEmail || '',
@@ -135,6 +139,7 @@ export default function UsersPage() {
                     <thead>
                         <tr>
                             <th>User Identity</th>
+                            <th>Status</th>
                             <th>Role</th>
                             <th>Stats</th>
                             <th>Site Allocation</th>
@@ -149,6 +154,12 @@ export default function UsersPage() {
                                         <span className="user-name">{u.displayName}</span>
                                         <span className="user-email">{u.email}</span>
                                         <span className="uid-tag">{u.uid}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div className={`status-indicator ${u.isOnline ? 'online' : 'offline'}`}>
+                                        <span className="dot"></span>
+                                        <span className="text">{u.isOnline ? 'ONLINE' : 'OFFLINE'}</span>
                                     </div>
                                 </td>
                                 <td>
@@ -230,7 +241,9 @@ export default function UsersPage() {
                                 </div>
                                 <div className="stat-box">
                                     <span className="label">Status</span>
-                                    <span className="value ok">Active</span>
+                                    <span className={`value ${selectedUser.isOnline ? 'ok' : 'offline'}`}>
+                                        {selectedUser.isOnline ? 'Online' : 'Offline'}
+                                    </span>
                                 </div>
                             </div>
 
@@ -399,6 +412,16 @@ export default function UsersPage() {
                 .status-dot.active { background: #00ff88; }
                 .status-dot.banned { background: #ff3232; }
                 .status-dot.verified { background: #00f0ff; }
+                
+                .status-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; font-weight: 800; }
+                .status-indicator .dot { width: 8px; height: 8px; border-radius: 50%; }
+                .status-indicator.online { color: #00ff88; }
+                .status-indicator.online .dot { background: #00ff88; box-shadow: 0 0 10px #00ff88; }
+                .status-indicator.offline { color: rgba(255,255,255,0.3); }
+                .status-indicator.offline .dot { background: rgba(255,255,255,0.2); }
+                
+                .stat-box .value.offline { color: rgba(255,255,255,0.4); }
+
                 .site-link { color: #fff; text-decoration: none; opacity: 0.5; transition: opacity 0.2s; }
                 .site-link:hover { opacity: 1; }
 
