@@ -17,6 +17,11 @@ const MOCK_EVENTS = [
 
 export default function ActivityFeed() {
   const [events, setEvents] = useState(MOCK_EVENTS);
+  const [currentTime, setCurrentTime] = useState("");
+
+  useEffect(() => {
+    setCurrentTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  }, []);
 
   return (
     <div className="activity-ticker">
@@ -28,7 +33,7 @@ export default function ActivityFeed() {
         <div className="ticker-move">
           {events.concat(events).map((event, i) => (
             <div key={i} className="ticker-item">
-              <span className="ticker-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="ticker-time">{currentTime}</span>
               <span className="ticker-text">{event}</span>
               <span className="ticker-sep">/ /</span>
             </div>

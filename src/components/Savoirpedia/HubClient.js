@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import MagneticWrapper from '../Effects/MagneticWrapper';
 import { db } from '../../lib/firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
@@ -51,9 +52,11 @@ export default function HubClient() {
                     <Link href="/savoirpedia/dashboard" className="create-btn" style={{backgroundColor: '#333', color: '#fff', border: '1px solid #444', marginRight: '5px'}} title="My Dashboard">
                         📊 Dashboard
                     </Link>
-                    <Link href="/savoirpedia/editor" className="create-btn" title="Contribute Article">
-                        ✍️ Create
-                    </Link>
+                        <MagneticWrapper strength={0.2}>
+                            <Link href="/savoirpedia/editor" className="create-btn">
+                                CREATE ARTICLE
+                            </Link>
+                        </MagneticWrapper>
                     <input
                         type="text"
                         placeholder="Search database..."
@@ -115,24 +118,24 @@ export default function HubClient() {
                                             const thumbnail = (imgMatch && imgMatch[1]) ? imgMatch[1] : '/assets/logo.jpg';
                                             
                                             return (
-                                                <article key={post.id} className="post-card">
+                                                <Link href={`/savoirpedia/post/${post.slug}`} className="post-card glass no-underline" style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <MagneticWrapper strength={0.1} range={100}>
                                                         <div className="card-image">
                                                             <Image src={thumbnail} alt={post.title} width={400} height={180} />
                                                         </div>
-                                                    <div className="card-content">
-                                                        <Link href={`/savoirpedia/post?slug=${post.slug || '#'}`} className="card-title">
-                                                            {post.title}
-                                                        </Link>
-                                                        <div className="card-meta">
-                                                            <span>{new Date(post.date).toLocaleDateString()}</span>
-                                                            <span className="dot">•</span>
-                                                            <span>{post.category || 'General'}</span>
+                                                        <div className="card-content">
+                                                            <div className="card-meta">
+                                                                <span>{new Date(post.date).toLocaleDateString()}</span>
+                                                                <span className="dot">•</span>
+                                                                <span>{post.category || 'General'}</span>
+                                                            </div>
+                                                            <h3 className="card-title">{post.title}</h3>
+                                                            <p className="card-snippet">
+                                                                {post.content.replace(/<[^>]*>?/gm, '').substring(0, 120)}...
+                                                            </p>
                                                         </div>
-                                                        <p className="card-snippet">
-                                                            {post.content.replace(/<[^>]*>?/gm, '').substring(0, 120)}...
-                                                        </p>
-                                                    </div>
-                                                </article>
+                                                    </MagneticWrapper>
+                                                </Link>
                                             );
                                         })}
                                     </div>
@@ -149,178 +152,170 @@ export default function HubClient() {
                 body { padding-top: 0 !important; }
             `}</style>
             <style jsx>{`
-                /* ... keep existing styles ... */
-                .posts-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                    gap: 25px;
-                }
-                
-                .post-card {
-                    background: #222;
-                    border: 1px solid #333;
-                    border-radius: 12px;
-                    overflow: hidden;
-                    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-                    display: flex; flex-direction: column;
-                }
-                .post-card:hover {
-                    transform: translateY(-5px);
-                    border-color: #00f0ff;
-                    box-shadow: 0 5px 15px rgba(0, 240, 255, 0.1);
-                }
-
-                .card-image {
-                    height: 180px;
-                    width: 100%;
-                    overflow: hidden;
-                    background: #111;
-                }
-                .card-image img {
-                    width: 100%; height: 100%; object-fit: cover;
-                }
-                
-                .card-content { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
-                
-                .card-title {
-                    font-size: 1.3rem; margin-bottom: 10px;
-                    color: #fff; text-decoration: none;
-                    font-family: 'Georgia', serif; font-weight: bold;
-                    line-height: 1.3;
-                }
-                .card-title:hover { color: #00f0ff; }
-
-                .card-meta {
-                    font-size: 0.8rem; color: #888; margin-bottom: 12px;
-                    display: flex; align-items: center; gap: 8px;
-                }
-                .dot { color: #444; }
-
-                .card-snippet { font-size: 0.9rem; color: #bbb; line-height: 1.5; margin: 0; }
-
                 .wiki-container {
-                    max-width: 100%;
-                    width: 100%;
-                    margin: 0;
-                    padding: 20px;
-                    font-family: 'Georgia', serif; /* Classic Wiki Feel */
-                    background: #f6f6f6;
-                    color: #000;
+                    background: #000;
+                    color: var(--text);
                     min-height: 100vh;
-                }
-                
-                /* Dark Mode Override for consistency with main site if needed, 
-                   but Wiki style usually implies white paper look. 
-                   Let's stick to a "Dark Wiki" theme to match the site, 
-                   OR a high-contrast inverted one if the user wants "Wiki" look.
-                   Given "look like Wikipedia", standard implies white/light. 
-                   However, the site is dark. Let's make a "Dark Wiki". */
-                
-                .wiki-container {
-                    background: #1a1a1a;
-                    color: #e0e0e0;
-                    font-family: sans-serif; /* Modern Wiki */
+                    padding: 40px 20px;
                 }
 
                 .wiki-header {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    border-bottom: 1px solid #333;
-                    padding-bottom: 20px;
-                    margin-bottom: 20px;
+                    border-bottom: 1px solid var(--glass-border);
+                    padding-bottom: 30px;
+                    margin-bottom: 40px;
+                    max-width: 1400px;
+                    margin-left: auto;
+                    margin-right: auto;
                 }
-                .wiki-logo { display: flex; align-items: center; gap: 15px; }
-                .logo-symbol { font-size: 3rem; font-family: serif; color: #00f0ff; }
-                .logo-text h1 { margin: 0; font-size: 1.5rem; font-family: serif; letter-spacing: 1px; }
-                .logo-text p { margin: 0; opacity: 0.6; font-size: 0.8rem; }
+                .wiki-logo { display: flex; align-items: center; gap: 20px; }
+                .logo-symbol { font-size: 3.5rem; font-family: 'Orbitron', sans-serif; color: var(--primary); font-weight: 900; }
+                .logo-text h1 { margin: 0; font-size: 2rem; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; font-weight: 900; }
+                .logo-text p { margin: 0; color: var(--text-dim); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; }
 
-                .wiki-search { display: flex; gap: 5px; }
+                .wiki-search { display: flex; gap: 10px; align-items: center; }
                 .create-btn {
-                    padding: 8px 15px;
-                    background: #00f0ff;
-                    color: #000;
+                    padding: 10px 20px;
+                    background: var(--glass-bg);
+                    border: 1px solid var(--glass-border);
+                    color: var(--text);
                     text-decoration: none;
-                    font-weight: bold;
-                    display: flex; align-items: center;
+                    font-weight: 900;
+                    border-radius: 12px;
+                    font-size: 0.85rem;
+                    transition: all 0.3s;
                 }
+                .create-btn:hover { background: var(--primary); color: #000; border-color: var(--primary); transform: translateY(-2px); }
+                
                 .search-input {
-                    padding: 8px;
-                    border: 1px solid #333;
-                    background: #222;
-                    color: #fff;
-                    width: 250px;
+                    padding: 12px 20px;
+                    border: 1px solid var(--glass-border);
+                    background: var(--glass-bg);
+                    color: var(--text);
+                    width: 300px;
+                    border-radius: 12px;
+                    outline: none;
                 }
                 .search-btn {
-                    padding: 8px 15px;
-                    background: #333;
-                    border: 1px solid #333;
-                    color: #fff;
+                    padding: 12px 20px;
+                    background: var(--glass-bg);
+                    border: 1px solid var(--glass-border);
+                    color: var(--text);
                     cursor: pointer;
+                    border-radius: 12px;
                 }
 
                 .wiki-layout {
                     display: grid;
-                    grid-template-columns: 250px 1fr;
-                    gap: 30px;
+                    grid-template-columns: 280px 1fr;
+                    gap: 60px;
+                    max-width: 1400px;
+                    margin: 0 auto;
                 }
 
-                .wiki-sidebar {
-                    font-size: 0.9rem;
-                }
-                .wiki-nav { margin-bottom: 20px; }
+                .wiki-sidebar { font-size: 0.95rem; }
+                .wiki-nav { margin-bottom: 40px; }
                 .wiki-nav h3 {
-                    font-size: 0.8rem;
+                    font-size: 0.75rem;
                     text-transform: uppercase;
-                    border-bottom: 1px solid #333;
-                    margin-bottom: 10px;
-                    padding-bottom: 5px;
-                    color: #00f0ff;
+                    border-bottom: 1px solid var(--glass-border);
+                    margin-bottom: 15px;
+                    padding-bottom: 10px;
+                    color: var(--primary);
+                    font-family: 'Orbitron', sans-serif;
+                    letter-spacing: 3px;
                 }
                 .wiki-nav ul { list-style: none; padding: 0; }
-                .wiki-nav li { margin-bottom: 5px; }
-                .wiki-nav a { color: #aaa; text-decoration: none; }
-                .wiki-nav a:hover { color: #fff; text-decoration: underline; }
+                .wiki-nav li { margin-bottom: 12px; }
+                .wiki-nav a { color: var(--text-dim); text-decoration: none; transition: all 0.2s; }
+                .wiki-nav a:hover { color: var(--primary); padding-left: 5px; }
 
                 .welcome-banner {
-                    background: #222;
-                    border: 1px solid #00f0ff;
-                    border-left-width: 5px;
-                    padding: 20px;
-                    margin-bottom: 30px;
+                    background: linear-gradient(135deg, rgba(0, 240, 255, 0.05), transparent);
+                    border: 1px solid var(--primary);
+                    border-left-width: 8px;
+                    padding: 40px;
+                    margin-bottom: 50px;
+                    border-radius: 20px;
                 }
-                .welcome-banner h2 { margin-top: 0; font-family: serif; color: #00f0ff; }
+                .welcome-banner h2 { 
+                    margin-top: 0; 
+                    font-family: 'Orbitron', sans-serif; 
+                    color: var(--primary); 
+                    font-weight: 900;
+                    font-size: 1.8rem;
+                }
+                .welcome-banner p { color: var(--text-dim); font-size: 1.1rem; line-height: 1.7; }
 
                 .section-header {
                     display: flex;
                     align-items: center;
-                    gap: 10px;
-                    margin-bottom: 20px;
+                    gap: 20px;
+                    margin-bottom: 30px;
                 }
-                .section-header h3 { margin: 0; white-space: nowrap; font-family: serif; font-size: 1.5rem; }
-                .section-header .line { height: 1px; background: #333; width: 100%; }
-
-                .article-list { list-style: none; padding: 0; }
-                .article-item { margin-bottom: 25px; }
-                .article-link {
-                    display: block;
-                    font-size: 1.2rem;
-                    color: #00f0ff;
-                    text-decoration: none;
-                    margin-bottom: 5px;
-                    font-family: serif;
-                    font-weight: bold;
+                .section-header h3 { 
+                    margin: 0; white-space: nowrap; 
+                    font-family: 'Orbitron', sans-serif; 
+                    font-size: 1.4rem; 
+                    font-weight: 900;
                 }
-                .article-link:hover { text-decoration: underline; }
-                .article-meta { font-size: 0.8rem; color: #666; }
-                .article-snippet { color: #ccc; line-height: 1.5; margin-top: 5px; }
+                .section-header .line { height: 1px; background: var(--glass-border); width: 100%; }
 
-                @media (max-width: 768px) {
+                .posts-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                    gap: 30px;
+                }
+                
+                .post-card {
+                    background: var(--glass-bg);
+                    border: 1px solid var(--glass-border);
+                    border-radius: 24px;
+                    overflow: hidden;
+                    transition: all 0.4s var(--ease-out-expo);
+                    display: flex; flex-direction: column;
+                }
+                .post-card:hover {
+                    transform: translateY(-10px);
+                    border-color: var(--primary);
+                    box-shadow: 0 10px 40px rgba(0, 240, 255, 0.1);
+                }
+
+                .card-image {
+                    height: 200px;
+                    width: 100%;
+                    overflow: hidden;
+                }
+                
+                .card-content { padding: 30px; flex-grow: 1; display: flex; flex-direction: column; }
+                
+                .card-title {
+                    font-size: 1.4rem; margin-bottom: 12px;
+                    color: var(--text); text-decoration: none;
+                    font-family: 'Orbitron', sans-serif; font-weight: 900;
+                    line-height: 1.3;
+                    transition: color 0.3s;
+                }
+                .card-title:hover { color: var(--primary); }
+
+                .card-meta {
+                    font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;
+                    display: flex; align-items: center; gap: 10px;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                    font-weight: 950;
+                }
+                .dot { color: var(--glass-border); }
+                .card-snippet { font-size: 0.95rem; color: var(--text-dim); line-height: 1.7; margin: 0; }
+
+                @media (max-width: 1024px) {
                     .wiki-layout { grid-template-columns: 1fr; }
                     .wiki-sidebar { display: none; }
-                    .wiki-header { flex-direction: column; gap: 20px; align-items: flex-start; }
-                    .wiki-search { width: 100%; }
-                    .search-input { width: 100%; }
+                    .wiki-header { flex-direction: column; gap: 30px; align-items: center; text-align: center; }
+                    .wiki-search { width: 100%; justify-content: center; flex-wrap: wrap; }
+                    .search-input { width: 100%; max-width: 400px; }
                 }
             `}</style>
         </main>

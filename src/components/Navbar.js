@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import MagneticWrapper from './Effects/MagneticWrapper';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -183,11 +184,13 @@ export default function Navbar() {
                   className={`nav-link ${isLinkActive(href) ? 'active' : ''}`}
                   scroll={href.startsWith('#')}
                 >
-                  <span className="nav-icon">{icon}</span>
-                  <span className="nav-label">{label}</span>
-                  {isLinkActive(href) && (
-                    <div className="active-glow"></div>
-                  )}
+                  <MagneticWrapper strength={0.3} range={40}>
+                    <span className="nav-icon">{icon}</span>
+                    <span className="nav-label">{label}</span>
+                    {isLinkActive(href) && (
+                      <div className="active-glow"></div>
+                    )}
+                  </MagneticWrapper>
                 </Link>
                 <div className={`nav-hover-effect ${hoveredLink === href ? 'visible' : ''}`}></div>
               </div>
@@ -261,13 +264,15 @@ export default function Navbar() {
                     className={`mobile-nav-link ${isLinkActive(href) ? 'active' : ''}`}
                     scroll={href.startsWith('#')}
                   >
-                    <div className="card-icon">{icon}</div>
-                    <span className="card-label">{label}</span>
-                    {isLinkActive(href) && (
-                      <div className="card-active-indicator">
-                        <div className="pulse-ring"></div>
-                      </div>
-                    )}
+                    <MagneticWrapper strength={0.2} range={60}>
+                      <div className="card-icon">{icon}</div>
+                      <span className="card-label">{label}</span>
+                      {isLinkActive(href) && (
+                        <div className="card-active-indicator">
+                          <div className="pulse-ring"></div>
+                        </div>
+                      )}
+                    </MagneticWrapper>
                   </Link>
                   <div className="card-glow"></div>
                 </div>
@@ -299,7 +304,7 @@ export default function Navbar() {
           left: 0;
           right: 0;
           height: 90px;
-          z-index: 10000; /* Maximum z-index */
+          z-index: 30000; /* Absolute top-layer UI */
           transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1);
           background: rgba(8, 8, 12, 0);
           border-bottom: 1px solid transparent;
@@ -764,7 +769,7 @@ export default function Navbar() {
           left: 0;
           right: 0;
           bottom: 0;
-          z-index: 2000;
+          z-index: 30001;
           pointer-events: none;
           visibility: hidden; /* Ensure it's hidden from interactivity */
         }
