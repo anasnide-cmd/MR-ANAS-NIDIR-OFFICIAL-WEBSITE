@@ -22,8 +22,7 @@ export default function NotificationCenter() {
             // Simplified query to test permissions (fetch only broadcasts)
             const q = query(
                 collection(db, 'messages'), 
-                where('type', '==', 'broadcast'),
-                orderBy('createdAt', 'desc')
+                where('type', '==', 'broadcast')
             );
             
             const unsubMsg = onSnapshot(q, (snap) => {
@@ -35,6 +34,8 @@ export default function NotificationCenter() {
                 );
 
                 setMessages(visible);
+            }, (error) => {
+                console.error("NotificationCenter: Snapshot listener error", error);
             });
 
             return () => unsubMsg();

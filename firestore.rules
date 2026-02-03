@@ -85,7 +85,7 @@ service cloud.firestore {
 
     // System Health Logs
     match /system_logs/{logId} {
-      allow create: if request.auth != null; // Authenticated users can report errors
+      allow create: if true; // Allow anonymous error reporting
       allow read, update, delete: if isAdmin(); // Only admins can view/manage logs
     }
   }
