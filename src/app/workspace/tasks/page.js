@@ -19,6 +19,8 @@ export default function TaskBoard() {
         const unsubTasks = onSnapshot(q, (snapshot) => {
             const taskList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setTasks(taskList);
+        }, (error) => {
+            console.error("TaskBoard: Snapshot listener error", error);
         });
 
         return () => {

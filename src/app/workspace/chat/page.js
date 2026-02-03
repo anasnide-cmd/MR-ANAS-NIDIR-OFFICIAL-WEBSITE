@@ -30,6 +30,8 @@ export default function ChatPage() {
             setMessages(msgs);
             // Scroll to bottom on new message
             setTimeout(() => dummyRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+        }, (error) => {
+            console.error("ChatPage: Snapshot listener error", error);
         });
 
         return () => {
