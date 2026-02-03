@@ -17,17 +17,31 @@ export default function TeamPage() {
         const unsub = onAuthStateChanged(auth, async (u) => {
             if (u) {
                 const userDoc = await getDoc(doc(db, 'users', u.uid));
-                if (userDoc.exists() && (userDoc.data().role === 'owner' || userDoc.data().role === 'admin')) {
+                // Allow specific emails to bypass role check for bootstrapping
+                const isWhitelisted = ['anasnide@gmail.com', 'ceo@anasnidir.com'].includes(u.email);
+                
+                if (isWhitelisted || (userDoc.exists() && (userDoc.data().role === 'owner' || userDoc.data().role === 'admin'))) {
                     setIsOwner(true);
-                    setCurrentUser(u);
+                    setCurrentUser({ ...u, role: userDoc.exists() ? userDoc.data().role : 'none' });
                     fetchTeam();
                 } else {
-                    setIsOwner(false); // Should be handled by layout, but extra safety
+                    setIsOwner(false);
                 }
             }
         });
         return () => unsub();
     }, []);
+
+    const claimOwnership = async () => {
+        try {
+            await updateDoc(doc(db, 'users', currentUser.uid), { role: 'owner' });
+            alert("Ownership claimed! You now have full system access.");
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to claim ownership. Check console.");
+        }
+    };
 
     const fetchTeam = async () => {
         try {
@@ -102,7 +116,36 @@ export default function TeamPage() {
             <header className="page-header">
                 <h1>TEAM MANAGEMENT</h1>
                 <p>Recruit and manage workspace access.</p>
+                {currentUser && currentUser.role !== 'owner' && (
+                    <div className="alert-box">
+                        <span>⚠ You are detected as Owner but your system role is not set.</span>
+                        <button onClick={claimOwnership} className="btn-claim">CLAIM OWNERSHIP</button>
+                    </div>
+                )}
             </header>
+
+            <style jsx>{`
+                .alert-box {
+                    margin-top: 20px;
+                    background: rgba(255, 200, 0, 0.1);
+                    border: 1px solid rgba(255, 200, 0, 0.3);
+                    padding: 15px;
+                    border-radius: 8px;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 15px;
+                    color: #ffd700;
+                }
+                .btn-claim {
+                    padding: 8px 16px;
+                    background: #ffd700;
+                    color: #000;
+                    border: none;
+                    border-radius: 4px;
+                    font-weight: 700;
+                    cursor: pointer;
+                }
+            `}</style>
 
             <div className="recruit-section card">
                 <h3>Recruit New Staff</h3>

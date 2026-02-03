@@ -5,11 +5,12 @@ service cloud.firestore {
     
     // Helper function to check if user is admin
     function isAdmin() {
-      // Check if the user document has role 'admin'
-      // Note: This requires the user document to exist.
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return request.auth != null && (
+        request.auth.token.email.matches('.*anasnidir.*') || 
+        request.auth.token.email == 'anasnide@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
     }
 
     // Helper to check if user is owner
@@ -19,13 +20,12 @@ service cloud.firestore {
 
     // Helper to check if user is staff (or admin)
     function isStaff() {
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             (
-               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'staff' ||
-               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner'
-             );
+      return request.auth != null && (
+        isAdmin() || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'staff' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner'))
+      );
     }
 
     // Allow authenticated users to read/write posts
