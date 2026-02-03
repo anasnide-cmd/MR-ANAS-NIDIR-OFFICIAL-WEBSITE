@@ -17,6 +17,17 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
+    // Helper to check if user is staff (or admin)
+    function isStaff() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             (
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'staff' ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner'
+             );
+    }
+
     // Allow authenticated users to read/write posts
     match /posts/{postId} {
       allow read: if true; // Public can read blog posts
@@ -87,6 +98,19 @@ service cloud.firestore {
     match /system_logs/{logId} {
       allow create: if true; // Allow anonymous error reporting
       allow read, update, delete: if isAdmin(); // Only admins can view/manage logs
+    }
+
+    // Workspace Communication (Chat)
+    match /workspace_chats/{chatId} {
+      allow read, create: if isStaff();
+      // Only admins can delete/moderate chats if needed, or maybe staff can delete their own?
+      allow delete: if isAdmin(); 
+      allow update: if isAdmin();
+    }
+
+    // Workspace Tasks (Kanban)
+    match /workspace_tasks/{taskId} {
+      allow read, write: if isStaff();
     }
   }
 }
