@@ -1,6 +1,7 @@
 import { Orbitron, Exo_2 } from 'next/font/google';
 import './globals.css';
 import ClientLayout from '../components/ClientLayout';
+import GlobalErrorBoundary from '../components/GlobalErrorBoundary';
 
 const orbitron = Orbitron({
   subsets: ['latin'],
@@ -91,9 +92,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${orbitron.variable} ${exo2.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <ClientLayout navItems={navItems}>
-            {children}
-        </ClientLayout>
+        <GlobalErrorBoundary>
+            <ClientLayout navItems={navItems}>
+                {children}
+            </ClientLayout>
+        </GlobalErrorBoundary>
       </body>
     </html>
   );

@@ -82,5 +82,11 @@ service cloud.firestore {
       );
       allow write: if isAdmin();
     }
+
+    // System Health Logs
+    match /system_logs/{logId} {
+      allow create: if request.auth != null; // Authenticated users can report errors
+      allow read, update, delete: if isAdmin(); // Only admins can view/manage logs
+    }
   }
 }
