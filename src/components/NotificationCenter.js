@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { db, auth } from '../lib/firebase';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, or } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
 export default function NotificationCenter() {
@@ -19,7 +19,12 @@ export default function NotificationCenter() {
         const unsubAuth = onAuthStateChanged(auth, (user) => {
             if (!user) return;
 
-            const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+            // Simplified query to test permissions (fetch only broadcasts)
+            const q = query(
+                collection(db, 'messages'), 
+                where('type', '==', 'broadcast'),
+                orderBy('createdAt', 'desc')
+            );
             
             const unsubMsg = onSnapshot(q, (snap) => {
                 const allMsgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));

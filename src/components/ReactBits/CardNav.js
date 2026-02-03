@@ -17,19 +17,13 @@ const CardNav = ({
   buttonBgColor = '#00f0ff',
   buttonTextColor = '#000000'
 }) => {
+  // State for menu
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const navRef = useRef(null);
   const cardsRef = useRef([]);
   const tlRef = useRef(null);
   const pathname = usePathname();
-  const [prevPathname, setPrevPathname] = useState(pathname);
-
-  // Synchronize icon state on route change during render
-  if (pathname !== prevPathname) {
-      setPrevPathname(pathname);
-      if (isHamburgerOpen) setIsHamburgerOpen(false);
-  }
 
   const calculateHeight = () => {
     const navEl = navRef.current;
@@ -98,16 +92,16 @@ const CardNav = ({
 
   // Close menu when route changes
   useEffect(() => {
-    if (isExpanded) {
-      setIsExpanded(false);
-      setIsHamburgerOpen(false);
-      // Reset animations
-      if (navRef.current) {
-         gsap.to(navRef.current, { height: 70, duration: 0.5, ease: ease });
-         gsap.to(cardsRef.current, { y: 50, opacity: 0, duration: 0.3, ease: ease });
-      }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsExpanded(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsHamburgerOpen(false);
+    // Reset animations
+    if (navRef.current) {
+       gsap.to(navRef.current, { height: 70, duration: 0.5, ease: ease });
+       gsap.to(cardsRef.current, { y: 50, opacity: 0, duration: 0.3, ease: ease });
     }
-  }, [pathname]);
+  }, [pathname, ease]);
 
   // Close on click outside
   useEffect(() => {
@@ -125,7 +119,7 @@ const CardNav = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isExpanded]);
+  }, [isExpanded, ease]);
 
   const setCardRef = i => el => {
     if (el) cardsRef.current[i] = el;
