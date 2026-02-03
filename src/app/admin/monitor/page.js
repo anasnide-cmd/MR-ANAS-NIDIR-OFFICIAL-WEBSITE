@@ -148,6 +148,19 @@ export default function SystemMonitorPage() {
                     gap: 20px;
                     margin-bottom: 40px;
                 }
+                @media (max-width: 768px) {
+                    .stats-grid {
+                        grid-template-columns: 1fr;
+                    }
+                    .monitor-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 20px;
+                    }
+                    .refresh-btn {
+                        width: 100%;
+                    }
+                }
                 .stat-card {
                     background: rgba(255, 255, 255, 0.03);
                     padding: 20px;

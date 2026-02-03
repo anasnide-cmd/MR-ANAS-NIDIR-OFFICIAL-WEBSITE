@@ -307,7 +307,7 @@ export default function HomeClient() {
         }
 
         .hero-title {
-          font-size: clamp(3rem, 10vw, 6rem);
+          font-size: clamp(2rem, 10vw, 6rem);
           font-weight: 950;
           letter-spacing: -3px;
           margin-bottom: 10px;
@@ -404,7 +404,7 @@ export default function HomeClient() {
         /* Project Cards 3D */
         .project-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
           gap: 30px;
         }
         .project-card {

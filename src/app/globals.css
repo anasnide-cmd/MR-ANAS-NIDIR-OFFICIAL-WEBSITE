@@ -12,15 +12,17 @@
 html,
 body {
   height: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll on mobile */
+  width: 100%;
 }
 
 body {
   margin: 0;
-  /* padding-top is handled by layout/navbar spacing if needed, or keep it */
   padding-top: 70px;
   background: var(--bg);
   color: var(--text);
   scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Re-use existing utility classes */
