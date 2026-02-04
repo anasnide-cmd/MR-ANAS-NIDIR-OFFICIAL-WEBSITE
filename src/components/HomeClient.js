@@ -7,6 +7,18 @@ import ShinyText from './ReactBits/ShinyText';
 import RetroGrid from './ReactBits/RetroGrid';
 import { db } from '../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import ActivityFeed from './ActivityFeed';
+import SystemStatus from './SystemStatus';
+import PresenceDisplay from './PresenceDisplay';
+import ScrollReveal from './Effects/ScrollReveal';
+import ParallaxLayer from './Effects/ParallaxLayer';
+import QuantumCore from './Effects/QuantumCore';
+import MagneticWrapper from './Effects/MagneticWrapper';
+import CustomCursor from './Effects/CustomCursor';
+import HyperButton from './Effects/HyperButton';
+import LensEffects from './Effects/LensEffects';
+import NexusCommand from './NexusCommand';
+
 
 export default function HomeClient() {
   const sectionsRef = useRef([]);
@@ -58,53 +70,79 @@ export default function HomeClient() {
         x: (e.clientX / window.innerWidth - 0.5) * 20,
         y: (e.clientY / window.innerHeight - 0.5) * 20,
       });
+
+      // Localized mouse tracking for cards
+      const cards = document.querySelectorAll('.project-card, .hub-card, .price-card');
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--mouse-x', `${x}%`);
+        card.style.setProperty('--mouse-y', `${y}%`);
+      });
     };
     window.addEventListener('mousemove', handleMouseMove);
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('active');
-        }
-      });
-    }, { threshold: 0.1 });
-
-    sectionsRef.current.forEach(el => el && observer.observe(el));
     return () => {
-      observer.disconnect();
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
 
   return (
     <>
+      <LensEffects />
+      <NexusCommand />
+      <CustomCursor />
+      <QuantumCore />
       {/* HERO */}
       <header className="hero" id="home">
         <div className="hero-bg">
-          <RetroGrid />
+          <div className="subtle-grid">
+            <RetroGrid opacity={0.1} />
+          </div>
+          <div className="nebula-container">
+            <div className="nebula nebula-1"></div>
+            <div className="nebula nebula-2"></div>
+            <div className="nebula nebula-3"></div>
+          </div>
           <div className="grid-overlay"></div>
         </div>
 
         <div className="hero-content" style={{ transform: `translate3d(${mousePos.x}px, ${mousePos.y}px, 0)` }}>
-          <div className="logo-container">
-            <div className="logo-pulse"></div>
-            <div className="logo-glow">
-              <Image src="/assets/logo.jpg" alt="Logo" width={400} height={400} className="logo" style={{ objectFit: 'contain' }} />
+          <ParallaxLayer speed={-0.3}>
+            <div className="logo-container">
+              <div className="logo-pulse"></div>
+              <div className="logo-glow">
+                <Image src="/assets/logo.jpg" alt="Logo" width={400} height={400} className="logo" style={{ objectFit: 'contain' }} />
+              </div>
             </div>
-          </div>
-          <h1 className="hero-title animate-reveal">
-            <ShinyText text={settings.heroTitle} speed={3} className="custom-shiny-text" />
-          </h1>
-          <p className="hero-subtitle animate-reveal-delay">{settings.heroSubtitle}</p>
-          <div className="hero-buttons animate-reveal-delay-2">
-            <Link href="#projects" className="btn-premium">
-              <span>EXPLORE UNIVERSE</span>
-              <div className="btn-glow"></div>
-            </Link>
-            <Link href="/savoirpedia" className="btn-outline">
-              READ ARCHIVES
-            </Link>
-          </div>
+          </ParallaxLayer>
+
+          <ScrollReveal direction="up" delay={0.2}>
+            <h1 className="hero-title animate-reveal">
+              <ShinyText text={settings.heroTitle} speed={3} className="custom-shiny-text" />
+            </h1>
+          </ScrollReveal>
+          
+          <ScrollReveal direction="up" delay={0.4}>
+            <p className="hero-subtitle animate-reveal-delay">{settings.heroSubtitle}</p>
+          </ScrollReveal>
+          
+          <ScrollReveal direction="up" delay={0.6}>
+            <div className="hero-presence animate-reveal-delay">
+              <PresenceDisplay />
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={0.8}>
+            <div className="hero-buttons animate-reveal-delay-2">
+              <HyperButton href="#projects">
+                EXPLORE UNIVERSE
+              </HyperButton>
+              <HyperButton href="/savoirpedia" className="alt-btn">
+                READ ARCHIVES
+              </HyperButton>
+            </div>
+          </ScrollReveal>
         </div>
 
         <div className="scroll-indicator">
@@ -115,31 +153,208 @@ export default function HomeClient() {
         </div>
       </header>
 
-      {/* PROJECTS */}
-      <section id="projects" className="section reveal" ref={el => sectionsRef.current[0] = el}>
-        <div className="section-header">
-          <span className="section-tag">PORTFOLIO</span>
-          <h2 className="section-title">ENGINEERED PROJECTS</h2>
-          <div className="section-line"></div>
-        </div>
+      <div className="telemetry-bar">
+        <ActivityFeed />
+      </div>
+
+      {/* NEXUS AI SUITE */}
+      <section id="projects" className="section">
+        <ScrollReveal direction="up">
+          <div className="section-header">
+            <span className="section-tag">THE ECOSYSTEM</span>
+            <h2 className="section-title">NEXUS AI SUITE</h2>
+          </div>
+        </ScrollReveal>
 
         <div className="project-grid">
-          {settings.projects.map((proj, i) => (
-            <article key={i} className="project-card glass shadow-hover">
-              <div className="card-top">
-                <div className="card-icon-wrapper">
-                  <span className="card-icon">{proj.icon}</span>
-                  <div className="icon-glow"></div>
+          <ScrollReveal direction="left" delay={0.1}>
+            <Link href="/mr-build" className="project-card glass shadow-hover no-underline">
+              <MagneticWrapper strength={0.1} range={100}>
+                <div className="card-top">
+                  <div className="card-icon-wrapper">
+                    <span className="card-icon">🏗️</span>
+                    <div className="icon-glow"></div>
+                  </div>
+                  <span className="card-tag">Web Builder</span>
                 </div>
-                <span className="card-tag">{proj.tag}</span>
+                <h3>MR BUILD</h3>
+                <p>Deploy high-performance, SEO-optimized websites in seconds. Zero code, total control.</p>
+                <div className="card-footer">
+                  <span className="view-link">LAUNCH ENGINE →</span>
+                </div>
+              </MagneticWrapper>
+            </Link>
+          </ScrollReveal>
+
+          <ScrollReveal direction="left" delay={0.2}>
+            <Link href="/mr-search" className="project-card glass shadow-hover no-underline">
+              <MagneticWrapper strength={0.1} range={100}>
+                <div className="card-top">
+                  <div className="card-icon-wrapper">
+                    <span className="card-icon">🔍</span>
+                    <div className="icon-glow"></div>
+                  </div>
+                  <span className="card-tag">Real-time Search</span>
+                </div>
+                <h3>MR SEARCH</h3>
+                <p>Next-gen indexing technology for deep-web discovery and instant data retrieval.</p>
+                <div className="card-footer">
+                  <span className="view-link">START SEARCH →</span>
+                </div>
+              </MagneticWrapper>
+            </Link>
+          </ScrollReveal>
+
+          <ScrollReveal direction="left" delay={0.3}>
+            <Link href="/mr-shop" className="project-card glass shadow-hover no-underline">
+              <MagneticWrapper strength={0.1} range={100}>
+                <div className="card-top">
+                  <div className="card-icon-wrapper">
+                    <span className="card-icon">🛍️</span>
+                    <div className="icon-glow"></div>
+                  </div>
+                  <span className="card-tag">Marketplace</span>
+                </div>
+                <h3>MR SHOP</h3>
+                <p>A secure digital asset exchange for futuristic tools, templates, and AI models.</p>
+                <div className="card-footer">
+                  <span className="view-link">BROWSE ASSETS →</span>
+                </div>
+              </MagneticWrapper>
+            </Link>
+          </ScrollReveal>
+
+          <ScrollReveal direction="left" delay={0.4}>
+            <Link href="/savoirpedia" className="project-card glass shadow-hover no-underline">
+              <MagneticWrapper strength={0.1} range={100}>
+                <div className="card-top">
+                  <div className="card-icon-wrapper">
+                    <span className="card-icon">📚</span>
+                    <div className="icon-glow"></div>
+                  </div>
+                  <span className="card-tag">Knowledge Hub</span>
+                </div>
+                <h3>SAVOIRPEDIA</h3>
+                <p>The definitive archive for tech, futurism, and digital sovereignty.</p>
+                <div className="card-footer">
+                  <span className="view-link">OPEN ARCHIVES →</span>
+                </div>
+              </MagneticWrapper>
+            </Link>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* PRO CTAS: SAVOIRPEDIA & BIO INTERRUPT */}
+      <section className="section cta-banner-section">
+        <div className="cta-banner glass pro">
+          <div className="cta-content">
+            <span className="cta-tag">PREMIUM ACCESS</span>
+            <h2>UNLOCK THE MASTER ARCHIVE</h2>
+            <p>Get exclusive access to the deep-tech insights and futurist perspectives reserved for our Pro members.</p>
+          </div>
+          <Link href="/mr-build/subscription" className="btn-premium gold">
+            GO PRO NOW
+          </Link>
+        </div>
+      </section>
+
+      {/* SYSTEM DASHBOARD */}
+      <section className="section" style={{ paddingTop: '50px' }}>
+        <ScrollReveal direction="up">
+          <div className="section-header">
+            <span className="section-tag">SYSTEM STATUS</span>
+            <h2 className="section-title">GLOBAL PERFORMANCE</h2>
+          </div>
+        </ScrollReveal>
+        <SystemStatus />
+      </section>
+
+      {/* ECONOMIC ENGINE: PRICING */}
+      <section id="pricing" className="section">
+        <ScrollReveal direction="up">
+          <div className="section-header center">
+            <span className="section-tag">MONETIZATION</span>
+            <h2 className="section-title">ECONOMIC ENGINE</h2>
+            <p className="section-subtitle">Fuel your digital expansion with our premium protocols.</p>
+          </div>
+        </ScrollReveal>
+
+        <div className="pricing-grid">
+          <ScrollReveal direction="up" delay={0.2}>
+            <MagneticWrapper strength={0.05} range={200}>
+              <div className="price-card glass">
+                <div className="price-header">
+                  <h3>TRIAL-X</h3>
+                  <div className="amount">$0<span>/mo</span></div>
+                </div>
+                <ul className="price-features">
+                  <li>✅ 1 Active Deployment</li>
+                  <li>✅ Basic Site Editor</li>
+                  <li>✅ Manual Deployments</li>
+                  <li>❌ Custom Domains</li>
+                </ul>
+                <Link href="/mr-build/login" className="btn-outline">START FREE</Link>
               </div>
-              <h3>{proj.title}</h3>
-              <p>{proj.desc}</p>
-              <div className="card-footer">
-                <span className="view-link">INITIATING DATA...</span>
+            </MagneticWrapper>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={0.4}>
+            <MagneticWrapper strength={0.08} range={200}>
+              <div className="price-card glass pro highlight">
+                <div className="badge">MOST POPULAR</div>
+                <div className="price-header">
+                  <h3>PREMIUM-X</h3>
+                  <div className="amount">$9.99<span>/mo</span></div>
+                </div>
+                <ul className="price-features">
+                  <li>✅ <strong>5 Active Deployments</strong></li>
+                  <li>✅ <strong>Advanced Components</strong></li>
+                  <li>✅ <strong>Instant Updates</strong></li>
+                  <li>✅ 24/7 Priority Channel</li>
+                </ul>
+                <Link href="/mr-build/subscription" className="btn-premium">UPGRADE NOW</Link>
               </div>
-            </article>
-          ))}
+            </MagneticWrapper>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* MARKETPLACE SHOWCASE */}
+      <section className="section">
+        <ScrollReveal direction="left">
+          <div className="section-header">
+            <span className="section-tag">MR SHOP</span>
+            <h2 className="section-title">FEATURED ASSETS</h2>
+          </div>
+        </ScrollReveal>
+        
+        <div className="asset-grid">
+          <ScrollReveal direction="right" delay={0.2}>
+            <MagneticWrapper strength={0.1}>
+              <div className="asset-item glass">
+                <div className="asset-info">
+                  <h4>Nebula UI Kit</h4>
+                  <p>Premium dark-mode templates for Mr Build.</p>
+                </div>
+                <div className="asset-price">$19</div>
+                <a href="https://anasnidir.gumroad.com/" target="_blank" className="btn-buy">BUY NOW</a>
+              </div>
+            </MagneticWrapper>
+          </ScrollReveal>
+          
+          <ScrollReveal direction="right" delay={0.4}>
+            <MagneticWrapper strength={0.1}>
+              <div className="asset-item glass">
+                <div className="asset-info">
+                  <h4>Quantum Search API</h4>
+                  <p>Direct access to Mr Search indexing core.</p>
+                </div>
+                <div className="asset-price">$49</div>
+                <a href="https://anasnidir.gumroad.com/" target="_blank" className="btn-buy">BUY NOW</a>
+              </div>
+            </MagneticWrapper>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -158,45 +373,57 @@ export default function HomeClient() {
       </section>
 
       {/* ABOUT */}
-      <section id="about" className="section reveal" ref={el => sectionsRef.current[1] = el}>
-        <h2 className="section-title">👤 About Me</h2>
-        <div className="about-content">
-          <p className="about-text">
-            {settings.aboutText}
-          </p>
-        </div>
+      <section id="about" className="section">
+        <ScrollReveal direction="up">
+          <h2 className="section-title">👤 About Me</h2>
+          <div className="about-content">
+            <p className="about-text">
+              {settings.aboutText}
+            </p>
+          </div>
+        </ScrollReveal>
       </section>
 
       {/* BIO */}
-      <section id="bio" className="section bio-section reveal" ref={el => sectionsRef.current[2] = el}>
+      <section id="bio" className="section bio-section">
         <div className="bio-glitch-bg"></div>
         <div className="bio-container">
           <div className="bio-visual">
-            <div className="bio-image-frame">
-              <Image src="/assets/profile.jpg" alt="Anas" width={400} height={400} className="bio-img" />
-              <div className="frame-border"></div>
-            </div>
-            <div className="bio-experience">
-              <span className="exp-num">EST.</span>
-              <span className="exp-text">2025</span>
-            </div>
+            <ScrollReveal direction="left">
+              <ParallaxLayer speed={0.2}>
+                <div className="bio-image-frame">
+                  <Image src="/assets/profile.jpg" alt="Anas" width={400} height={400} className="bio-img" />
+                  <div className="frame-border"></div>
+                </div>
+              </ParallaxLayer>
+            </ScrollReveal>
+            <ScrollReveal direction="up" delay={0.3}>
+              <div className="bio-experience">
+                <span className="exp-num">EST.</span>
+                <span className="exp-text">2025</span>
+              </div>
+            </ScrollReveal>
           </div>
           <div className="bio-text">
-            <span className="subtitle">THE ARCHITECT</span>
-            <h2>{settings.bioTitle}</h2>
-            <p className="highlight">{settings.bioText1}</p>
-            <p>{settings.bioText2}</p>
-            <div className="quote-box">
-              <span className="quote-icon">&quot;</span>
-              <p>{settings.quote}</p>
-            </div>
+            <ScrollReveal direction="right">
+              <span className="subtitle">THE ARCHITECT</span>
+              <h2>{settings.bioTitle}</h2>
+              <p className="highlight">{settings.bioText1}</p>
+              <p>{settings.bioText2}</p>
+              <div className="quote-box">
+                <span className="quote-icon">&quot;</span>
+                <p>{settings.quote}</p>
+              </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
 
       {/* PRODUCTS */}
-      <section id="products" className="section product-section reveal" ref={el => sectionsRef.current[3] = el}>
-        <h2 className="section-title">DIGITAL ASSETS</h2>
+      <section id="products" className="section product-section">
+        <ScrollReveal direction="up">
+          <h2 className="section-title">DIGITAL ASSETS</h2>
+        </ScrollReveal>
         <div className="asset-grid">
           {settings.products.map((prod, i) => (
             <a key={i} href={prod.url} target="_blank" rel="noopener noreferrer" className="asset-link glass">
@@ -207,11 +434,81 @@ export default function HomeClient() {
         </div>
       </section>
 
+      {/* SUCCESS SIGNALS (Testimonials / Social Proof) */}
+      <section className="section success-signals">
+        <ScrollReveal direction="up">
+          <div className="section-header center">
+            <span className="section-tag">VALIDATION</span>
+            <h2 className="section-title">SUCCESS SIGNALS</h2>
+          </div>
+        </ScrollReveal>
+        <div className="signal-grid">
+          <div className="signal-card glass">
+            <p className="signal-quote">"Mr Build changed how I deploy. It's the infrastructure I didn't know I needed."</p>
+            <div className="signal-author">— Verified Architect</div>
+          </div>
+          <div className="signal-card glass">
+            <p className="signal-quote">"The speed of Mr Search is unparalleled. Absolute digital sovereignty."</p>
+            <div className="signal-author">— Data Futurist</div>
+          </div>
+        </div>
+      </section>
+
+      {/* NEXUS HUB: COMMUNITY & REFERRALS */}
+      <section id="community" className="section community-hub-section">
+        <div className="hub-container">
+          <ScrollReveal direction="left">
+            <div className="hub-info">
+              <span className="section-tag">JOIN THE FLEET</span>
+              <h2 className="section-title">THE NEXUS HUB</h2>
+              <p>Connect with other digital architects, share your builds, and earn rewards for expanding the universe.</p>
+              
+              <MagneticWrapper strength={0.05}>
+                <div className="referral-teaser glass">
+                  <div className="teaser-icon">🎁</div>
+                  <div className="teaser-text">
+                    <h4>REFER & EARN</h4>
+                    <p>Invite a friend and get 1 month of PREMIUM-X for free.</p>
+                  </div>
+                </div>
+              </MagneticWrapper>
+            </div>
+          </ScrollReveal>
+
+          <div className="hub-links">
+            <ScrollReveal direction="right" delay={0.2}>
+              <MagneticWrapper strength={0.1}>
+                <a href="#" className="hub-card discord shadow-hover no-underline">
+                  <span className="hub-icon">💬</span>
+                  <h3>DISCORD COMMAND</h3>
+                  <p>Official HQ for updates and support.</p>
+                </a>
+              </MagneticWrapper>
+            </ScrollReveal>
+            
+            <ScrollReveal direction="right" delay={0.4}>
+              <MagneticWrapper strength={0.1}>
+                <a href="#" className="hub-card x shadow-hover no-underline">
+                  <span className="hub-icon">𝕏</span>
+                  <h3>NEXUS BROADCAST</h3>
+                  <p>Follow the latest system signals.</p>
+                </a>
+              </MagneticWrapper>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
       {/* CONTACT */}
-      <section id="contact" className="section contact-section reveal" ref={el => sectionsRef.current[4] = el}>
+      <section id="contact" className="section contact-section">
         <div className="footer-glow"></div>
-        <h2 className="section-title">SECURE CONNECTION</h2>
-        <p className="section-subtitle">READY TO LAUNCH YOUR NEXT VISION?</p>
+        <ScrollReveal direction="up">
+          <div className="section-header center">
+            <span className="section-tag">CONNECTION</span>
+            <h2 className="section-title">SECURE PROTOCOL</h2>
+            <p className="section-subtitle">READY TO LAUNCH YOUR NEXT VISION?</p>
+          </div>
+        </ScrollReveal>
         <a href={`mailto:${settings.contactEmail}`} className="contact-link gradient-text">{settings.contactEmail}</a>
 
         <div className="social-wrap">
@@ -222,7 +519,57 @@ export default function HomeClient() {
       </section>
 
       <style jsx>{`
+        .section {
+          padding: var(--section-padding) 20px;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+
+        /* LIQUID FROST GLASS SYSTEM */
+        .glass {
+          background: rgba(255, 255, 255, 0.015);
+          backdrop-filter: blur(40px) saturate(150%);
+          -webkit-backdrop-filter: blur(40px) saturate(150%);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.9),
+                      inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+          transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+          position: relative;
+          overflow: hidden;
+        }
+        .glass::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+          transform: translateX(-100%);
+          transition: transform 0.8s;
+        }
+        .glass:hover::after {
+          transform: translateX(100%);
+        }
+        .glass:hover {
+          background: rgba(255, 255, 255, 0.035);
+          border-color: rgba(0, 240, 255, 0.4);
+          transform: translateY(-10px) scale(1.02);
+          box-shadow: 0 60px 120px -30px rgba(0, 0, 0, 1),
+                      0 0 40px rgba(0, 240, 255, 0.15);
+        }
+
         /* Hero Section Premium */
+        .telemetry-bar {
+          position: relative;
+          z-index: 10;
+          border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(20px);
+        }
+        .subtle-grid {
+          position: absolute;
+          inset: 0;
+          opacity: 0.3;
+          pointer-events: none;
+        }
         .hero {
           min-height: 100vh;
           display: flex;
@@ -230,8 +577,170 @@ export default function HomeClient() {
           justify-content: center;
           position: relative;
           overflow: hidden;
-          background: #020202;
+          background: #000;
         }
+
+        .cta-banner-section { padding: var(--section-padding) 20px; }
+        .cta-banner {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 80px;
+          border-radius: 40px;
+          gap: 40px;
+          position: relative;
+          overflow: hidden;
+        }
+        .cta-banner::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at top right, rgba(0, 240, 255, 0.1), transparent);
+          pointer-events: none;
+        }
+        .cta-banner.pro {
+          border-color: rgba(255, 215, 0, 0.3);
+          background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent);
+          box-shadow: inset 0 0 100px rgba(255, 215, 0, 0.05);
+        }
+        .cta-tag { color: #ffd700; font-weight: 950; letter-spacing: 5px; font-size: 0.7rem; text-transform: uppercase; }
+        .cta-content h2 { font-family: 'Orbitron', sans-serif; font-size: clamp(2rem, 5vw, 3.5rem); margin: 15px 0; font-weight: 900; }
+        .cta-content p { opacity: 0.6; max-width: 500px; font-size: 1.1rem; line-height: 1.6; color: var(--text-dim); }
+        
+        .pricing-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 30px;
+          margin-top: 60px;
+        }
+        .price-card {
+          padding: 60px 40px;
+          border-radius: 30px;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          gap: 30px;
+          position: relative;
+        }
+        .price-card.pro {
+          border-color: var(--primary);
+          transform: scale(1.05);
+          z-index: 2;
+          background: rgba(0, 240, 255, 0.04);
+          box-shadow: 0 0 50px rgba(0, 240, 255, 0.1);
+        }
+        .price-card .badge {
+          position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+          background: var(--primary); color: #000; font-weight: 900; font-size: 0.7rem;
+          padding: 6px 18px; border-radius: 20px;
+          box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3);
+        }
+        .price-header h3 { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; letter-spacing: 2px; margin-bottom: 20px; }
+        .amount { font-family: 'Orbitron', sans-serif; font-size: 3.5rem; font-weight: 950; }
+        .amount span { font-size: 1rem; opacity: 0.4; font-family: 'Inter', sans-serif; }
+        
+        .price-features { list-style: none; padding: 0; text-align: left; }
+        .price-features li { margin-bottom: 18px; color: var(--text-dim); font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
+        
+        .asset-grid {
+          display: grid;
+          gap: 20px;
+          margin-top: 40px;
+        }
+        .asset-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 30px 45px;
+          border-radius: 24px;
+        }
+        .asset-item:hover { transform: translateX(10px); }
+        .asset-info h4 { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; margin-bottom: 5px; }
+        .asset-info p { font-size: 0.9rem; color: var(--text-dim); }
+        .asset-price { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 900; color: var(--primary); }
+
+        .signal-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 30px;
+          margin-top: 50px;
+        }
+        .signal-card {
+          padding: 50px;
+          border-radius: 30px;
+          border: 1px solid rgba(0, 240, 255, 0.1);
+          text-align: left;
+        }
+        .signal-quote { font-style: italic; font-size: 1.15rem; color: var(--text-dim); margin-bottom: 25px; line-height: 1.6; }
+        .signal-author { font-family: 'Orbitron', sans-serif; font-weight: 950; font-size: 0.75rem; letter-spacing: 2px; color: var(--primary); text-transform: uppercase; }
+
+        .hub-container {
+          display: grid;
+          grid-template-columns: 1.2fr 0.8fr;
+          gap: 80px;
+          align-items: center;
+        }
+        .hub-info h2 { font-family: 'Orbitron', sans-serif; font-size: clamp(2.5rem, 6vw, 4rem); margin-bottom: 30px; font-weight: 900; line-height: 1.1; }
+        .hub-info p { font-size: 1.2rem; color: var(--text-dim); margin-bottom: 40px; line-height: 1.7; }
+        
+        .referral-teaser {
+          display: flex;
+          align-items: center;
+          gap: 30px;
+          padding: 40px;
+          border-radius: 30px;
+          border: 1px solid rgba(255, 215, 0, 0.3);
+          background: linear-gradient(135deg, rgba(255, 215, 0, 0.05), transparent);
+        }
+        .teaser-icon { font-size: 3rem; }
+        .teaser-text h4 { font-family: 'Orbitron', sans-serif; font-weight: 950; color: #ffd700; margin-bottom: 8px; font-size: 1.2rem; }
+        .teaser-text p { font-size: 0.95rem; color: var(--text-dim); margin-bottom: 0; }
+
+        .hub-links {
+          display: grid;
+          gap: 24px;
+        }
+        .hub-card {
+          padding: 50px 40px;
+          border-radius: 30px;
+        }
+        .hub-card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .discord { background: rgba(88, 101, 242, 0.05); }
+        .hub-icon { font-size: 3rem; display: block; margin-bottom: 25px; }
+        .hub-card h3 { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 900; margin-bottom: 12px; }
+
+        .logo-glow {
+          width: clamp(220px, 30vw, 450px);
+          height: clamp(220px, 30vw, 450px);
+          border-radius: 40px;
+          box-shadow: 0 20px 80px rgba(0, 240, 255, 0.15);
+        }
+        .logo-pulse {
+          width: clamp(250px, 35vw, 500px); 
+          height: clamp(250px, 35vw, 500px);
+          border-radius: 60px;
+        }
+
+        .hero-title {
+          font-family: 'Orbitron', sans-serif;
+          font-size: clamp(3.5rem, 12vw, 7.5rem);
+          line-height: 0.9;
+          margin-bottom: 15px;
+        }
+        .hero-subtitle {
+          font-size: 1.2rem;
+          color: var(--text-dim);
+          letter-spacing: 6px;
+        }
+
+        @media (max-width: 1024px) {
+          .hub-container { grid-template-columns: 1fr; gap: 60px; text-align: center; }
+          .hub-info p { margin-left: auto; margin-right: auto; }
+          .referral-teaser { justify-content: center; }
+          .cta-banner { flex-direction: column; text-align: center; padding: 60px 40px; }
+          .cta-content p { margin: 0 auto; }
+        }
+
         .hero-bg {
           position: absolute;
           inset: 0;
@@ -266,7 +775,29 @@ export default function HomeClient() {
           position: relative;
           z-index: 2;
           text-align: center;
-          transition: transform 0.1s ease-out;
+          transition: transform 0.2s cubic-bezier(0.075, 0.82, 0.165, 1);
+        }
+
+        .nebula-container {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          pointer-events: none;
+        }
+        .nebula {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(120px);
+          opacity: 0.3;
+          animation: nebulaMove 25s infinite alternate;
+        }
+        .nebula-1 { width: 600px; height: 600px; background: radial-gradient(circle, #00f0ff, transparent); top: -10%; left: -10%; }
+        .nebula-2 { width: 500px; height: 500px; background: radial-gradient(circle, #7000ff, transparent); bottom: -10%; right: -10%; animation-delay: -5s; }
+        .nebula-3 { width: 400px; height: 400px; background: radial-gradient(circle, #ff00c8, transparent); top: 30%; left: 40%; animation-delay: -10s; }
+
+        @keyframes nebulaMove {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(100px, 100px) scale(1.2); }
         }
         .logo-container {
           position: relative;
@@ -396,10 +927,30 @@ export default function HomeClient() {
 
         /* Section Styling */
         .section { padding: 150px 40px; max-width: 1400px; margin: 0 auto; }
-        .section-header { text-align: left; margin-bottom: 80px; }
+        .section-header { text-align: left; margin-bottom: 80px; position: relative; }
         .section-tag { color: #00f0ff; letter-spacing: 5px; font-weight: 900; font-size: 0.75rem; display: block; margin-bottom: 15px; }
-        .section-title { font-size: 3rem; font-weight: 900; letter-spacing: -1px; }
-        .section-header .section-line { width: 100px; height: 4px; background: #00f0ff; margin-top: 20px; box-shadow: 0 0 20px #00f0ff; }
+        .section-title { 
+          font-size: 3rem; 
+          font-weight: 900; 
+          letter-spacing: -1px;
+          position: relative;
+          display: inline-block;
+        }
+        .section-title::after {
+          content: '';
+          position: absolute;
+          left: 0;
+          bottom: -10px;
+          width: 0;
+          height: 2px;
+          background: #00f0ff;
+          box-shadow: 0 0 15px #00f0ff;
+          transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .section:hover .section-title::after {
+          width: 100%;
+        }
+        .section-header .section-line { width: 100px; height: 4px; background: #00f0ff; margin-top: 20px; box-shadow: 0 0 20px #00f0ff; display: none; }
 
         /* Project Cards 3D */
         .project-grid {
@@ -411,15 +962,27 @@ export default function HomeClient() {
           padding: 50px;
           border-radius: 30px;
           text-align: left;
-          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
           position: relative;
           overflow: hidden;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(0, 240, 255, 0.05);
         }
         .project-card:hover {
           transform: translateY(-15px) scale(1.02);
           border-color: rgba(0, 240, 255, 0.4);
-          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.1);
+          background: rgba(255, 255, 255, 0.05);
         }
+        .project-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 240, 255, 0.1), transparent 80%);
+          opacity: 0;
+          transition: opacity 0.3s;
+        }
+        .project-card:hover::before { opacity: 1; }
         .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
         .card-icon-wrapper { position: relative; }
         .card-icon { font-size: 3rem; position: relative; z-index: 2; }
@@ -532,18 +1095,7 @@ export default function HomeClient() {
         .social-btn:hover { color: #00f0ff; }
         .dot { width: 6px; height: 6px; background: #00f0ff; border-radius: 50%; opacity: 0.4; }
 
-        /* Global Reveal */
-        .reveal { opacity: 0; transform: translateY(50px); transition: all 1s cubic-bezier(0.4, 0, 0.2, 1); }
-        .reveal.active { opacity: 1; transform: translateY(0); }
-
-        /* Animation Helpers */
-        .animate-reveal { animation: revIn 1s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-        .animate-reveal-delay { animation: revIn 1s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards; opacity: 0; }
-        .animate-reveal-delay-2 { animation: revIn 1s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards; opacity: 0; }
-        @keyframes revIn {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        /* Global Scroll Reveal Logic handled by ScrollReveal component */
 
         @media (max-width: 1024px) {
           .bio-container { grid-template-columns: 1fr; gap: 50px; }
