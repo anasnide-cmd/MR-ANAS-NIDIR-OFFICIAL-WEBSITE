@@ -118,7 +118,7 @@ export default function HubClient() {
                                             const thumbnail = (imgMatch && imgMatch[1]) ? imgMatch[1] : '/assets/logo.jpg';
                                             
                                             return (
-                                                <Link href={`/savoirpedia/post/${post.slug}`} className="post-card glass no-underline" style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <Link key={post.id} href={`/savoirpedia/post/${post.slug}`} className="post-card glass no-underline" style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <MagneticWrapper strength={0.1} range={100}>
                                                         <div className="card-image">
                                                             <Image src={thumbnail} alt={post.title} width={400} height={180} />
