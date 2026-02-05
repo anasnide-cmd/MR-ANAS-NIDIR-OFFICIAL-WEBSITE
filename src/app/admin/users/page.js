@@ -430,6 +430,60 @@ export default function UsersPage() {
 
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+                /* RESPONSIVE / MOBILE OPTIMIZATION */
+                @media (max-width: 768px) {
+                    .page-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+                    .search-input { width: 100%; }
+                    
+                    /* Transform Table to Cards */
+                    .admin-table, .admin-table tbody, .admin-table tr { display: block; width: 100%; }
+                    .admin-table thead { display: none; } /* Hide headers */
+                    
+                    .user-row {
+                        background: rgba(255,255,255,0.03);
+                        margin-bottom: 20px;
+                        padding: 20px;
+                        border-radius: 16px;
+                        border: 1px solid rgba(255,255,255,0.08);
+                        display: grid !important;
+                        grid-template-columns: 1fr 1fr;
+                        grid-template-areas: 
+                            "identity status"
+                            "role stats"
+                            "limits limits"
+                            "actions actions";
+                        gap: 15px 0;
+                        align-items: center;
+                    }
+                    
+                    .admin-table td { padding: 0; border: none; display: block; }
+                    
+                    /* Assign grid areas to specific cells based on standard order */
+                    .admin-table td:nth-child(1) { grid-area: identity; }
+                    .admin-table td:nth-child(2) { grid-area: status; justify-self: end; }
+                    .admin-table td:nth-child(3) { grid-area: role; }
+                    .admin-table td:nth-child(4) { grid-area: stats; justify-self: end; text-align: right; }
+                    .admin-table td:nth-child(5) { grid-area: limits; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
+                    .admin-table td:nth-child(6) { grid-area: actions; margin-top: 10px; }
+
+                    .user-identity { gap: 2px; }
+                    .user-email { font-size: 0.8rem; }
+                    .uid-tag { display: none; } /* Hide raw UID on mobile to save space */
+                    
+                    .action-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+                    .btn-small.details { 
+                        display: flex; justify-content: center; align-items: center; 
+                        padding: 12px; background: rgba(0, 240, 255, 0.1); 
+                        border-color: rgba(0, 240, 255, 0.3); color: #00f0ff;
+                        font-weight: 700;
+                    }
+                    
+                    .modal-content { width: 100%; padding: 20px; }
+                    .stats-grid-mini { grid-template-columns: 1fr; }
+                    .personal-details-grid { grid-template-columns: 1fr; }
+                    .full-width-item { grid-column: span 1; }
+                }
             `}</style>
         </div>
     );

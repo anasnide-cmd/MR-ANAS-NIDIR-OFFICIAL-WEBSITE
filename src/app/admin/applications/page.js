@@ -345,6 +345,47 @@ export default function AdminApplicationsPage() {
         }
         
         .btn-whatsapp:hover { background: #20BD5A; }
+
+        @media (max-width: 768px) {
+          .admin-container {
+            padding: 1rem;
+          }
+
+          .header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+          }
+
+          .title {
+            font-size: 1.5rem;
+          }
+
+          .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+          }
+
+          .card-actions {
+            width: 100%;
+            justify-content: space-between;
+          }
+
+          .detail-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+
+          .action-buttons {
+            flex-direction: column;
+          }
+
+          .btn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
       `}</style>
     </div>
   );

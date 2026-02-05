@@ -33,19 +33,43 @@
 
 html, body {
   height: 100%;
-  overflow-x: hidden; /* Prevent horizontal scroll on mobile */
   width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  padding-right: env(safe-area-inset-right);
+  padding-left: env(safe-area-inset-left);
+}
+
+/* Prevent image overflow globally */
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Ensure text doesn't push width */
+p, h1, h2, h3, h4, h5, h6, span, a {
+  overflow-wrap: break-word;
 }
 
 body {
   margin: 0;
-  padding-top: 70px;
+  padding-top: 0; /* Fixed: Removed global padding to prevent gaps */
   background: var(--bg);
   color: var(--text);
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   font-family: 'Inter', sans-serif;
   line-height: 1.6;
+  -webkit-tap-highlight-color: transparent; /* Android fix */
+}
+
+/* Global Android/Mobile Input Polish */
+input, textarea, select, button {
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 0; /* Reset Android default radius */
+  font-family: inherit;
 }
 
 /* Re-use existing utility classes */
@@ -90,19 +114,19 @@ h1, h2, h3, .orbitron {
 }
 
 /* Scrollbar Refinement */
+/* Scrollbar Refinement */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 6px; /* Slightly wider for better usability on Windows/Android */
 }
 ::-webkit-scrollbar-track {
   background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--primary-glow);
-  border-radius: 10px;
+  background: rgba(0, 240, 255, 0.3); /* Primary glow color */
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
-  box-shadow: var(--bloom);
 }
 
 /* Selection */

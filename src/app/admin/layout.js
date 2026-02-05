@@ -793,7 +793,7 @@ export default function AdminLayout({ children }) {
                     margin-left: 280px;
                     padding: 0;
                     transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                    min-height: 100vh;
+                    min-height: 100dvh;
                     display: flex;
                     flex-direction: column;
                 }
@@ -934,6 +934,9 @@ export default function AdminLayout({ children }) {
                     .admin-main {
                         margin-left: 0 !important;
                         padding-top: 80px;
+                        width: 100%;
+                        max-width: 100vw;
+                        overflow-x: hidden;
                     }
                     
                     .mobile-toggle {

@@ -220,6 +220,16 @@ export default function AdminDashboard() {
                 .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); }
                 .animate-fade-in { animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+                @media (max-width: 768px) {
+                    .dashboard-overview { padding-bottom: 60px; }
+                    .page-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+                    .header-actions { width: 100%; display: flex; justify-content: flex-end; }
+                    h1 { font-size: 2rem; }
+                    .stats-grid { grid-template-columns: 1fr; }
+                    .recent-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+                    .site-meta { width: 100%; justify-content: space-between; }
+                }
             `}</style>
         </div>
     );
