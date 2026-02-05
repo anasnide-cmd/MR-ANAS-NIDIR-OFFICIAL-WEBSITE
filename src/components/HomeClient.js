@@ -801,7 +801,10 @@ export default function HomeClient() {
         }
         .logo-container {
           position: relative;
-          margin-bottom: 50px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
         }
         .logo-glow {
           position: relative;
@@ -1120,8 +1123,8 @@ export default function HomeClient() {
           .stat-label { font-size: 0.6rem; letter-spacing: 2px; }
           .stats-section { padding: 60px 20px; }
           .stats-container { gap: 20px; }
-          .logo-glow { width: 280px; height: 280px; }
-          .logo-pulse { width: 310px; height: 310px; }
+          .logo-glow { width: clamp(200px, 40vw, 300px); height: clamp(200px, 40vw, 300px); }
+          .logo-pulse { width: clamp(230px, 45vw, 350px); height: clamp(230px, 45vw, 350px); }
           .bio-container { gap: 40px; }
           .bio-text h2 { font-size: 2.5rem; }
           .highlight { font-size: 1.1rem; }
@@ -1139,8 +1142,8 @@ export default function HomeClient() {
           .section-title { font-size: 1.6rem; }
           .hero-title { font-size: 2rem; }
           .hero-subtitle { font-size: 0.75rem; letter-spacing: 1px; }
-          .logo-glow { width: 200px; height: 200px; }
-          .logo-pulse { width: 230px; height: 230px; }
+          .logo-glow { width: clamp(160px, 50vw, 220px); height: clamp(160px, 50vw, 220px); }
+          .logo-pulse { width: clamp(190px, 55vw, 250px); height: clamp(190px, 55vw, 250px); }
           .logo-container { margin-bottom: 30px; }
           .project-card { padding: 25px; }
           .project-card h3 { font-size: 1.2rem; }
