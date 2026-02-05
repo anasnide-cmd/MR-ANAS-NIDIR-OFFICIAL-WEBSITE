@@ -112,5 +112,12 @@ service cloud.firestore {
     match /workspace_tasks/{taskId} {
       allow read, write: if isStaff();
     }
+
+    // Team Applications
+    match /team_applications/{applicationId} {
+      // Allow public to create (apply), but only admins/staff can read/manage
+      allow create: if true;
+      allow read, update, delete: if isStaff();
+    }
   }
 }
