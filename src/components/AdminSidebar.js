@@ -10,6 +10,7 @@ export default function AdminSidebar({ isOpen, close, isMinimized, toggleMinimiz
     const menuItems = [
         { name: 'Dashboard', path: '/admin/', icon: '📊' },
         { name: 'Users', path: '/admin/users/', icon: '👥' },
+        { name: 'Savoirpedia', path: '/savoirpedia/dashboard/', icon: '📚' },
         { name: 'Sites', path: '/admin/sites/', icon: '🌐' },
         { name: 'Content', path: '/admin/content/', icon: '📝' },
         { name: 'New Post', path: '/admin/editor/', icon: '✍️' },

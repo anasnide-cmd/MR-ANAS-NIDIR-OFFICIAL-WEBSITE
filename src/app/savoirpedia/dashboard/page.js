@@ -18,7 +18,9 @@ export default function SavoirPediaDashboard() {
     const [searchTerm, setSearchTerm] = useState('');
     const [displayName, setDisplayName] = useState('');
     const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+    const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [adminModeActive, setAdminModeActive] = useState(false);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (u) => {
@@ -27,6 +29,7 @@ export default function SavoirPediaDashboard() {
                 setDisplayName(u.displayName || '');
                 const adminStatus = ALLOWED_ADMINS.includes(u.email);
                 setIsAdmin(adminStatus);
+                setAdminModeActive(adminStatus); // Default to ON for admins
                 fetchUserPosts(u.uid, adminStatus);
             } else {
                 setLoading(false);
@@ -56,9 +59,18 @@ export default function SavoirPediaDashboard() {
         }
     };
 
+    const toggleAdminMode = () => {
+        if (!isAdmin) return;
+        const newMode = !adminModeActive;
+        setAdminModeActive(newMode);
+        fetchUserPosts(user.uid, newMode);
+    };
+
     const handleDelete = async (postId) => {
-        if (!isAdmin && !confirm('Are you sure you want to delete this article? This action cannot be undone.')) return;
-        if (isAdmin && !confirm('ADMIN WARNING: You are about to delete this article. This action cannot be undone.')) return;
+        const actingAsAdmin = isAdmin && adminModeActive;
+        
+        if (!actingAsAdmin && !confirm('Are you sure you want to delete this article? This action cannot be undone.')) return;
+        if (actingAsAdmin && !confirm('ADMIN WARNING: You are about to delete this article. This action cannot be undone.')) return;
         
         try {
             await deleteDoc(doc(db, 'posts', postId));
@@ -122,9 +134,36 @@ export default function SavoirPediaDashboard() {
             <header className="dash-header">
                 <div className="header-left">
                     <h1>SavoirPedia Dashboard</h1>
-                    <p>
-                        Welcome back, <strong>{user.email}</strong>
-                        {isAdmin && <span style={{marginLeft:'10px', color:'#00f0ff', fontSize:'0.8rem', border:'1px solid #00f0ff', padding:'2px 6px', borderRadius:'4px', letterSpacing:'1px'}}>ADMIN MODE</span>}
+                    <p style={{display:'flex', alignItems:'center', gap:'10px', marginTop:'5px'}}>
+                        <span>Welcome back, <strong>{user.email}</strong></span>
+                        {isAdmin && (
+                            <button 
+                                onClick={toggleAdminMode}
+                                style={{
+                                    background: adminModeActive ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                                    color: adminModeActive ? '#00f0ff' : '#888',
+                                    border: `1px solid ${adminModeActive ? '#00f0ff' : '#444'}`,
+                                    padding: '4px 10px',
+                                    borderRadius: '20px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    letterSpacing: '0.5px',
+                                    transition: 'all 0.2s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}
+                                title={adminModeActive ? "Switch to Personal View" : "Switch to Admin View"}
+                            >
+                                <span style={{
+                                    width:'8px', height:'8px', borderRadius:'50%', 
+                                    background: adminModeActive ? '#00f0ff' : '#888',
+                                    boxShadow: adminModeActive ? '0 0 8px #00f0ff' : 'none'
+                                }}></span>
+                                {adminModeActive ? 'ADMIN MODE' : 'USER MODE'}
+                            </button>
+                        )}
                     </p>
                 </div>
                 <div className="header-actions">
