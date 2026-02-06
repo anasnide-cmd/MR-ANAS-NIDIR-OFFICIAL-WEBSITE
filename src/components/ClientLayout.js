@@ -6,7 +6,7 @@ import PresenceTracker from './PresenceTracker';
 
 export default function ClientLayout({ children, navItems }) {
     const pathname = usePathname();
-    const isSearchPage = pathname?.startsWith('/mr-search');
+    const isSearchPage = pathname?.startsWith('/mr-search') || pathname?.startsWith('/nex-ai');
 
     return (
         <>

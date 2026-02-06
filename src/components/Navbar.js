@@ -121,6 +121,7 @@ export default function Navbar() {
   // Hide Navbar on user sites or admin pages
   if (pathname?.startsWith('/s/')) return null;
   if (pathname?.startsWith('/admin')) return null;
+  if (pathname?.startsWith('/nex-ai')) return null;
 
   const navLinks = [
     { href: '/', label: 'Home', icon: '🏠' },
