@@ -1,14 +1,11 @@
-import { db } from '../../../lib/firebase';
+import { db } from '../../../../lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import WikiArticle from '../../../components/Savoirpedia/WikiArticle';
+import WikiArticle from '../../../../components/Savoirpedia/WikiArticle';
 
 // Helper function to fetch article by slug
 async function getArticle(slug) {
     if (!slug) return null;
     
-    // Note: Since this is running in Node (Next.js server), 
-    // firebase/firestore needs to be compatible.
-    // If using client SDK in a server component, it works for reading usually.
     try {
         const q = query(collection(db, 'posts'), where('slug', '==', slug));
         const snap = await getDocs(q);
@@ -29,8 +26,11 @@ async function getArticle(slug) {
     return null;
 }
 
-export async function generateMetadata({ searchParams }) {
-    const { slug } = await searchParams;
+export async function generateMetadata({ params }) {
+    // Next.js 15+ demands awaiting params
+    const resolvedParams = await params;
+    const { slug } = resolvedParams;
+    
     const article = await getArticle(slug);
 
     if (!article) {
@@ -49,7 +49,7 @@ export async function generateMetadata({ searchParams }) {
         openGraph: {
             title: article.title,
             description: `Read about ${article.title} on Savoirpedia.`,
-            url: `https://mr-anas-nidir-official-website.web.app/savoirpedia/post?slug=${slug}`, // Replace with actual domain if known
+            url: `https://mr-anas-nidir-official-website.web.app/savoirpedia/post/${slug}`,
             siteName: 'Savoirpedia',
             images: [
                 {
@@ -70,8 +70,11 @@ export async function generateMetadata({ searchParams }) {
     };
 }
 
-export default async function WikiPostPage({ searchParams }) {
-    const { slug } = await searchParams;
+export default async function WikiPostPage({ params }) {
+    // Next.js 15+ demands awaiting params
+    const resolvedParams = await params;
+    const { slug } = resolvedParams;
+    
     const article = await getArticle(slug);
 
     return <WikiArticle article={article} />;

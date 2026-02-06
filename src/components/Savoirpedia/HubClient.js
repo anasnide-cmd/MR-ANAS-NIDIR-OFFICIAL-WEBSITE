@@ -29,293 +29,315 @@ export default function HubClient() {
         fetchPosts();
     }, []);
 
+    // Derived state for stats
+    const totalArticles = posts.length;
+    const engineeringCount = posts.filter(p => (p.category || '').toLowerCase() === 'engineering').length;
+    const designCount = posts.filter(p => (p.category || '').toLowerCase() === 'design').length;
+
+    // Filter Logic
+    const [activeCategory, setActiveCategory] = useState('All');
+    
     useEffect(() => {
-        const results = posts.filter(post =>
-            (post.status === 'active' || !post.status) && // Show active or legacy posts (no status)
-            (post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            post.content.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
+        let results = posts;
+        
+        // 1. Search Filter
+        if (searchTerm) {
+            results = results.filter(post =>
+                (post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                post.content.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+        }
+
+        // 2. Category Filter
+        if (activeCategory !== 'All') {
+            results = results.filter(post => (post.category || 'General') === activeCategory);
+        }
+
+        // 3. Status Filter (Legacy vs Active)
+        results = results.filter(post => post.status === 'active' || !post.status);
+
         setFilteredPosts(results);
-    }, [searchTerm, posts]);
+    }, [searchTerm, activeCategory, posts]);
 
     return (
         <main className="wiki-container">
-            <header className="wiki-header">
-                <div className="wiki-logo">
-                    <span className="logo-symbol">S</span>
-                    <div className="logo-text">
-                        <h1>SavoirPedia</h1>
-                        <p>The Free Knowledge Base</p>
+            {/* HOLOGRAPHIC HERO DASHBOARD */}
+            <header className="wiki-hero glass-panel">
+                <div className="hero-content">
+                    <div className="wiki-logo">
+                        <span className="logo-symbol">S</span>
+                        <div className="logo-text">
+                            <h1>SavoirPedia</h1>
+                            <p>SYSTEM KNOWLEDGE ARCHIVE</p>
+                        </div>
+                    </div>
+                    
+                    <div className="hero-stats">
+                        <div className="stat-item">
+                            <span className="stat-val">{totalArticles}</span>
+                            <span className="stat-label">ENTRIES</span>
+                        </div>
+                        <div className="stat-item">
+                            <span className="stat-val online">ONLINE</span>
+                            <span className="stat-label">SYSTEM STATUS</span>
+                        </div>
                     </div>
                 </div>
-                <div className="wiki-search">
-                    <Link href="/savoirpedia/dashboard" className="create-btn" style={{backgroundColor: '#333', color: '#fff', border: '1px solid #444', marginRight: '5px'}} title="My Dashboard">
-                        📊 Dashboard
-                    </Link>
-                        <MagneticWrapper strength={0.2}>
-                            <Link href="/savoirpedia/editor" className="create-btn">
-                                CREATE ARTICLE
-                            </Link>
-                        </MagneticWrapper>
-                    <input
-                        type="text"
-                        placeholder="Search database..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="search-input"
-                    />
-                    <button className="search-btn">🔍</button>
+
+                <div className="hero-actions">
+                     <MagneticWrapper strength={0.2}>
+                        <Link href="/savoirpedia/dashboard" className="action-btn dashboard-btn">
+                            <span>📊 MY DASHBOARD</span>
+                        </Link>
+                    </MagneticWrapper>
+                    <MagneticWrapper strength={0.2}>
+                        <Link href="/savoirpedia/editor" className="action-btn create-btn">
+                            <span>+ NEW ENTRY</span>
+                        </Link>
+                    </MagneticWrapper>
                 </div>
             </header>
 
-            <div className="wiki-layout">
-                <aside className="wiki-sidebar">
-                    <nav className="wiki-nav">
-                        <h3>Navigation</h3>
-                        <ul>
-                            <li><Link href="/">Main Page</Link></li>
-                            <li><Link href="/savoirpedia/dashboard">My Dashboard</Link></li>
-                            <li><Link href="/mr-build">Mr Build</Link></li>
-                            <li><Link href="/mr-games">Games</Link></li>
-                            <li><Link href="/#contact">Contact</Link></li>
-                        </ul>
-                    </nav>
-                    <nav className="wiki-nav">
-                        <h3>Portals</h3>
-                        <ul>
-                            <li><a href="#">Engineering</a></li>
-                            <li><a href="#">Product</a></li>
-                            <li><a href="#">Design</a></li>
-                        </ul>
-                    </nav>
-                </aside>
-
-                <div className="wiki-main-content">
-                    {loading ? (
-                        <div className="loading-state">Accessing Archives...</div>
-                    ) : (
-                        <>
-                            <section className="welcome-banner white-panel">
-                                <h2>Welcome to the Archive</h2>
-                                <p>
-                                    Welcome to the <strong>Mr Anas Nidir Official Knowledge Base</strong>, a collection of 
-                                    documentation, articles, and devlogs maintained by the system administrator. 
-                                    There are currently <strong>{posts.length}</strong> articles in the database.
-                                </p>
-                            </section>
-
-                            <div className="articles-grid">
-                                <div className="section-header">
-                                    <h3>{searchTerm ? `Search Results for "${searchTerm}"` : "Latest Entries"}</h3>
-                                    <div className="line"></div>
-                                </div>
-                                
-                                {filteredPosts.length > 0 ? (
-                                    <div className="posts-grid">
-                                        {filteredPosts.map(post => {
-                                            // Extract first image
-                                            const imgMatch = post.content.match(/<img[^>]+src="([^">]+)"/);
-                                            const thumbnail = (imgMatch && imgMatch[1]) ? imgMatch[1] : '/assets/logo.jpg';
-                                            
-                                            return (
-                                                <Link key={post.id} href={`/savoirpedia/post/${post.slug}`} className="post-card glass no-underline" style={{ display: 'flex', flexDirection: 'column' }}>
-                                                    <MagneticWrapper strength={0.1} range={100}>
-                                                        <div className="card-image">
-                                                            <Image src={thumbnail} alt={post.title} width={400} height={180} />
-                                                        </div>
-                                                        <div className="card-content">
-                                                            <div className="card-meta">
-                                                                <span>{new Date(post.date).toLocaleDateString()}</span>
-                                                                <span className="dot">•</span>
-                                                                <span>{post.category || 'General'}</span>
-                                                            </div>
-                                                            <h3 className="card-title">{post.title}</h3>
-                                                            <p className="card-snippet">
-                                                                {post.content.replace(/<[^>]*>?/gm, '').substring(0, 120)}...
-                                                            </p>
-                                                        </div>
-                                                    </MagneticWrapper>
-                                                </Link>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <p>No results found matching your query.</p>
-                                )}
-                            </div>
-                        </>
-                    )}
+            {/* CONTROL BAR: SEARCH & FILTERS */}
+            <section className="control-bar">
+                <div className="search-wrapper">
+                    <span className="search-icon">🔍</span>
+                    <input
+                        type="text"
+                        placeholder="Search the archive..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="spotlight-search"
+                    />
                 </div>
+                
+                <div className="filter-pills">
+                    {['All', 'Engineering', 'Design', 'Product', 'General'].map(cat => (
+                        <button 
+                            key={cat}
+                            onClick={() => setActiveCategory(cat)}
+                            className={`filter-pill ${activeCategory === cat ? 'active' : ''}`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </div>
+            </section>
+
+            <div className="wiki-main-content">
+                {loading ? (
+                    <div className="loading-state">
+                        <div className="loader-spinner"></div>
+                        <span>Decryption in progress...</span>
+                    </div>
+                ) : (
+                    <div className="articles-grid">
+                        <div className="grid-header">
+                            <h3>{activeCategory === 'All' && !searchTerm ? "Latest Transmissions" : "Filtered Results"}</h3>
+                            <div className="tech-line"></div>
+                        </div>
+                        
+                        {filteredPosts.length > 0 ? (
+                            <div className="posts-masonry">
+                                {filteredPosts.map((post, index) => {
+                                    // Extract first image
+                                    const imgMatch = post.content.match(/<img[^>]+src="([^">]+)"/);
+                                    const thumbnail = (imgMatch && imgMatch[1]) ? imgMatch[1] : '/assets/logo.jpg';
+                                    
+                                    return (
+                                        <Link key={post.id} href={`/savoirpedia/post/${post.slug}`} className="post-card-wrapper">
+                                            <MagneticWrapper strength={0.15}>
+                                                <article className="post-card glass" style={{animationDelay: `${index * 50}ms`}}>
+                                                    <div className="card-image-wrapper">
+                                                        <Image src={thumbnail} alt={post.title} fill style={{objectFit: 'cover'}} />
+                                                        <div className="card-overlay"></div>
+                                                    </div>
+                                                    <div className="card-content">
+                                                        <div className="card-meta">
+                                                            <span className="meta-cat">{post.category || 'General'}</span>
+                                                            <span className="meta-date">{new Date(post.date).toLocaleDateString()}</span>
+                                                        </div>
+                                                        <h3 className="card-title">{post.title}</h3>
+                                                    </div>
+                                                </article>
+                                            </MagneticWrapper>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="empty-state">
+                                <span className="empty-icon">∅</span>
+                                <p>No data found matching query param.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             <style jsx global>{`
-                body { padding-top: 0 !important; }
+                body { padding-top: 0 !important; background: #050505; }
             `}</style>
             <style jsx>{`
                 .wiki-container {
-                    background: #000;
-                    color: var(--text);
+                    background: #050505;
+                    color: #fff;
                     min-height: 100vh;
                     padding: 40px 20px;
+                    background-image: 
+                        radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.03) 0%, transparent 25%), 
+                        radial-gradient(circle at 85% 30%, rgba(212, 175, 55, 0.03) 0%, transparent 25%);
                 }
 
-                .wiki-header {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    border-bottom: 1px solid var(--glass-border);
-                    padding-bottom: 30px;
-                    margin-bottom: 40px;
+                /* GLASS PANEL HERO */
+                .glass-panel {
+                    background: rgba(255, 255, 255, 0.02);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 24px;
+                    padding: 40px;
+                    margin: 0 auto 40px auto;
                     max-width: 1400px;
-                    margin-left: auto;
-                    margin-right: auto;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    flex-wrap: wrap;
+                    gap: 30px;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
                 }
-                .wiki-logo { display: flex; align-items: center; gap: 20px; }
-                .logo-symbol { font-size: 3.5rem; font-family: 'Orbitron', sans-serif; color: var(--primary); font-weight: 900; }
-                .logo-text h1 { margin: 0; font-size: 2rem; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; font-weight: 900; }
-                .logo-text p { margin: 0; color: var(--text-dim); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; }
 
-                .wiki-search { display: flex; gap: 10px; align-items: center; }
-                .create-btn {
-                    padding: 10px 20px;
-                    background: var(--glass-bg);
-                    border: 1px solid var(--glass-border);
-                    color: var(--text);
-                    text-decoration: none;
-                    font-weight: 900;
+                .wiki-logo { display: flex; align-items: center; gap: 20px; }
+                .logo-symbol { 
+                    font-size: 3.5rem; font-family: 'Orbitron', sans-serif; 
+                    background: linear-gradient(135deg, #fff, #888); 
+                    -webkit-background-clip: text; color: transparent; 
+                    font-weight: 900; 
+                }
+                .logo-text h1 { 
+                    margin: 0; font-size: 2.5rem; font-family: 'Orbitron', sans-serif; 
+                    letter-spacing: -1px; font-weight: 900; color: #fff; 
+                }
+                .logo-text p { 
+                    margin: 0; color: #00f0ff; font-size: 0.75rem; 
+                    letter-spacing: 4px; text-transform: uppercase; font-weight: 700;
+                }
+
+                .hero-stats { display: flex; gap: 40px; }
+                .stat-item { display: flex; flex-direction: column; align-items: flex-start; }
+                .stat-val { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 700; color: #fff; line-height: 1; }
+                .stat-val.online { color: #00ff88; font-size: 1rem; padding-top: 8px; text-shadow: 0 0 10px rgba(0,255,136,0.5); }
+                .stat-label { font-size: 0.65rem; color: rgba(255,255,255,0.4); margin-top: 5px; letter-spacing: 1px; }
+
+                .hero-actions { display: flex; gap: 15px; }
+                .action-btn {
+                    padding: 12px 24px;
                     border-radius: 12px;
-                    font-size: 0.85rem;
+                    text-decoration: none;
+                    font-weight: 700;
+                    font-size: 0.8rem;
+                    letter-spacing: 1px;
+                    transition: all 0.3s;
+                    display: inline-block;
+                }
+                .dashboard-btn { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
+                .dashboard-btn:hover { background: #fff; color: #000; }
+                .create-btn { background: #00f0ff; color: #000; border: 1px solid #00f0ff; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); }
+                .create-btn:hover { background: #fff; border-color: #fff; color: #000; box-shadow: 0 0 30px rgba(255,255,255,0.5); }
+
+                /* CONTROL BAR */
+                .control-bar {
+                    max-width: 1400px; margin: 0 auto 50px auto;
+                    display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+                }
+                .search-wrapper {
+                    flex-grow: 1; position: relative; max-width: 500px;
+                }
+                .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); opacity: 0.5; font-size: 0.9rem; }
+                .spotlight-search {
+                    width: 100%; padding: 16px 20px 16px 50px;
+                    background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 50px; color: #fff; font-size: 1rem;
                     transition: all 0.3s;
                 }
-                .create-btn:hover { background: var(--primary); color: #000; border-color: var(--primary); transform: translateY(-2px); }
-                
-                .search-input {
-                    padding: 12px 20px;
-                    border: 1px solid var(--glass-border);
-                    background: var(--glass-bg);
-                    color: var(--text);
-                    width: 300px;
-                    border-radius: 12px;
-                    outline: none;
-                }
-                .search-btn {
-                    padding: 12px 20px;
-                    background: var(--glass-bg);
-                    border: 1px solid var(--glass-border);
-                    color: var(--text);
-                    cursor: pointer;
-                    border-radius: 12px;
-                }
+                .spotlight-search:focus { outline: none; border-color: #00f0ff; box-shadow: 0 0 20px rgba(0, 240, 255, 0.1); background: rgba(0,0,0,0.8); }
 
-                .wiki-layout {
+                .filter-pills { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+                .filter-pill {
+                    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+                    color: rgba(255,255,255,0.6); padding: 8px 18px; border-radius: 20px;
+                    cursor: pointer; font-size: 0.8rem; transition: all 0.3s; white-space: nowrap;
+                }
+                .filter-pill:hover { background: rgba(255,255,255,0.1); color: #fff; }
+                .filter-pill.active { background: #fff; color: #000; border-color: #fff; font-weight: 700; }
+
+                /* GRID LAYOUT */
+                .wiki-main-content { max-width: 1400px; margin: 0 auto; }
+                .grid-header { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
+                .grid-header h3 { margin: 0; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: #fff; white-space: nowrap; }
+                .tech-line { height: 1px; background: linear-gradient(90deg, #00f0ff, transparent); width: 100%; opacity: 0.3; }
+
+                .posts-masonry {
                     display: grid;
-                    grid-template-columns: 280px 1fr;
-                    gap: 60px;
-                    max-width: 1400px;
-                    margin: 0 auto;
-                }
-
-                .wiki-sidebar { font-size: 0.95rem; }
-                .wiki-nav { margin-bottom: 40px; }
-                .wiki-nav h3 {
-                    font-size: 0.75rem;
-                    text-transform: uppercase;
-                    border-bottom: 1px solid var(--glass-border);
-                    margin-bottom: 15px;
-                    padding-bottom: 10px;
-                    color: var(--primary);
-                    font-family: 'Orbitron', sans-serif;
-                    letter-spacing: 3px;
-                }
-                .wiki-nav ul { list-style: none; padding: 0; }
-                .wiki-nav li { margin-bottom: 12px; }
-                .wiki-nav a { color: var(--text-dim); text-decoration: none; transition: all 0.2s; }
-                .wiki-nav a:hover { color: var(--primary); padding-left: 5px; }
-
-                .welcome-banner {
-                    background: linear-gradient(135deg, rgba(0, 240, 255, 0.05), transparent);
-                    border: 1px solid var(--primary);
-                    border-left-width: 8px;
-                    padding: 40px;
-                    margin-bottom: 50px;
-                    border-radius: 20px;
-                }
-                .welcome-banner h2 { 
-                    margin-top: 0; 
-                    font-family: 'Orbitron', sans-serif; 
-                    color: var(--primary); 
-                    font-weight: 900;
-                    font-size: 1.8rem;
-                }
-                .welcome-banner p { color: var(--text-dim); font-size: 1.1rem; line-height: 1.7; }
-
-                .section-header {
-                    display: flex;
-                    align-items: center;
-                    gap: 20px;
-                    margin-bottom: 30px;
-                }
-                .section-header h3 { 
-                    margin: 0; white-space: nowrap; 
-                    font-family: 'Orbitron', sans-serif; 
-                    font-size: 1.4rem; 
-                    font-weight: 900;
-                }
-                .section-header .line { height: 1px; background: var(--glass-border); width: 100%; }
-
-                .posts-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
                     gap: 30px;
                 }
-                
+
                 .post-card {
-                    background: var(--glass-bg);
-                    border: 1px solid var(--glass-border);
-                    border-radius: 24px;
+                    background: #0a0a0a;
+                    border: 1px solid rgba(255,255,255,0.05);
+                    border-radius: 20px;
                     overflow: hidden;
-                    transition: all 0.4s var(--ease-out-expo);
                     display: flex; flex-direction: column;
+                    height: 100%;
+                    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+                    animation: fadeUp 0.6s ease-out backwards;
                 }
                 .post-card:hover {
-                    transform: translateY(-10px);
-                    border-color: var(--primary);
-                    box-shadow: 0 10px 40px rgba(0, 240, 255, 0.1);
+                    transform: translateY(-5px);
+                    border-color: rgba(0, 240, 255, 0.3);
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
                 }
 
-                .card-image {
-                    height: 200px;
-                    width: 100%;
-                    overflow: hidden;
+                .card-image-wrapper {
+                    position: relative; height: 220px; width: 100%;
                 }
-                
-                .card-content { padding: 30px; flex-grow: 1; display: flex; flex-direction: column; }
-                
+                .card-overlay {
+                    position: absolute; inset: 0;
+                    background: linear-gradient(to top, #0a0a0a 0%, transparent 100%);
+                    opacity: 0.8;
+                }
+
+                .card-content { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
+                .card-meta { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; }
+                .meta-cat { color: #00f0ff; font-weight: 700; }
+
                 .card-title {
-                    font-size: 1.4rem; margin-bottom: 12px;
-                    color: var(--text); text-decoration: none;
-                    font-family: 'Orbitron', sans-serif; font-weight: 900;
-                    line-height: 1.3;
-                    transition: color 0.3s;
+                    font-size: 1.3rem; margin: 0; color: #fff;
+                    font-family: 'Orbitron', sans-serif; line-height: 1.4;
+                    font-weight: 700;
                 }
-                .card-title:hover { color: var(--primary); }
 
-                .card-meta {
-                    font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;
-                    display: flex; align-items: center; gap: 10px;
-                    letter-spacing: 1px;
-                    text-transform: uppercase;
-                    font-weight: 950;
+                .loading-state, .empty-state {
+                    text-align: center; padding: 100px 0; color: rgba(255,255,255,0.3);
+                    font-family: 'Orbitron', sans-serif;
                 }
-                .dot { color: var(--glass-border); }
-                .card-snippet { font-size: 0.95rem; color: var(--text-dim); line-height: 1.7; margin: 0; }
+                .loader-spinner {
+                    width: 40px; height: 40px; border: 2px solid rgba(0, 240, 255, 0.1);
+                    border-top-color: #00f0ff; border-radius: 50%;
+                    animation: spin 1s linear infinite; margin: 0 auto 20px auto;
+                }
+                .empty-icon { font-size: 4rem; display: block; margin-bottom: 20px; opacity: 0.2; }
 
-                @media (max-width: 1024px) {
-                    .wiki-layout { grid-template-columns: 1fr; }
-                    .wiki-sidebar { display: none; }
-                    .wiki-header { flex-direction: column; gap: 30px; align-items: center; text-align: center; }
-                    .wiki-search { width: 100%; justify-content: center; flex-wrap: wrap; }
-                    .search-input { width: 100%; max-width: 400px; }
+                @keyframes spin { to { transform: rotate(360deg); } }
+                @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+                @media (max-width: 768px) {
+                    .glass-panel { flex-direction: column; align-items: flex-start; padding: 30px 20px; }
+                    .hero-actions { width: 100%; flex-direction: column; }
+                    .action-btn { width: 100%; text-align: center; }
+                    .control-bar { flex-direction: column; align-items: stretch; }
+                    .search-wrapper { max-width: 100%; }
+                    .posts-masonry { grid-template-columns: 1fr; }
                 }
             `}</style>
         </main>
