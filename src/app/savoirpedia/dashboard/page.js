@@ -18,7 +18,6 @@ export default function SavoirPediaDashboard() {
     const [searchTerm, setSearchTerm] = useState('');
     const [displayName, setDisplayName] = useState('');
     const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-    const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminModeActive, setAdminModeActive] = useState(false);
 
