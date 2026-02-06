@@ -47,14 +47,14 @@ export default function WikiArticle({ article }) {
             {/* HERO SECTION */}
             <header className="article-hero">
                 <div className="hero-bg">
-                    <Image src={heroImage} alt="Hero" fill style={{objectFit: 'cover'}} className="hero-img-blur" />
+                    <Image src={heroImage} alt="Hero" fill style={{objectFit: 'cover'}} className="hero-img-blur" priority />
                     <div className="hero-overlay"></div>
                 </div>
                 
                 <div className="hero-content">
                     <div className="hero-meta">
                         <span className="hero-cat">{category}</span>
-                        <span className="hero-date">{new Date(article.date).toLocaleDateString()}</span>
+                        <span className="hero-date">{new Date(article.date).toLocaleDateString('en-US')}</span>
                     </div>
                     <h1 className="hero-title">{article.title}</h1>
                     <div className="hero-actions">
@@ -81,7 +81,7 @@ export default function WikiArticle({ article }) {
                         <h3>System References</h3>
                         <ol className="refs-list">
                             <li>^ Original entry by {author}, {new Date(article.date).getFullYear()}.</li>
-                            <li>^ System logs verification hash: #A8F-{Math.floor(Math.random()*999)}.</li>
+                            <li>^ System logs verification hash: #A8F-492.</li>
                         </ol>
                     </div>
                 </div>
@@ -152,7 +152,7 @@ export default function WikiArticle({ article }) {
 
                 /* HERO */
                 .article-hero {
-                    position: relative; height: 60vh; min-height: 400px; width: 100%;
+                    position: relative; height: 60dvh; min-height: 400px; width: 100%;
                     display: flex; align-items: flex-end; justify-content: flex-start;
                     margin-bottom: 60px;
                 }
@@ -173,6 +173,7 @@ export default function WikiArticle({ article }) {
                     font-size: 3.5rem; font-family: 'Orbitron', sans-serif; 
                     font-weight: 900; line-height: 1.1; margin: 0 0 30px 0;
                     text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    word-break: break-word; overflow-wrap: break-word;
                 }
                 .hero-actions { display: flex; gap: 20px; align-items: center; }
 
@@ -208,6 +209,15 @@ export default function WikiArticle({ article }) {
                 .meta-label { color: rgba(255,255,255,0.5); }
                 .meta-value.mono { font-family: monospace; color: #00f0ff; }
                 .status-badge { background: rgba(0, 255, 136, 0.1); color: #00ff88; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+                .status-badge.verified { 
+                    box-shadow: 0 0 5px rgba(0, 255, 136, 0.2); 
+                    animation: badgePulse 2s infinite; 
+                }
+                @keyframes badgePulse {
+                    0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); }
+                    70% { box-shadow: 0 0 0 4px rgba(0, 255, 136, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
+                }
 
                 .toc-card { padding: 25px; position: sticky; top: 100px; }
                 .toc-header { font-family: 'Orbitron', sans-serif; font-weight: 700; margin-bottom: 15px; color: #fff; }
@@ -224,7 +234,11 @@ export default function WikiArticle({ article }) {
                     .side-col { order: -1; }
                     .meta-card { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; }
                     .meta-row { border: none; margin: 0; padding: 0; gap: 10px; }
-                    .toc-card { display: none; }
+                    .toc-card { 
+                        position: relative; top: 0; 
+                        margin-top: 20px; padding: 15px; 
+                    }
+                    .toc-list { flex-direction: row; flex-wrap: wrap; gap: 20px; }
                 }
 
                 @media (max-width: 768px) {
