@@ -6,6 +6,8 @@ import { onAuthStateChanged, updateProfile } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const ALLOWED_ADMINS = ['anasnide@gmail.com', 'ceo@anasnidir.com'];
+
 export default function SavoirPediaDashboard() {
     const router = useRouter();
     const [user, setUser] = useState(null);
@@ -16,13 +18,16 @@ export default function SavoirPediaDashboard() {
     const [searchTerm, setSearchTerm] = useState('');
     const [displayName, setDisplayName] = useState('');
     const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (u) => {
             if (u) {
                 setUser(u);
                 setDisplayName(u.displayName || '');
-                fetchUserPosts(u.uid);
+                const adminStatus = ALLOWED_ADMINS.includes(u.email);
+                setIsAdmin(adminStatus);
+                fetchUserPosts(u.uid, adminStatus);
             } else {
                 setLoading(false);
             }
@@ -30,9 +35,15 @@ export default function SavoirPediaDashboard() {
         return () => unsub();
     }, []);
 
-    const fetchUserPosts = async (uid) => {
+    const fetchUserPosts = async (uid, isUserAdmin) => {
         try {
-            const q = query(collection(db, 'posts'), where('authorId', '==', uid));
+            let q;
+            if (isUserAdmin) {
+                q = query(collection(db, 'posts'));
+            } else {
+                q = query(collection(db, 'posts'), where('authorId', '==', uid));
+            }
+
             const snap = await getDocs(q);
             const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             // Sort by date desc (client side for now since composite index might be missing)
@@ -46,7 +57,9 @@ export default function SavoirPediaDashboard() {
     };
 
     const handleDelete = async (postId) => {
-        if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) return;
+        if (!isAdmin && !confirm('Are you sure you want to delete this article? This action cannot be undone.')) return;
+        if (isAdmin && !confirm('ADMIN WARNING: You are about to delete this article. This action cannot be undone.')) return;
+        
         try {
             await deleteDoc(doc(db, 'posts', postId));
             setPosts(prev => prev.filter(p => p.id !== postId));
@@ -109,7 +122,10 @@ export default function SavoirPediaDashboard() {
             <header className="dash-header">
                 <div className="header-left">
                     <h1>SavoirPedia Dashboard</h1>
-                    <p>Welcome back, <strong>{user.email}</strong></p>
+                    <p>
+                        Welcome back, <strong>{user.email}</strong>
+                        {isAdmin && <span style={{marginLeft:'10px', color:'#00f0ff', fontSize:'0.8rem', border:'1px solid #00f0ff', padding:'2px 6px', borderRadius:'4px', letterSpacing:'1px'}}>ADMIN MODE</span>}
+                    </p>
                 </div>
                 <div className="header-actions">
                     <Link href="/savoirpedia/editor" className="btn-create">
@@ -199,19 +215,21 @@ export default function SavoirPediaDashboard() {
                                                     <span className="post-cat">{post.category}</span>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Status">
                                                 <span className={`status-badge ${post.status || 'active'}`}>
                                                     {post.status === 'draft' ? 'Draft' : 'Published'}
                                                 </span>
                                             </td>
-                                            <td>{new Date(post.date).toLocaleDateString()}</td>
-                                            <td className="actions-cell">
-                                                <Link href={`/savoirpedia/editor?id=${post.id}`} className="btn-icon edit" title="Edit">
-                                                    ✏️
-                                                </Link>
-                                                <button onClick={() => handleDelete(post.id)} className="btn-icon delete" title="Delete">
-                                                    🗑️
-                                                </button>
+                                            <td data-label="Date">{new Date(post.date).toLocaleDateString()}</td>
+                                            <td className="actions-cell" data-label="Actions">
+                                                <div className="action-buttons">
+                                                    <Link href={`/savoirpedia/editor?id=${post.id}`} className="btn-icon edit" title="Edit">
+                                                        ✏️
+                                                    </Link>
+                                                    <button onClick={() => handleDelete(post.id)} className="btn-icon delete" title="Delete">
+                                                        🗑️
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -249,19 +267,19 @@ export default function SavoirPediaDashboard() {
                 .btn-create {
                     background: #00f0ff; color: #000; padding: 10px 20px; 
                     text-decoration: none; font-weight: bold; border-radius: 4px;
+                    white-space: nowrap;
                 }
                 .btn-back {
+                    display: inline-flex; align-items: center;
                     background: #333; color: #fff; padding: 10px 20px; 
                     text-decoration: none; border-radius: 4px; border: 1px solid #444;
+                    white-space: nowrap;
                 }
 
                 .dashboard-grid {
                     display: grid;
                     grid-template-columns: 300px 1fr;
                     gap: 30px;
-                }
-                @media (max-width: 900px) {
-                    .dashboard-grid { grid-template-columns: 1fr; }
                 }
 
                 .panel { background: #222; border: 1px solid #333; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
@@ -272,7 +290,6 @@ export default function SavoirPediaDashboard() {
                 .form-group button { 
                     width: 100%; padding: 8px; background: #333; color: #fff; border: 1px solid #444; cursor: pointer;
                 }
-                .form-group button:hover { background: #444; }
 
                 .stat-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #2a2a2a; padding-bottom: 5px; }
                 .stat-item span { color: #888; }
@@ -286,21 +303,82 @@ export default function SavoirPediaDashboard() {
                 .posts-table { width: 100%; border-collapse: collapse; }
                 .posts-table th, .posts-table td { padding: 15px; text-align: left; border-bottom: 1px solid #333; }
                 .posts-table th { background: #2a2a2a; color: #aaa; font-weight: normal; font-size: 0.9rem; }
-                .posts-table tr:hover { background: #2a2a2a; }
-
+                
                 .post-title-cell { display: flex; flex-direction: column; }
                 .post-cat { font-size: 0.8rem; color: #666; margin-top: 4px; }
                 .table-link { color: #fff; text-decoration: none; font-weight: bold; font-size: 1.1rem; }
                 .table-link:hover { text-decoration: underline; color: #00f0ff; }
 
-                .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; text-transform: uppercase; background: #333; }
+                .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; text-transform: uppercase; background: #333; display: inline-block; }
                 .status-badge.active { background: rgba(0, 240, 255, 0.1); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3); }
                 .status-badge.draft { background: rgba(255, 165, 0, 0.1); color: orange; border: 1px solid rgba(255, 165, 0, 0.3); }
 
                 .actions-cell { text-align: right; }
-                .btn-icon { background: none; border: none; font-size: 1.2rem; cursor: pointer; margin-left: 10px; padding: 5px; }
-                .btn-icon:hover { opacity: 0.8; }
-                .btn-icon.delete:hover { filter: drop-shadow(0 0 5px red); }
+                .action-buttons { display: flex; justify-content: flex-end; gap: 10px; }
+                .btn-icon { 
+                    background: #333; border: 1px solid #444; 
+                    font-size: 1.2rem; cursor: pointer; padding: 8px; 
+                    border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;
+                    width: 40px; height: 40px; transition: all 0.2s;
+                }
+                .btn-icon:hover { background: #444; transform: translateY(-2px); }
+                .btn-icon.delete:hover { border-color: red; background: rgba(255,0,0,0.1); }
+                
+                /* MOBILE RESPONSIVE STYLES */
+                @media (max-width: 900px) {
+                    .dashboard-grid { grid-template-columns: 1fr; }
+                    .dash-container { padding: 20px 15px; }
+                    
+                    /* Header Stack */
+                    .dash-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+                    .header-actions { width: 100%; justify-content: space-between; }
+                    .btn-create, .btn-back { flex: 1; text-align: center; justify-content: center; }
+
+                    /* Responsive Table -> Cards */
+                    .posts-table, .posts-table tbody, .posts-table tr, .posts-table td {
+                        display: block;
+                        width: 100%;
+                    }
+                    .posts-table thead { display: none; }
+                    
+                    .posts-table tr {
+                        background: #1a1a1a;
+                        margin-bottom: 20px;
+                        border: 1px solid #333;
+                        border-radius: 12px;
+                        padding: 15px;
+                    }
+                    
+                    .posts-table td {
+                        padding: 10px 0;
+                        border-bottom: 1px solid #2a2a2a;
+                        text-align: right;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+                    .posts-table td:last-child { border-bottom: none; }
+                    
+                    .posts-table td::before {
+                        content: attr(data-label);
+                        font-weight: bold;
+                        color: #666;
+                        font-size: 0.85rem;
+                        text-transform: uppercase;
+                    }
+
+                    /* Special Styling for Title Cell in Card Mode */
+                    .posts-table td:first-child {
+                        text-align: left;
+                        display: block;
+                    }
+                    .posts-table td:first-child::before { display: none; }
+                    .post-title-cell { margin-bottom: 5px; }
+                    .table-link { font-size: 1.3rem; display: block; margin-bottom: 5px; }
+
+                    /* Action Buttons Mobile */
+                    .action-buttons { width: 100%; justify-content: flex-end; }
+                }
                 
                 .empty-state { padding: 40px; text-align: center; color: #888; }
                 .empty-state a { color: #00f0ff; margin-left: 10px; }

@@ -13,6 +13,8 @@ import 'primereact/resources/themes/lara-dark-cyan/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 
+const ALLOWED_ADMINS = ['anasnide@gmail.com', 'ceo@anasnidir.com'];
+
 export default function PublicWikiEditor() {
     return (
         <Suspense fallback={<div className="wiki-container">Loading Editor...</div>}>
@@ -45,8 +47,9 @@ function PublicWikiEditorContent() {
                         const docSnap = await getDoc(docRef);
                         if (docSnap.exists()) {
                             const data = docSnap.data();
-                            // Security check: Only author or admin can edit (add admin check later if needed)
-                            if (data.authorId !== u.uid) {
+                            // Security check: Only author or admin can edit
+                            const isAdmin = ALLOWED_ADMINS.includes(u.email);
+                            if (data.authorId !== u.uid && !isAdmin) {
                                 alert("You are not authorized to edit this article.");
                                 router.push('/savoirpedia/dashboard');
                                 return;
