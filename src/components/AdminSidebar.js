@@ -17,6 +17,7 @@ export default function AdminSidebar({ isOpen, close, isMinimized, toggleMinimiz
         { name: 'Messages', path: '/admin/messages/', icon: '📢' },
         { name: 'Applications', path: '/admin/applications/', icon: '📋' },
         { name: 'Monitor', path: '/admin/monitor/', icon: '🛡️' },
+        { name: 'Settings', path: '/admin/settings/', icon: '⚙️' },
     ];
 
     return (

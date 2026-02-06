@@ -1,463 +1,305 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../../lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { onAuthStateChanged } from 'firebase/auth';
 import Loader from '../../../components/Loader';
 
-export default function SettingsPage() {
+const ALLOWED_ADMINS = ['anasnide@gmail.com', 'ceo@anasnidir.com'];
+
+export default function AdminSettings() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState('general');
-    const router = useRouter();
+    
+    // Keys State
+    const [keys, setKeys] = useState([]);
+    const [newKey, setNewKey] = useState('');
+    const [keyLabel, setKeyLabel] = useState('');
+    
+    // Models State
+    const [models, setModels] = useState([]);
+    const [newModelId, setNewModelId] = useState('');
+    const [newModelName, setNewModelName] = useState('');
+    const [newModelDesc, setNewModelDesc] = useState('');
 
-    // Settings State
-    const [settings, setSettings] = useState({
-        heroTitle: 'MR ANAS NIDIR',
-        heroSubtitle: 'Entrepreneur • Visionary • Digital Innovator',
-        aboutText: "I'm Mr Anas Nidir, a builder of tech, AI systems, and futuristic platforms — driven by simplicity and independence. I believe in creating tools that empower, not restrict.",
-        bioTitle: 'My Story',
-        bioText1: 'Mr Anas Nidir is a tech entrepreneur, futurist, and digital architect...',
-        bioText2: 'Since March 2025, he has been developing high-performance solutions...',
-        quote: 'Simple is Power',
-        contactEmail: 'ceo@anasnidir.com',
-        tiktok: 'https://tiktok.com/@anasnide',
-        instagram: 'https://www.instagram.com/anasnide',
-        stats: [
-            { label: 'Active Projects', value: '3+' },
-            { label: 'Founded', value: '2025' },
-            { label: 'Possibilities', value: '∞' }
-        ],
-        projects: [
-            { icon: '⚡', title: 'NEXENGINE', desc: 'Independent web server system built for speed, privacy, and total control.', tag: 'Infrastructure' },
-            { icon: '🤖', title: 'NEX AI', desc: 'Custom AI Chatbot Platform with advanced natural language processing.', tag: 'AI / ML' },
-            { icon: '💬', title: 'ANAS GPT', desc: 'Advanced LLM Web Assistant for seamless human-AI interaction.', tag: 'AI Assistant' }
-        ],
-        products: [
-            { name: 'Gumroad', url: 'https://anasnidir.gumroad.com/' }
-        ]
-    });
+    const [isSaving, setIsSaving] = useState(false);
+    const [statusMsg, setStatusMsg] = useState('');
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (u) => {
-            if (!u) return;
-            setUser(u);
-
-            const docRef = doc(db, 'settings', 'homepage');
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                setSettings(prev => ({
-                    ...prev,
-                    ...data,
-                    stats: data.stats || prev.stats,
-                    aboutText: data.aboutText || prev.aboutText
-                }));
+            if (u && ALLOWED_ADMINS.includes(u.email)) {
+                setUser(u);
+                fetchSettings();
+            } else {
+                setLoading(false);
             }
-            setLoading(false);
         });
         return () => unsub();
     }, []);
 
-    const handleSave = async (e) => {
-        e.preventDefault();
-        setSaving(true);
+    const fetchSettings = async () => {
         try {
-            await setDoc(doc(db, 'settings', 'homepage'), settings);
-            alert('Settings saved successfully!');
+            const docRef = doc(db, 'system_config', 'nex_ai');
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+                const data = snap.data();
+                
+                // Load Keys
+                if (data.keys) {
+                    setKeys(data.keys);
+                } else if (data.openRouterKey) {
+                    // Legacy migration
+                    setKeys([{
+                        id: Date.now().toString(),
+                        key: data.openRouterKey,
+                        label: 'Legacy Key',
+                        status: 'active',
+                        addedAt: new Date().toISOString()
+                    }]);
+                }
+
+                // Load Models
+                if (data.models) {
+                    setModels(data.models);
+                } else {
+                    // Defaults if empty
+                    setModels([
+                        { id: 'openai/gpt-4o', name: 'GPT-4 Omni', description: 'Smartest model', active: true },
+                        { id: 'anthropic/claude-3-opus', name: 'Claude 3 Opus', description: 'Human-like reasoning', active: true }
+                    ]);
+                }
+            }
         } catch (err) {
-            alert('Error saving settings: ' + err.message);
+            console.error("Error fetching settings:", err);
         } finally {
-            setSaving(false);
+            setLoading(false);
         }
     };
 
-    if (loading) return <Loader text="Initializing Config..." />;
+    const saveData = async (updatedKeys, updatedModels) => {
+        setIsSaving(true);
+        setStatusMsg('');
+        try {
+            await setDoc(doc(db, 'system_config', 'nex_ai'), {
+                keys: updatedKeys !== undefined ? updatedKeys : keys,
+                models: updatedModels !== undefined ? updatedModels : models,
+                updatedAt: new Date().toISOString(),
+                updatedBy: user.email
+            }, { merge: true });
+            
+            if (updatedKeys) setKeys(updatedKeys);
+            if (updatedModels) setModels(updatedModels);
+            
+            setStatusMsg('✅ Configuration saved successfully!');
+            setTimeout(() => setStatusMsg(''), 3000);
+        } catch (err) {
+            setStatusMsg('❌ Error saving: ' + err.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
-    const tabs = [
-        { id: 'general', label: 'General Info', icon: '🏠' },
-        { id: 'projects', label: 'Projects', icon: '🚀' },
-        { id: 'products', label: 'Products', icon: '📦' },
-    ];
+    // --- KEY HANDLERS ---
+    const handleAddKey = (e) => {
+        e.preventDefault();
+        if (!newKey.trim()) return;
+        const newItem = {
+            id: Date.now().toString(),
+            key: newKey.trim(),
+            label: keyLabel.trim() || `Key ${keys.length + 1}`,
+            status: 'active',
+            addedAt: new Date().toISOString()
+        };
+        saveData([...keys, newItem], undefined);
+        setNewKey('');
+        setKeyLabel('');
+    };
+
+    const toggleKeyStatus = (id) => {
+        const updated = keys.map(k => k.id === id ? { ...k, status: k.status === 'active' ? 'disabled' : 'active' } : k);
+        saveData(updated, undefined);
+    };
+
+    const deleteKey = (id) => {
+        if (!confirm('Permanently remove this API key?')) return;
+        saveData(keys.filter(k => k.id !== id), undefined);
+    };
+
+    // --- MODEL HANDLERS ---
+    const handleAddModel = (e) => {
+        e.preventDefault();
+        if (!newModelId.trim() || !newModelName.trim()) return;
+        
+        const newModel = {
+            id: newModelId.trim(), // e.g., 'openai/gpt-4'
+            name: newModelName.trim(),
+            description: newModelDesc.trim() || 'Custom AI Model',
+            active: true
+        };
+        
+        saveData(undefined, [...models, newModel]);
+        setNewModelId('');
+        setNewModelName('');
+        setNewModelDesc('');
+    };
+
+    const toggleModelStatus = (id) => {
+        const updated = models.map(m => m.id === id ? { ...m, active: !m.active } : m);
+        saveData(undefined, updated);
+    };
+
+    const deleteModel = (id) => {
+        if (!confirm('Remove this model from the list?')) return;
+        saveData(undefined, models.filter(m => m.id !== id));
+    };
+
+
+    if (loading) return <Loader text="Loading Settings..." />;
+    if (!user) return <div style={{padding:'40px', color:'#fff'}}>Access Denied</div>;
 
     return (
-        <div className="settings-view">
+        <div className="settings-view animate-fade-in">
             <header className="page-header">
-                <div className="header-info">
-                    <span className="page-tag">SYSTEM CONFIG</span>
-                    <h1>Environment Settings</h1>
-                    <p className="subtitle">Configure your digital identity across the platform.</p>
-                </div>
-                <button
-                    onClick={handleSave}
-                    className={`btn glow-blue ${saving ? 'saving' : ''}`}
-                    disabled={saving}
-                >
-                    {saving ? '⚡ Syncing...' : '💾 Save Configurations'}
-                </button>
+                <h1>System Config</h1>
+                <p className="subtitle">Manage global API keys and AI models.</p>
             </header>
 
-            <div className="settings-container">
-                <nav className="tab-sidebar">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
-                            onClick={() => setActiveTab(tab.id)}
-                        >
-                            <span className="tab-icon">{tab.icon}</span>
-                            <div className="tab-text">
-                                <span className="tab-label">{tab.label}</span>
-                                <span className="tab-desc">Edit {tab.id} data</span>
+            {/* --- API KEYS SECTION --- */}
+            <div className="card glass">
+                <div className="card-header">
+                    <h2>🔑 API Keys (Rotation Pool)</h2>
+                    <span className="badge">{keys.filter(k => k.status === 'active').length} Active</span>
+                </div>
+                
+                <form onSubmit={handleAddKey} className="add-form">
+                    <div className="form-row">
+                        <input type="text" value={keyLabel} onChange={e => setKeyLabel(e.target.value)} placeholder="Label" className="modern-input label-input" />
+                        <input type="text" value={newKey} onChange={e => setNewKey(e.target.value)} placeholder="sk-or..." className="modern-input key-input" required />
+                        <button type="submit" className="btn-add" disabled={isSaving}>+ ADD</button>
+                    </div>
+                </form>
+
+                <div className="list-container">
+                    {keys.map(k => (
+                        <div key={k.id} className={`list-item ${k.status}`}>
+                            <div className="item-info">
+                                <span className="item-title">{k.label}</span>
+                                <code className="item-sub">...{k.key.substring(k.key.length - 4)}</code>
                             </div>
-                        </button>
+                            <div className="item-actions">
+                                <button className={`btn-toggle ${k.status}`} onClick={() => toggleKeyStatus(k.id)}>{k.status}</button>
+                                <button className="btn-delete" onClick={() => deleteKey(k.id)}>🗑️</button>
+                            </div>
+                        </div>
                     ))}
-                </nav>
-
-                <div className="tab-viewport card glass">
-                    {activeTab === 'general' && (
-                        <div className="settings-form animate-fade-in">
-                            <div className="section-block">
-                                <h3 className="section-title">Hero Branding</h3>
-                                <div className="input-row">
-                                    <div className="input-wrapper">
-                                        <label>Primary Title</label>
-                                        <input type="text" value={settings.heroTitle} onChange={e => setSettings({ ...settings, heroTitle: e.target.value })} className="modern-input" />
-                                    </div>
-                                    <div className="input-wrapper">
-                                        <label>Subtitle Tagline</label>
-                                        <input type="text" value={settings.heroSubtitle} onChange={e => setSettings({ ...settings, heroSubtitle: e.target.value })} className="modern-input" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="section-block">
-                                <h3 className="section-title">About Narrative</h3>
-                                <div className="input-wrapper">
-                                    <label>Introductory Paragraph</label>
-                                    <textarea rows={4} value={settings.aboutText} onChange={e => setSettings({ ...settings, aboutText: e.target.value })} className="modern-input" />
-                                </div>
-                            </div>
-
-                            <div className="section-block">
-                                <h3 className="section-title">Performance Stats</h3>
-                                <div className="stats-editor-grid">
-                                    {settings.stats.map((s, idx) => (
-                                        <div key={idx} className="stat-input-group">
-                                            <input placeholder="20+" value={s.value} onChange={e => {
-                                                const newS = [...settings.stats]; newS[idx].value = e.target.value; setSettings({ ...settings, stats: newS });
-                                            }} className="modern-input compact" />
-                                            <input placeholder="Label" value={s.label} onChange={e => {
-                                                const newS = [...settings.stats]; newS[idx].label = e.target.value; setSettings({ ...settings, stats: newS });
-                                            }} className="modern-input" />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="section-block">
-                                <h3 className="section-title">Bio & Social Connectivity</h3>
-                                <div className="input-row">
-                                    <div className="input-wrapper">
-                                        <label>Contact Email</label>
-                                        <input type="email" value={settings.contactEmail} onChange={e => setSettings({ ...settings, contactEmail: e.target.value })} className="modern-input" />
-                                    </div>
-                                    <div className="input-wrapper">
-                                        <label>TikTok Handle</label>
-                                        <input type="text" value={settings.tiktok} onChange={e => setSettings({ ...settings, tiktok: e.target.value })} className="modern-input" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'projects' && (
-                        <div className="projects-manager animate-fade-in">
-                            <div className="manager-header">
-                                <h3 className="section-title">Portfolio Infrastructure</h3>
-                                <button type="button" onClick={() => setSettings({ ...settings, projects: [...settings.projects, { icon: '🚀', title: '', desc: '', tag: '' }] })} className="btn-small">+ Deploy New</button>
-                            </div>
-                            <div className="projects-grid-modern">
-                                {settings.projects.map((proj, idx) => (
-                                    <div key={idx} className="project-editor-card glass">
-                                        <div className="card-top">
-                                            <input placeholder="🚀" value={proj.icon} onChange={e => {
-                                                const newP = [...settings.projects]; newP[idx].icon = e.target.value; setSettings({ ...settings, projects: newP });
-                                            }} className="icon-input" />
-                                            <input placeholder="Project Name" value={proj.title} onChange={e => {
-                                                const newP = [...settings.projects]; newP[idx].title = e.target.value; setSettings({ ...settings, projects: newP });
-                                            }} className="title-input" />
-                                        </div>
-                                        <textarea placeholder="Brief engineering description..." rows={2} value={proj.desc} onChange={e => {
-                                            const newP = [...settings.projects]; newP[idx].desc = e.target.value; setSettings({ ...settings, projects: newP });
-                                        }} className="modern-input" style={{ marginTop: 15 }} />
-                                        <div className="card-bottom">
-                                            <input placeholder="TAG" value={proj.tag} onChange={e => {
-                                                const newP = [...settings.projects]; newP[idx].tag = e.target.value; setSettings({ ...settings, projects: newP });
-                                            }} className="tag-input" />
-                                            <button type="button" onClick={() => setSettings({ ...settings, projects: settings.projects.filter((_, i) => i !== idx) })} className="del-btn">Delete</button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'products' && (
-                        <div className="products-manager animate-fade-in">
-                            <div className="manager-header">
-                                <h3 className="section-title">Commercial Channels</h3>
-                                <button type="button" onClick={() => setSettings({ ...settings, products: [...settings.products, { name: '', url: '' }] })} className="btn-small">+ Link Store</button>
-                            </div>
-                            <div className="products-list-modern">
-                                {settings.products.map((prod, idx) => (
-                                    <div key={idx} className="product-input-row glass">
-                                        <input placeholder="Gumroad" value={prod.name} onChange={e => {
-                                            const newP = [...settings.products]; newP[idx].name = e.target.value; setSettings({ ...settings, products: newP });
-                                        }} className="modern-input" style={{ flex: 1 }} />
-                                        <input placeholder="URL" value={prod.url} onChange={e => {
-                                            const newP = [...settings.products]; newP[idx].url = e.target.value; setSettings({ ...settings, products: newP });
-                                        }} className="modern-input" style={{ flex: 2 }} />
-                                        <button type="button" onClick={() => setSettings({ ...settings, products: settings.products.filter((_, i) => i !== idx) })} className="del-btn circle">✕</button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    {keys.length === 0 && <div className="empty-msg">No keys found.</div>}
                 </div>
             </div>
 
-            <style jsx>{`
-                .settings-view { padding-bottom: 50px; }
-                .page-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 50px;
-                }
-                .page-tag {
-                    font-size: 0.65rem;
-                    color: #00f0ff;
-                    font-weight: 800;
-                    letter-spacing: 2px;
-                    background: rgba(0, 240, 255, 0.1);
-                    padding: 4px 10px;
-                    border-radius: 4px;
-                    margin-bottom: 10px;
-                    display: inline-block;
-                }
-                .subtitle { opacity: 0.6; font-size: 1.1rem; }
+            {/* --- MODELS SECTION --- */}
+            <div className="card glass">
+                <div className="card-header">
+                    <h2>🤖 AI Models</h2>
+                    <span className="badge blue">{models.filter(m => m.active).length} Active</span>
+                </div>
                 
-                .settings-container {
-                    display: grid;
-                    grid-template-columns: 280px 1fr;
-                    gap: 40px;
-                    align-items: flex-start;
-                }
-                .tab-sidebar {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 15px;
-                }
-                .tab-item {
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                    padding: 15px 20px;
-                    background: transparent;
-                    border: 1px solid transparent;
-                    border-radius: 16px;
-                    color: rgba(255, 255, 255, 0.4);
-                    cursor: pointer;
-                    text-align: left;
-                    transition: all 0.3s;
-                }
-                .tab-item:hover {
-                    background: rgba(255, 255, 255, 0.03);
-                    color: rgba(255, 255, 255, 0.8);
-                }
-                .tab-item.active {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(0, 240, 255, 0.2);
-                    color: #fff;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                }
-                .tab-icon { font-size: 1.5rem; }
-                .tab-text { display: flex; flex-direction: column; }
-                .tab-label { font-weight: 700; font-size: 1rem; }
-                .tab-desc { font-size: 0.75rem; opacity: 0.5; }
+                <p className="description">Define which models appear in the NEX AI dropdown.</p>
 
-                .tab-viewport {
-                    padding: 40px;
-                    min-height: 500px;
-                    border-radius: 30px;
-                }
+                <form onSubmit={handleAddModel} className="add-form">
+                    <div className="form-row">
+                        <input type="text" value={newModelName} onChange={e => setNewModelName(e.target.value)} placeholder="Name (e.g. Gemini Pro)" className="modern-input" required />
+                        <input type="text" value={newModelId} onChange={e => setNewModelId(e.target.value)} placeholder="Model ID (e.g. google/gemini-pro)" className="modern-input key-input" required />
+                    </div>
+                    <div className="form-row" style={{marginTop:'10px'}}>
+                         <input type="text" value={newModelDesc} onChange={e => setNewModelDesc(e.target.value)} placeholder="Description (Optional)" className="modern-input full-width" />
+                         <button type="submit" className="btn-add" disabled={isSaving}>+ ADD MODEL</button>
+                    </div>
+                </form>
 
-                .section-block { margin-bottom: 40px; }
-                .section-title {
-                    font-size: 1rem;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                    margin-bottom: 20px;
-                    color: #00f0ff;
-                    border-left: 3px solid #00f0ff;
-                    padding-left: 15px;
-                }
+                <div className="list-container">
+                    {models.map(m => (
+                        <div key={m.id} className={`list-item ${m.active ? 'active' : 'disabled'}`}>
+                            <div className="item-info">
+                                <span className="item-title">{m.name}</span>
+                                <span className="item-sub">{m.id}</span>
+                            </div>
+                            <div className="item-actions">
+                                <button className={`btn-toggle ${m.active ? 'active' : 'disabled'}`} onClick={() => toggleModelStatus(m.id)}>
+                                    {m.active ? 'VISIBLE' : 'HIDDEN'}
+                                </button>
+                                <button className="btn-delete" onClick={() => deleteModel(m.id)}>🗑️</button>
+                            </div>
+                        </div>
+                    ))}
+                    {models.length === 0 && <div className="empty-msg">No models configured.</div>}
+                </div>
+            </div>
 
-                .input-row {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 25px;
-                }
-                .input-wrapper { display: flex; flex-direction: column; gap: 8px; }
-                .input-wrapper label { font-size: 0.85rem; opacity: 0.5; font-weight: 600; }
+            {statusMsg && <div className="status-toast">{statusMsg}</div>}
 
+            <style jsx>{`
+                .settings-view { padding: 0 0 40px; color: #fff; max-width: 900px; }
+                .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+                
+                .page-header { margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
+                h1 { margin: 0; font-size: 2rem; background: linear-gradient(to right, #fff, #00f0ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+                .subtitle { color: #888; margin-top: 5px; }
+
+                .card { padding: 30px; border-radius: 16px; margin-bottom: 30px; }
+                .glass { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.05); }
+                
+                .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+                h2 { margin: 0; color: #00f0ff; font-size: 1.4rem; }
+                .badge { background: rgba(0, 255, 128, 0.1); color: #00ff80; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; border: 1px solid rgba(0, 255, 128, 0.2); }
+                .badge.blue { background: rgba(0, 240, 255, 0.1); color: #00f0ff; border-color: rgba(0, 240, 255, 0.2); }
+
+                .description { color: #aaa; margin-bottom: 20px; font-size: 0.9rem; }
+
+                .add-form { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05); }
+                .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+                
                 .modern-input {
-                    padding: 14px 18px;
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 12px;
-                    color: #fff;
-                    font-size: 1rem;
-                    transition: all 0.3s;
+                    padding: 12px 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 8px; color: #fff; flex: 1; transition: 0.2s;
                 }
-                .modern-input:focus {
-                    background: rgba(255, 255, 255, 0.06);
-                    border-color: #00f0ff;
-                    outline: none;
-                    box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+                .modern-input:focus { outline: none; border-color: #00f0ff; }
+                .modern-input.full-width { width: 100%; flex: 100%; }
+                
+                .btn-add {
+                    background: #00f0ff; color: #000; border: none; padding: 0 25px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap;
                 }
-                .compact { width: 100px; text-align: center; font-weight: 800; color: #00f0ff; }
+                .btn-add:hover { box-shadow: 0 0 15px rgba(0,240,255,0.4); }
 
-                .stats-editor-grid {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 20px;
+                .list-container { display: flex; flex-direction: column; gap: 10px; }
+                .list-item {
+                    display: flex; justify-content: space-between; align-items: center;
+                    background: rgba(255,255,255,0.02); padding: 15px 20px; border-radius: 10px;
+                    border: 1px solid rgba(255,255,255,0.05);
                 }
-                .stat-input-group {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 10px;
-                }
+                .list-item.active { border-left: 3px solid #00f0ff; }
+                .list-item.disabled { border-left: 3px solid #666; opacity: 0.6; }
 
-                .manager-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 30px;
-                }
-                .btn-small {
-                    padding: 8px 16px;
-                    background: #00f0ff;
-                    color: #000;
-                    border: none;
-                    border-radius: 8px;
-                    font-weight: 700;
-                    font-size: 0.8rem;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-                .btn-small:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
+                .item-info { display: flex; flex-direction: column; gap: 4px; }
+                .item-title { font-weight: bold; color: #fff; }
+                .item-sub { font-size: 0.8rem; color: #888; font-family: monospace; }
 
-                .projects-grid-modern {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 20px;
-                }
-                .project-editor-card {
-                    padding: 25px;
-                    border-radius: 20px;
-                    border: 1px solid rgba(255, 255, 255, 0.05);
-                }
-                .card-top { display: flex; gap: 15px; }
-                .icon-input { width: 50px; text-align: center; font-size: 1.2rem; }
-                .title-input { flex: 1; font-weight: 700; }
-                .icon-input, .title-input, .tag-input {
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 10px;
-                    padding: 10px;
-                    color: #fff;
-                }
-                .card-bottom {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-top: 15px;
-                }
-                .tag-input { width: 40%; font-size: 0.8rem; font-weight: 700; color: #00f0ff; text-transform: uppercase; }
-                .del-btn {
-                    background: none;
-                    border: none;
-                    color: #ff4d4d;
-                    font-weight: 600;
-                    font-size: 0.85rem;
-                    cursor: pointer;
-                    opacity: 0.6;
-                    transition: opacity 0.2s;
-                }
-                .del-btn:hover { opacity: 1; }
-                .del-btn.circle {
-                    width: 35px;
-                    height: 35px;
-                    background: rgba(255, 77, 77, 0.1);
-                    border-radius: 100px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
+                .item-actions { display: flex; gap: 10px; align-items: center; }
+                .btn-toggle { font-size: 0.7rem; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; }
+                .btn-toggle.active { background: rgba(0, 255, 128, 0.2); color: #00ff80; }
+                .btn-toggle.disabled { background: rgba(255, 255, 255, 0.1); color: #aaa; }
+                
+                .btn-delete { background: none; border: none; cursor: pointer; opacity: 0.5; font-size: 1.1rem; }
+                .btn-delete:hover { opacity: 1; color: #ff4444; }
+                
+                .empty-msg { text-align: center; color: #666; font-style: italic; padding: 20px; }
 
-                .products-list-modern {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 15px;
+                .status-toast {
+                    position: fixed; bottom: 30px; right: 30px; background: #222; color: #fff; padding: 15px 25px;
+                    border-left: 4px solid #00f0ff; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100;
                 }
-                .product-input-row {
-                    display: flex;
-                    gap: 15px;
-                    padding: 15px;
-                    border-radius: 16px;
-                    align-items: center;
-                }
-
-                .glow-blue {
-                    padding: 12px 25px;
-                    background: #00f0ff;
-                    color: #000;
-                    border: none;
-                    border-radius: 12px;
-                    font-weight: 800;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
-                }
-                .glow-blue:hover { transform: translateY(-2px); box-shadow: 0 5px 25px rgba(0, 240, 255, 0.4); }
-                .glow-blue:disabled { opacity: 0.5; transform: none; box-shadow: none; }
-
-                .animate-fade-in {
-                    animation: fadeIn 0.4s ease-out;
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-
-                @media (max-width: 1024px) {
-                    .settings-container { grid-template-columns: 1fr; }
-                    .tab-sidebar { flex-direction: row; overflow-x: auto; padding-bottom: 10px; }
-                    .tab-item { flex: 0 0 auto; white-space: nowrap; }
-                    .tab-desc { display: none; }
-                }
-                @media (max-width: 768px) {
-                    .page-header { flex-direction: column; align-items: flex-start; gap: 20px; }
-                    .input-row, .stats-editor-grid, .projects-grid-modern { grid-template-columns: 1fr; }
-                    .tab-viewport { padding: 25px; }
-                    .product-input-row { flex-direction: column; }
-                    .product-input-row .modern-input { width: 100%; }
-                }
+                @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
             `}</style>
         </div>
     );

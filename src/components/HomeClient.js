@@ -205,6 +205,25 @@ export default function HomeClient() {
             </Link>
           </ScrollReveal>
 
+          <ScrollReveal direction="left" delay={0.25}>
+            <Link href="/nex-ai" className="project-card glass shadow-hover no-underline">
+              <MagneticWrapper strength={0.1} range={100}>
+                <div className="card-top">
+                  <div className="card-icon-wrapper">
+                    <span className="card-icon">🤖</span>
+                    <div className="icon-glow"></div>
+                  </div>
+                  <span className="card-tag">Artificial Intelligence</span>
+                </div>
+                <h3>NEX AI</h3>
+                <p>Interact with the singularity. Access GPT-4, Claude 3, and Llama 3 in a holographic interface.</p>
+                <div className="card-footer">
+                  <span className="view-link">INITIATE UPLINK →</span>
+                </div>
+              </MagneticWrapper>
+            </Link>
+          </ScrollReveal>
+
           <ScrollReveal direction="left" delay={0.3}>
             <Link href="/mr-shop" className="project-card glass shadow-hover no-underline">
               <MagneticWrapper strength={0.1} range={100}>
