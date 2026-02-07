@@ -373,7 +373,7 @@ export default function HubClient() {
                 }
 
                 .card-content { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
-                .card-meta { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; }
+                .card-meta { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.75rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
                 .meta-cat { color: #00f0ff; font-weight: 700; }
 
                 .card-title {
@@ -383,7 +383,7 @@ export default function HubClient() {
                 }
 
                 .loading-state, .empty-state {
-                    text-align: center; padding: 100px 0; color: rgba(255,255,255,0.3);
+                    text-align: center; padding: 100px 0; color: rgba(255,255,255,0.6);
                     font-family: 'Orbitron', sans-serif;
                 }
                 .loader-spinner {

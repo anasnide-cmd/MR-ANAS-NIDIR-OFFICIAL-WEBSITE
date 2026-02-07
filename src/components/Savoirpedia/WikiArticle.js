@@ -1,17 +1,58 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+
+
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import ShareButton from './ShareButton';
 import MagneticWrapper from '../Effects/MagneticWrapper';
+import { Share2, Clock, Terminal, ChevronRight, X, Sparkles } from 'lucide-react';
+import SavoirCopilot from './SavoirCopilot';
+
+// 1. Decryption Animation Utility
+const useDecryption = (text, active) => {
+    const [display, setDisplay] = useState(active ? '' : text);
+    const chars = '!<>-_\\/[]{}—=+*^?#________';
+    
+    useEffect(() => {
+        if (!active) return;
+        
+        let iteration = 0;
+        const interval = setInterval(() => {
+            setDisplay(text.split('').map((char, index) => {
+                if (index < iteration) return text[index];
+                return chars[Math.floor(Math.random() * chars.length)];
+            }).join(''));
+            
+            if (iteration >= text.length) clearInterval(interval);
+            iteration += Math.ceil(text.length / 30); // Reveal speed
+        }, 30);
+        
+        return () => clearInterval(interval);
+    }, [text, active]);
+    
+    return active ? display : text;
+};
 
 export default function WikiArticle({ article, allArticles = [] }) {
     const [scrolled, setScrolled] = useState(0);
-    const [processedContent, setProcessedContent] = useState(article.content);
+    const articleContent = article?.content;
+    const articleSlug = article?.slug;
+    const articleTitle = article?.title;
+    const [activeSection, setActiveSection] = useState('overview');
+    const [isDecrypting, setIsDecrypting] = useState(true);
+    const [selection, setSelection] = useState({ text: '', x: 0, y: 0, show: false });
+    const [copilotQuery, setCopilotQuery] = useState('');
+    const [soundEnabled, setSoundEnabled] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
+    const [showCopilot, setShowCopilot] = useState(false);
+
+    const wikiAuthor = article?.authorId || article?.author || 'Nexus Researcher';
+    const wikiCategory = article?.category || "Documentation";
 
     // Default image extraction if not provided
-    const heroImage = article.image || '/assets/logo.jpg';
+    const heroImage = article?.image || '/assets/logo.jpg';
 
     // 1. Intelligence Helpers
     const calculateStats = (text) => {
@@ -30,39 +71,12 @@ export default function WikiArticle({ article, allArticles = [] }) {
         return { readTime, tier };
     };
 
-    const stats = calculateStats(article.content);
-    const [activeSection, setActiveSection] = useState('overview');
-    const [isDecrypting, setIsDecrypting] = useState(true);
+    const stats = useMemo(() => {
+        if (!articleContent) return { readTime: 0, tier: "Tier 1: General" };
+        return calculateStats(articleContent);
+    }, [articleContent]);
 
-    // 1. Decryption Animation Utility
-    const useDecryption = (text, active) => {
-        const [display, setDisplay] = useState('');
-        const chars = '!<>-_\\/[]{}—=+*^?#________';
-        
-        useEffect(() => {
-            if (!active) {
-                setDisplay(text);
-                return;
-            }
-            
-            let iteration = 0;
-            const interval = setInterval(() => {
-                setDisplay(text.split('').map((char, index) => {
-                    if (index < iteration) return text[index];
-                    return chars[Math.floor(Math.random() * chars.length)];
-                }).join(''));
-                
-                if (iteration >= text.length) clearInterval(interval);
-                iteration += Math.ceil(text.length / 30); // Reveal speed
-            }, 30);
-            
-            return () => clearInterval(interval);
-        }, [text, active]);
-        
-        return display;
-    };
-
-    const decryptedTitle = useDecryption(article.title, isDecrypting);
+    const decryptedTitle = useDecryption(articleTitle || '', isDecrypting);
 
     useEffect(() => {
         const timer = setTimeout(() => setIsDecrypting(false), 2000);
@@ -70,25 +84,20 @@ export default function WikiArticle({ article, allArticles = [] }) {
     }, []);
 
     // 2. Auto-Linker Logic
-    useEffect(() => {
-        if (!article.content || !allArticles.length) return;
+    const processedContent = useMemo(() => {
+        if (!articleContent || !allArticles.length) return articleContent || '';
 
-        let content = article.content;
+        let content = articleContent;
         
-        // Sort articles by title length descending to prevent partial matches (e.g. "React" matching before "React Hooks")
+        // Sort articles by title length descending
         const sortedArticles = [...allArticles].sort((a, b) => b.title.length - a.title.length);
 
         sortedArticles.forEach(item => {
-            // Only link if not already inside a tag and not the current article
-            if (item.slug === article.slug) return;
+            if (item.slug === articleSlug) return;
             
-            // Regex to match the title but avoid replacing inside existing HTML tags
-            // Simplified approach: find the text if it's not preceded by < and not followed by >
-            // A more robust way is needed for production, but this works for standard markdown-to-html
             const escapedTitle = item.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp(`(?<!<[^>]*)${escapedTitle}(?![^<]*>)`, 'gi');
             
-            // Limit to first occurrence to avoid link spam
             let replaced = false;
             content = content.replace(regex, (match) => {
                 if (replaced) return match;
@@ -97,12 +106,11 @@ export default function WikiArticle({ article, allArticles = [] }) {
             });
         });
 
-        setProcessedContent(content);
-    }, [article.content, allArticles, article.slug]);
+        return content;
+    }, [articleContent, allArticles, articleSlug]);
 
     // 4. Highlight-to-Ask logic
-    const [selection, setSelection] = useState({ text: '', x: 0, y: 0, show: false });
-    const [copilotQuery, setCopilotQuery] = useState('');
+
 
     const handleMouseUp = (e) => {
         const selectedText = window.getSelection().toString().trim();
@@ -125,7 +133,6 @@ export default function WikiArticle({ article, allArticles = [] }) {
     }, [selection]);
 
     // 5. Soundscape Logic
-    const [soundEnabled, setSoundEnabled] = useState(false);
     const playSound = (freq = 440, type = 'sine', duration = 0.1) => {
         if (!soundEnabled) return;
         try {
@@ -144,7 +151,6 @@ export default function WikiArticle({ article, allArticles = [] }) {
     };
 
     // 6. PDF Export & History
-    const [showHistory, setShowHistory] = useState(false);
     const exportToPDF = () => {
         playSound(880, 'sine', 0.2);
         window.print();
@@ -174,18 +180,25 @@ export default function WikiArticle({ article, allArticles = [] }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // 7. Guard: Check for null article before rendering
     if (!article) {
         return (
             <div className="wiki-error">
-                <h1>Data Not Found</h1>
-                <p>The requested file is not in the system archives.</p>
-                <Link href="/savoirpedia">Return to Base</Link>
+                <style jsx>{`
+                    .wiki-error { 
+                        padding: 100px; text-align: center; color: #fff; font-family: Orbitron, sans-serif; 
+                        display: flex; flex-direction: column; align-items: center; gap: 20px;
+                    }
+                    .error-icon { font-size: 4rem; color: #ff3232; }
+                    .back-link { color: #00f0ff; text-decoration: none; border: 1px solid #00f0ff; padding: 10px 20px; border-radius: 4px; }
+                `}</style>
+                <div className="error-icon">⚠️</div>
+                <h1>CRITICAL_ERROR: DATA_MISSING</h1>
+                <p>The requested intelligence payload is not present in the neural archives.</p>
+                <Link href="/savoirpedia" className="back-link">RETURN TO HUB</Link>
             </div>
         );
     }
-
-    const category = article.category || "Documentation";
-    const author = article.author || "System Admin";
 
     return (
         <article className="wiki-wrapper">
@@ -203,7 +216,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
                 
                 <div className="hero-content">
                     <div className="hero-meta">
-                        <span className="hero-cat">{category}</span>
+                        <span className="hero-cat">{wikiCategory}</span>
                         <div className="hero-intelligence">
                             <span className="intel-item">READ TIME: {stats.readTime} MIN</span>
                             <span className="intel-item">{stats.tier}</span>
@@ -235,8 +248,8 @@ export default function WikiArticle({ article, allArticles = [] }) {
                 <div className="main-col" onMouseUp={handleMouseUp}>
                     <div id="overview" className="intro-block glass">
                         <p className="lead-paragraph">
-                            <strong>{article.title}</strong> is a documented entry in the system archives, initialized by <strong>{author}</strong>. 
-                            It serves as a primary intelligence source regarding {category.toLowerCase()}.
+                            <strong>{article.title}</strong> is a documented entry in the system archives, initialized by <strong>{wikiAuthor}</strong>. 
+                            It serves as a primary intelligence source regarding {wikiCategory.toLowerCase()}.
                         </p>
                     </div>
 
@@ -245,7 +258,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
                     <div id="references" className="wiki-references">
                         <h3>System References</h3>
                         <ol className="refs-list">
-                            <li>^ Original entry by {author}, {new Date(article.date).getFullYear()}.</li>
+                            <li>^ Original entry by {wikiAuthor}, {new Date(article.date).getFullYear()}.</li>
                             <li>^ System logs verification hash: #A8F-492.</li>
                         </ol>
                     </div>
@@ -261,7 +274,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
                         </div>
                         <div className="meta-row">
                             <span className="meta-label">Author</span>
-                            <span className="meta-value">{author}</span>
+                            <span className="meta-value">{wikiAuthor}</span>
                         </div>
                         <div className="meta-row">
                             <span className="meta-label">Last Updated</span>
@@ -334,13 +347,13 @@ export default function WikiArticle({ article, allArticles = [] }) {
                             <div className="log-entry">
                                 <div className="log-time">{new Date(article.date).toLocaleString()}</div>
                                 <div className="log-action">INITIAL_ENTRY_CREATED</div>
-                                <div className="log-user">System Initialization: {author}</div>
+                                <div className="log-user">System Initialization: {wikiAuthor}</div>
                             </div>
                             {article.updatedAt && (
                                 <div className="log-entry">
                                     <div className="log-time">{new Date(article.updatedAt).toLocaleString()}</div>
                                     <div className="log-action">ENTRY_REVISED</div>
-                                    <div className="log-user">Updated by: {author}</div>
+                                    <div className="log-user">Updated by: {wikiAuthor}</div>
                                 </div>
                             )}
                             <div className="log-entry future">
@@ -364,7 +377,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
                     font-size: 1.1rem; line-height: 1.8; color: rgba(255,255,255,0.85); margin-top: 30px;
                 }
                 .wiki-content-render h2 {
-                    font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: #fff;
+                    font-family: Orbitron, sans-serif; font-size: 1.5rem; color: #fff;
                     margin-top: 40px; margin-bottom: 20px; padding-bottom: 10px;
                     border-bottom: 1px solid rgba(0, 240, 255, 0.2);
                 }
@@ -386,7 +399,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
                 }
                 .data-header { 
                     background: rgba(0, 240, 255, 0.1); padding: 8px 15px; 
-                    font-family: 'Orbitron', sans-serif; font-size: 0.7rem; font-weight: 800;
+                    font-family: Orbitron, sans-serif; font-size: 0.7rem; font-weight: 800;
                     color: #00f0ff; letter-spacing: 2px;
                 }
                 .data-body { padding: 15px; color: #ccfaff; font-size: 0.95rem; }
@@ -418,7 +431,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
                 }
 
                 .wiki-error { 
-                    padding: 100px; text-align: center; color: #fff; font-family: 'Orbitron', sans-serif; 
+                    padding: 100px; text-align: center; color: #fff; font-family: Orbitron, sans-serif; 
                 }
             `}</style>
             <style jsx>{`
@@ -446,19 +459,19 @@ export default function WikiArticle({ article, allArticles = [] }) {
                     width: 100%; max-width: 1200px; margin: 0 auto; padding: 40px 20px;
                     position: relative; z-index: 10;
                 }
-                .hero-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; flex-wrap: wrap; gap: 15px; }
+                .hero-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-family: Orbitron, sans-serif; font-size: 0.9rem; flex-wrap: wrap; gap: 15px; }
                 .hero-cat { color: #00f0ff; font-weight: 700; text-transform: uppercase; }
-                .hero-date { color: rgba(255,255,255,0.6); }
+                .hero-date { color: rgba(255,255,255,0.8); }
 
                 .hero-intelligence { display: flex; gap: 20px; }
                 .intel-item { 
-                    font-size: 0.7rem; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); 
+                    font-size: 0.7rem; color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.1); 
                     padding: 4px 10px; border-radius: 4px; background: rgba(255,255,255,0.02);
                     letter-spacing: 1px; font-weight: 700;
                 }
 
                 .hero-title {
-                    font-size: 3.5rem; font-family: 'Orbitron', sans-serif; 
+                    font-size: 3.5rem; font-family: Orbitron, sans-serif; 
                     font-weight: 900; line-height: 1.1; margin: 0 0 30px 0;
                     text-shadow: 0 10px 30px rgba(0,0,0,0.5);
                     word-break: break-word; overflow-wrap: break-word;
@@ -466,7 +479,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
                 .hero-actions { display: flex; gap: 20px; align-items: center; }
 
                 .back-btn {
-                    color: rgba(255,255,255,0.7); text-decoration: none; font-weight: 700; font-size: 0.9rem;
+                    color: rgba(255,255,255,0.9); text-decoration: none; font-weight: 700; font-size: 0.9rem;
                     border: 1px solid rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 50px;
                     transition: all 0.3s;
                 }
@@ -474,7 +487,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
 
                 .sound-toggle {
                     background: transparent; border: 1px solid rgba(255,255,255,0.1);
-                    color: rgba(255,255,255,0.4); font-family: 'Orbitron', sans-serif;
+                    color: rgba(255,255,255,0.4); font-family: Orbitron, sans-serif;
                     font-size: 0.7rem; padding: 8px 12px; border-radius: 4px; cursor: pointer;
                     transition: all 0.2s; letter-spacing: 1px;
                 }
@@ -501,9 +514,9 @@ export default function WikiArticle({ article, allArticles = [] }) {
                 .side-col { display: flex; flex-direction: column; gap: 30px; }
                 
                 .meta-card { padding: 25px; }
-                .meta-card-header { font-family: 'Orbitron', sans-serif; font-weight: 700; margin-bottom: 20px; color: rgba(255,255,255,0.5); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+                .meta-card-header { font-family: Orbitron, sans-serif; font-weight: 700; margin-bottom: 20px; color: rgba(255,255,255,0.7); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
                 .meta-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; }
-                .meta-label { color: rgba(255,255,255,0.5); }
+                .meta-label { color: rgba(255,255,255,0.7); }
                 .meta-value.mono { font-family: monospace; color: #00f0ff; }
                 .status-badge { background: rgba(0, 255, 136, 0.1); color: #00ff88; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
                 .status-badge.verified { 
@@ -518,7 +531,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
 
                 .toc-card { padding: 25px; position: sticky; top: 100px; overflow: hidden; }
                 .toc-header { 
-                    font-family: 'Orbitron', sans-serif; font-weight: 700; margin-bottom: 20px; color: #fff; 
+                    font-family: Orbitron, sans-serif; font-weight: 700; margin-bottom: 20px; color: #fff; 
                     display: flex; justify-content: space-between; align-items: center; position: relative;
                 }
                 .scanning-line {
@@ -536,7 +549,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
                 .toc-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
                 .toc-list li { border-left: 2px solid transparent; transition: all 0.3s; }
                 .toc-list li.active { border-left: 2px solid #00f0ff; background: rgba(0, 240, 255, 0.05); }
-                .toc-list a { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.9rem; transition: all 0.2s; display: block; padding: 5px 15px; }
+                .toc-list a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.9rem; transition: all 0.2s; display: block; padding: 5px 15px; }
                 .toc-list li.active a { color: #00f0ff; font-weight: 700; }
                 .toc-list a:hover { color: #00f0ff; padding-left: 20px; }
 
@@ -547,7 +560,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
                     border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 4px;
                     box-shadow: 0 5px 20px rgba(0,0,0,0.5);
                     animation: popIn 0.2s ease-out;
-                    font-family: 'Orbitron', sans-serif;
+                    font-family: Orbitron, sans-serif;
                 }
                 @keyframes popIn {
                     from { opacity: 0; transform: translateY(10px) scale(0.9); }
@@ -568,13 +581,13 @@ export default function WikiArticle({ article, allArticles = [] }) {
                     to { transform: translateX(0); }
                 }
 
-                .wiki-references { margin-top: 60px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); }
-                .wiki-references h3 { font-family: 'Orbitron', sans-serif; font-size: 1rem; color: #fff; margin-bottom: 15px; }
+                .wiki-references { margin-top: 60px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+                .wiki-references h3 { font-family: Orbitron, sans-serif; font-size: 1rem; color: #fff; margin-bottom: 15px; }
                 .refs-list { padding-left: 20px; font-size: 0.85rem; }
 
                 .btn-utility {
                     background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-                    color: rgba(255,255,255,0.6); font-family: 'Orbitron', sans-serif;
+                    color: rgba(255,255,255,0.8); font-family: Orbitron, sans-serif;
                     font-size: 0.7rem; padding: 8px 12px; border-radius: 4px; cursor: pointer;
                     transition: all 0.2s; letter-spacing: 1px;
                 }
@@ -593,16 +606,16 @@ export default function WikiArticle({ article, allArticles = [] }) {
                     padding: 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between;
                     align-items: center; background: #1a1a1a;
                 }
-                .modal-header h3 { margin: 0; font-size: 0.9rem; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; color: #00f0ff; }
+                .modal-header h3 { margin: 0; font-size: 0.9rem; font-family: Orbitron, sans-serif; letter-spacing: 1px; color: #00f0ff; }
                 .modal-body { padding: 25px; display: flex; flex-direction: column; gap: 20px; }
                 .log-entry { border-left: 2px solid #00f0ff; padding-left: 15px; position: relative; }
                 .log-entry.future { border-left-color: #333; opacity: 0.5; }
                 .log-entry::before {
-                    content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px;
+                    content: ""; position: absolute; left: -6px; top: 0; width: 10px; height: 10px;
                     border-radius: 50%; background: #00f0ff; box-shadow: 0 0 10px #00f0ff;
                 }
                 .log-entry.future::before { background: #333; box-shadow: none; }
-                .log-time { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; color: #666; margin-bottom: 5px; }
+                .log-time { font-family: Orbitron, sans-serif; font-size: 0.65rem; color: #666; margin-bottom: 5px; }
                 .log-action { font-weight: 800; font-size: 0.8rem; letter-spacing: 1px; color: #fff; }
                 .log-user { font-size: 0.75rem; color: #888; margin-top: 3px; }
 
@@ -613,7 +626,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
                     .intel-item { border-color: #000 !important; color: #000 !important; }
                     .article-layout { display: block !important; }
                     .main-col { width: 100% !important; color: #000 !important; }
-                    body { background: #fff !important; color: #000 !important; font-family: 'Georgia', serif !important; }
+                    body { background: #fff !important; color: #000 !important; font-family: "Georgia", serif !important; }
                     .wiki-content-render { font-size: 12pt !important; line-height: 1.6 !important; color: #000 !important; }
                     .lead-paragraph { border-bottom: 2px solid #000 !important; padding-bottom: 20px !important; margin-bottom: 40px !important; }
                     .intro-block { border: none !important; background: none !important; color: #000 !important; }

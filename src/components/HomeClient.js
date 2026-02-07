@@ -463,11 +463,11 @@ export default function HomeClient() {
         </ScrollReveal>
         <div className="signal-grid">
           <div className="signal-card glass">
-            <p className="signal-quote">"Mr Build changed how I deploy. It's the infrastructure I didn't know I needed."</p>
+            <p className="signal-quote">&quot;Mr Build changed how I deploy. It&apos;s the infrastructure I didn&apos;t know I needed.&quot;</p>
             <div className="signal-author">— Verified Architect</div>
           </div>
           <div className="signal-card glass">
-            <p className="signal-quote">"The speed of Mr Search is unparalleled. Absolute digital sovereignty."</p>
+            <p className="signal-quote">&quot;The speed of Mr Search is unparalleled. Absolute digital sovereignty.&quot;</p>
             <div className="signal-author">— Data Futurist</div>
           </div>
         </div>

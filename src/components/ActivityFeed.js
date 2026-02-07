@@ -20,6 +20,7 @@ export default function ActivityFeed() {
   const [currentTime, setCurrentTime] = useState("");
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   }, []);
 

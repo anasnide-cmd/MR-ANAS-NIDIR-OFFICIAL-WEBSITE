@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { Sparkles, Send, Bot, User, Mic, Volume2, VolumeX, Edit3, Image as ImageIcon, X } from 'lucide-react';
 import { db } from '../../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
-export default function SavoirCopilot({ currentTitle, currentContent, onUpdate }) {
+export default function SavoirCopilot({ currentTitle, currentContent, onUpdate, initialMessage }) {
   // ... (existing state) ...
   const [messages, setMessages] = useState([
     {
@@ -17,6 +18,12 @@ export default function SavoirCopilot({ currentTitle, currentContent, onUpdate }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (initialMessage && initialMessage !== input) {
+      setInput(initialMessage);
+    }
+  }, [initialMessage]);
   
   // Voice State
   const [isListening, setIsListening] = useState(false);
@@ -250,9 +257,9 @@ export default function SavoirCopilot({ currentTitle, currentContent, onUpdate }
                   {content.map((part, i) => {
                       if (part.type === 'text') return <div key={i} className="text-content">{part.text}</div>;
                       if (part.type === 'image_url') return (
-                        <div key={i} className="uploaded-image-preview">
-                            <img src={part.image_url.url} alt="User Upload" />
-                        </div>
+                         <div key={i} className="uploaded-image-preview">
+                             <Image src={part.image_url.url} alt="User Upload" width={150} height={150} style={{ objectFit: 'cover' }} />
+                         </div>
                       );
                       return null;
                   })}
@@ -278,12 +285,14 @@ export default function SavoirCopilot({ currentTitle, currentContent, onUpdate }
                       
                       {data.action === 'GENERATE_IMAGE' && data.data?.description && (
                           <div className="image-container">
-                              <img 
-                                src={`https://image.pollinations.ai/prompt/${encodeURIComponent(data.data.description)}?width=1024&height=576&nologo=true`} 
-                                alt={data.data.description} 
-                                className="generated-image"
-                                loading="lazy"
-                              />
+                               <Image 
+                                 src={`https://image.pollinations.ai/prompt/${encodeURIComponent(data.data.description)}?width=1024&height=576&nologo=true`} 
+                                 alt={data.data.description} 
+                                 className="generated-image"
+                                 width={1024}
+                                 height={576}
+                                 loading="lazy"
+                               />
                               <div className="image-caption">Generative Art: {data.data.description}</div>
                           </div>
                       )}
@@ -359,7 +368,7 @@ export default function SavoirCopilot({ currentTitle, currentContent, onUpdate }
         {/* Image Preview Overlay */}
         {selectedImage && (
             <div className="image-preview-container">
-                <img src={selectedImage} alt="Preview" className="img-preview" />
+                <Image src={selectedImage} alt="Preview" className="img-preview" width={60} height={60} />
                 <button onClick={() => setSelectedImage(null)} className="remove-img-btn">
                     <X size={12} />
                 </button>

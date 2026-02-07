@@ -63,7 +63,7 @@ class GlobalErrorBoundary extends React.Component {
               letter-spacing: 2px;
             }
             p { color: rgba(255, 255, 255, 0.7); margin-bottom: 10px; }
-            .sub-text { font-size: 0.8rem; opacity: 0.5; margin-bottom: 30px; }
+            .sub-text { font-size: 0.8rem; opacity: 0.85; margin-bottom: 30px; }
             .reload-btn {
               background: #ff3232;
               color: #000;

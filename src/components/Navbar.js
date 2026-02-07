@@ -999,7 +999,7 @@ export default function Navbar() {
         .cta-subtext {
           display: block;
           font-size: 0.9rem;
-          opacity: 0.8;
+          opacity: 0.95;
           position: relative;
           z-index: 2;
         }

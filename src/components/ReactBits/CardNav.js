@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 import { useLayoutEffect, useRef, useState, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
@@ -24,6 +25,7 @@ const CardNav = ({
   const cardsRef = useRef([]);
   const tlRef = useRef(null);
   const pathname = usePathname();
+  const lastPath = useRef(pathname);
 
   const calculateHeight = () => {
     const navEl = navRef.current;
@@ -44,9 +46,12 @@ const CardNav = ({
     }
   }, []);
 
-  const toggleMenu = () => {
+  const toggleMenu = (e) => {
+    if (e) e.stopPropagation();
     const navEl = navRef.current;
     if (!navEl) return;
+
+    console.log("[CardNav] toggleMenu called. Current isExpanded:", isExpanded);
 
     if (!isExpanded) {
       // OPEN
@@ -54,14 +59,18 @@ const CardNav = ({
       setIsExpanded(true);
       
       const targetHeight = calculateHeight();
+      console.log("[CardNav] Opening to height:", targetHeight);
 
+      gsap.killTweensOf(navEl);
       gsap.to(navEl, {
         height: targetHeight,
         duration: 0.5,
         ease: ease
       });
 
-      gsap.to(cardsRef.current, { 
+      const validCards = cardsRef.current.filter(Boolean);
+      gsap.killTweensOf(validCards);
+      gsap.to(validCards, { 
         y: 0, 
         opacity: 1, 
         duration: 0.4, 
@@ -73,15 +82,22 @@ const CardNav = ({
     } else {
       // CLOSE
       setIsHamburgerOpen(false);
+      console.log("[CardNav] Closing menu");
       
+      gsap.killTweensOf(navEl);
       gsap.to(navEl, {
         height: 70,
         duration: 0.5,
         ease: ease,
-        onComplete: () => setIsExpanded(false)
+        onComplete: () => {
+          setIsExpanded(false);
+          console.log("[CardNav] Close animation complete");
+        }
       });
 
-      gsap.to(cardsRef.current, { 
+      const validCards = cardsRef.current.filter(Boolean);
+      gsap.killTweensOf(validCards);
+      gsap.to(validCards, { 
         y: 50, 
         opacity: 0, 
         duration: 0.3, 
@@ -92,14 +108,16 @@ const CardNav = ({
 
   // Close menu when route changes
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsExpanded(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsHamburgerOpen(false);
-    // Reset animations
-    if (navRef.current) {
-       gsap.to(navRef.current, { height: 70, duration: 0.5, ease: ease });
-       gsap.to(cardsRef.current, { y: 50, opacity: 0, duration: 0.3, ease: ease });
+    if (lastPath.current !== pathname) {
+      lastPath.current = pathname;
+      setIsExpanded(false);
+      setIsHamburgerOpen(false);
+      if (navRef.current) {
+         gsap.killTweensOf(navRef.current);
+         gsap.killTweensOf(cardsRef.current);
+         gsap.to(navRef.current, { height: 70, duration: 0.3, ease: ease });
+         gsap.to(cardsRef.current, { y: 50, opacity: 0, duration: 0.2, ease: ease });
+      }
     }
   }, [pathname, ease]);
 
@@ -107,11 +125,15 @@ const CardNav = ({
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isExpanded && navRef.current && !navRef.current.contains(event.target)) {
+         console.log("[CardNav] Click outside detected - closing");
          // Close logic
          setIsExpanded(false);
          setIsHamburgerOpen(false);
+         gsap.killTweensOf(navRef.current);
+         const validCards = cardsRef.current.filter(Boolean);
+         gsap.killTweensOf(validCards);
          gsap.to(navRef.current, { height: 70, duration: 0.5, ease: ease });
-         gsap.to(cardsRef.current, { y: 50, opacity: 0, duration: 0.3, ease: ease });
+         gsap.to(validCards, { y: 50, opacity: 0, duration: 0.3, ease: ease });
       }
     };
 
@@ -134,7 +156,7 @@ const CardNav = ({
         <div className="card-nav-top">
           <div
             className={`hamburger-menu ${isHamburgerOpen ? 'open' : ''}`}
-            onClick={toggleMenu}
+            onClick={(e) => toggleMenu(e)}
             role="button"
             aria-label={isExpanded ? 'Close menu' : 'Open menu'}
             tabIndex={0}
@@ -188,7 +210,7 @@ const CardNav = ({
             transform: translateX(-50%);
             width: 90%;
             max-width: 800px;
-            z-index: 10000;
+            z-index: 999999;
         }
 
         .card-nav {
