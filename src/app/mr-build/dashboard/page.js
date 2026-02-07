@@ -209,10 +209,10 @@ export default function BuildDashboard() {
                                 <button className="btn-filter">Type <ChevronDown size={12}/></button>
                                 <button className="btn-filter">Language <ChevronDown size={12}/></button>
                                 <button className="btn-filter">Sort <ChevronDown size={12}/></button>
-                                <button onClick={handleNewRepo} className="btn-new-repo">
-                                    <Book size={16} /> New
-                                </button>
                             </div>
+                            <button onClick={handleNewRepo} className="btn-new-repo">
+                                <Book size={16} /> New
+                            </button>
                         </div>
 
                         <div className="repo-list">
@@ -284,7 +284,7 @@ export default function BuildDashboard() {
                     --text-muted: #8b949e;
                     --brand: #00f0ff;
                     --brand-glow: rgba(0, 240, 255, 0.2);
-                    --btn-bg: rgba(33, 38, 45, 0.8);
+                    --btn-bg: rgba(33, 38, 45, 0.9);
                     --btn-hover: #30363d;
                     
                     min-height: 100vh;
@@ -318,7 +318,8 @@ export default function BuildDashboard() {
                     padding: 4px 12px;
                     display: flex;
                     align-items: center;
-                    width: 320px;
+                    width: 100%;
+                    max-width: 320px;
                     transition: 0.3s;
                 }
                 .search-bar:focus-within { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-glow); }
@@ -336,7 +337,13 @@ export default function BuildDashboard() {
                     border-radius: 4px; padding: 0 6px; font-size: 10px; color: var(--text-muted); 
                 }
                 
-                .header-nav { display: flex; gap: 4px; }
+                .header-nav { 
+                    display: flex; gap: 4px; 
+                    overflow-x: auto; 
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none;
+                }
+                .header-nav::-webkit-scrollbar { display: none; }
                 .nav-item { 
                     background: transparent; border: none; color: var(--text-main); 
                     font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 10px; border-radius: 6px;
@@ -429,7 +436,11 @@ export default function BuildDashboard() {
                     gap: 8px;
                     border-bottom: 1px solid var(--border);
                     margin-bottom: 32px;
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none;
                 }
+                .content-tabs::-webkit-scrollbar { display: none; }
                 .tab-btn {
                     background: transparent;
                     border: none;
@@ -442,6 +453,8 @@ export default function BuildDashboard() {
                     cursor: pointer;
                     border-bottom: 2px solid transparent;
                     transition: all 0.2s;
+                    white-space: nowrap;
+                    flex-shrink: 0;
                 }
                 .tab-btn:hover { background: rgba(255,255,255,0.03); border-radius: 6px 6px 0 0; }
                 .tab-btn.active { font-weight: 600; border-bottom-color: var(--brand); }
@@ -511,9 +524,29 @@ export default function BuildDashboard() {
                     justify-content: space-between;
                     padding: 32px 0;
                     border-top: 1px solid var(--border);
-                    transition: 0.2s;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    position: relative;
+                    animation: fadeIn 0.5s ease-out forwards;
+                    opacity: 0;
+                    border-radius: 8px; /* For hover effect */
+                    margin-bottom: 8px; /* Spacing for hover card look */
+                    padding: 24px; /* Adjust padding for card look */
                 }
-                .repo-item:hover { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.01)); }
+                .repo-item:nth-child(1) { animation-delay: 0.05s; }
+                .repo-item:nth-child(2) { animation-delay: 0.1s; }
+                .repo-item:nth-child(3) { animation-delay: 0.15s; }
+                .repo-item:nth-child(4) { animation-delay: 0.2s; }
+                .repo-item:nth-child(5) { animation-delay: 0.25s; }
+
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+                .repo-item:hover { 
+                    background: rgba(22, 27, 34, 0.8);
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                    border-color: rgba(255,255,255,0.1);
+                    transform: translateY(-2px); 
+                }
+                .repo-item:hover .repo-link { color: var(--brand); text-shadow: 0 0 12px var(--brand-glow); }
                 .repo-item:last-child { border-bottom: none; }
                 
                 .repo-header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
@@ -565,7 +598,7 @@ export default function BuildDashboard() {
                     .nebula-sidebar { 
                         display: flex; flex-direction: column; align-items: center; text-align: center;
                         border-right: none; border-bottom: 1px solid var(--border);
-                        padding: 16px;
+                        padding: 20px 16px;
                         width: 100%;
                         max-width: 100vw;
                         overflow-x: hidden;
@@ -578,6 +611,8 @@ export default function BuildDashboard() {
                         width: 100%; 
                         max-width: 100%;
                         gap: 12px; 
+                        padding-bottom: 12px;
+                        border-bottom: 1px solid rgba(255,255,255,0.1);
                     }
                     .profile-avatar-large { 
                         width: 72px; 
@@ -591,12 +626,39 @@ export default function BuildDashboard() {
                     .btn-edit-profile { width: 100%; justify-content: center; }
                     
                     .profile-details { width: 100%; max-width: 400px; }
-                    .nebula-content { padding: 16px; }
+                    .nebula-content { padding: 16px 12px; }
                 }
 
                 @media (max-width: 768px) {
+                    .nebula-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                        gap: 16px;
+                        padding: 12px 16px;
+                        height: auto;
+                    }
+                    .header-left {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 12px;
+                        width: 100%;
+                    }
+                    .logo-section { margin-bottom: 4px; }
+                    .search-bar { width: 100%; max-width: 100%; }
+                    .header-nav { 
+                         width: 100%; 
+                         padding-bottom: 8px;
+                         border-bottom: 1px solid rgba(255,255,255,0.1);
+                    }
+                    .header-right {
+                        position: absolute;
+                        top: 16px;
+                        right: 16px;
+                    }
+
                     .repo-controls { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 16px; }
                     .search-wrapper { width: 100%; }
+                    .filter-buttons::-webkit-scrollbar { display: none; }
                     .filter-buttons { 
                         display: flex; 
                         overflow-x: auto; 
@@ -604,8 +666,8 @@ export default function BuildDashboard() {
                         padding-bottom: 4px;
                         -webkit-overflow-scrolling: touch;
                         scrollbar-width: none; 
+                        white-space: nowrap;
                     }
-                    .filter-buttons::-webkit-scrollbar { display: none; }
                     .btn-filter { 
                         white-space: nowrap; flex-shrink: 0; 
                         padding: 6px 12px; font-size: 13px;
