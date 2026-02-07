@@ -12,7 +12,7 @@ const Editor = dynamic(() => import('primereact/editor').then(mod => mod.Editor)
 import 'primereact/resources/themes/lara-dark-cyan/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles, X, Minimize2, Maximize2 } from 'lucide-react';
 
 // Import SavoirCopilot (Dynamic to avoid SSR)
 const SavoirCopilot = dynamic(() => import('../../../components/Savoirpedia/SavoirCopilot'), { ssr: false });
@@ -41,6 +41,7 @@ function PublicWikiEditorContent() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [showCopilot, setShowCopilot] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(false);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (u) => {
@@ -296,21 +297,33 @@ function PublicWikiEditorContent() {
 
                 {/* AI Sidebar */}
                 {showCopilot && (
-                    <aside className="ai-sidebar">
+                    <aside className={`ai-sidebar ${isMinimized ? 'minimized' : ''}`}>
                         <div className="sidebar-header">
-                            <h3>NEX ASSISTANT</h3>
-                            <button onClick={() => setShowCopilot(false)} className="close-btn"><X size={16}/></button>
+                            <h3>{isMinimized ? 'NEX' : 'NEX ASSISTANT'}</h3>
+                            <div className="sidebar-actions">
+                                <button onClick={() => setIsMinimized(!isMinimized)} className="action-btn" title={isMinimized ? "Restore" : "Minimize"}>
+                                    {isMinimized ? <Maximize2 size={16}/> : <Minimize2 size={16}/>}
+                                </button>
+                                <button onClick={() => setShowCopilot(false)} className="action-btn close"><X size={16}/></button>
+                            </div>
                         </div>
                         <div className="sidebar-content">
-                            <SavoirCopilot 
-                                currentTitle={title}
-                                currentContent={content}
-                                onUpdate={(data) => {
-                                    if (data.title) setTitle(data.title);
-                                    if (data.category) setCategory(data.category);
-                                    if (data.content) setContent(data.content);
-                                }}
-                            />
+                            {!isMinimized ? (
+                                <SavoirCopilot 
+                                    currentTitle={title}
+                                    currentContent={content}
+                                    onUpdate={(data) => {
+                                        if (data.title) setTitle(data.title);
+                                        if (data.category) setCategory(data.category);
+                                        if (data.content) setContent(data.content);
+                                    }}
+                                />
+                            ) : (
+                                <div className="minimized-indicator" onClick={() => setIsMinimized(false)}>
+                                    <div className="orb-pulse"></div>
+                                    <Sparkles size={20} className="orb-icon" />
+                                </div>
+                            )}
                         </div>
                     </aside>
                 )}
@@ -341,16 +354,48 @@ function PublicWikiEditorContent() {
                     background: #111; border: 1px solid #333; border-radius: 8px;
                     display: flex; flex-direction: column; overflow: hidden;
                     height: calc(100vh - 150px); position: sticky; top: 20px;
+                    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .ai-sidebar.minimized {
+                    width: 60px;
+                    height: 120px;
+                    background: transparent;
+                    border-color: rgba(0, 240, 255, 0.3);
+                    box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
                 }
                 .sidebar-header {
                     padding: 10px 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;
                     background: #1a1a1a;
                 }
+                .ai-sidebar.minimized .sidebar-header { padding: 10px 5px; border-bottom-color: rgba(0, 240, 255, 0.2); flex-direction: column-reverse; gap: 10px; }
                 .sidebar-header h3 { margin: 0; font-size: 0.9rem; color: #aaa; letter-spacing: 1px; }
-                .close-btn { background: transparent; border: none; color: #666; cursor: pointer; }
-                .close-btn:hover { color: #fff; }
+                .ai-sidebar.minimized h3 { font-size: 0.6rem; letter-spacing: 0; opacity: 0.5; }
+
+                .sidebar-actions { display: flex; gap: 12px; align-items: center; }
+                .ai-sidebar.minimized .sidebar-actions { flex-direction: column; gap: 10px; }
+                .action-btn { 
+                    background: transparent; border: none; color: #aaa; cursor: pointer; 
+                    transition: all 0.2s; padding: 4px; display: flex; align-items: center; 
+                    justify-content: center; border-radius: 4px;
+                }
+                .action-btn:hover { color: #00f0ff; background: rgba(0, 240, 255, 0.1); }
+                .action-btn.close:hover { color: #ff4d4d; background: rgba(255, 77, 77, 0.1); }
                 
-                .sidebar-content { flex: 1; overflow: hidden; }
+                .sidebar-content { flex: 1; overflow: hidden; position: relative; }
+                
+                .minimized-indicator {
+                    height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;
+                }
+                .orb-pulse {
+                    position: absolute; width: 40px; height: 40px; border-radius: 50%;
+                    background: rgba(0, 240, 255, 0.15); animation: orb-glow 2s infinite;
+                }
+                @keyframes orb-glow {
+                    0% { transform: scale(0.8); opacity: 0.3; }
+                    50% { transform: scale(1.2); opacity: 0.1; }
+                    100% { transform: scale(0.8); opacity: 0.3; }
+                }
+                .orb-icon { color: #00f0ff; position: relative; z-index: 2; filter: drop-shadow(0 0 5px #00f0ff); }
 
                 /* Existing Styles */
                 .btn-draft {
@@ -448,7 +493,74 @@ function PublicWikiEditorContent() {
                 
                 @media (max-width: 1000px) {
                     .editor-layout { flex-direction: column; }
-                    .ai-sidebar { width: 100%; height: 500px; position: static; }
+                    .ai-sidebar { 
+                        position: fixed;
+                        top: 5dvh;
+                        left: 5vw;
+                        right: 5vw;
+                        bottom: 5dvh;
+                        width: auto;
+                        height: auto;
+                        max-height: 90dvh;
+                        z-index: 99999;
+                        background: rgba(10, 15, 20, 0.95);
+                        backdrop-filter: blur(25px) saturate(180%);
+                        box-shadow: 0 0 50px rgba(0,0,0,0.9), 0 0 20px rgba(0, 240, 255, 0.1);
+                        border: 1px solid rgba(0, 240, 255, 0.3);
+                        border-radius: 20px;
+                        display: flex;
+                        flex-direction: column;
+                        pointer-events: auto;
+                    }
+                    .ai-sidebar .sidebar-header {
+                        padding: 15px 20px;
+                        background: rgba(0, 240, 255, 0.05);
+                        border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+                        height: 60px;
+                        flex-shrink: 0;
+                    }
+                    .ai-sidebar .sidebar-header h3 {
+                        font-family: 'Orbitron', sans-serif;
+                        color: #00f0ff;
+                        text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+                        font-size: 0.8rem;
+                    }
+                    .sidebar-actions {
+                        pointer-events: auto;
+                        z-index: 10;
+                    }
+                    .action-btn {
+                        width: 44px;
+                        height: 44px;
+                        border-radius: 50%;
+                        background: rgba(255,255,255,0.05);
+                    }
+                    .ai-sidebar.minimized {
+                        top: auto;
+                        left: auto;
+                        bottom: 30px;
+                        right: 20px;
+                        width: 65px;
+                        height: 65px;
+                        background: rgba(0, 240, 255, 0.15);
+                        border: 1px solid rgba(0, 240, 255, 0.5);
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
+                        max-height: 65px;
+                    }
+                    .ai-sidebar.minimized .sidebar-header { display: none; }
+                    .ai-sidebar.minimized .sidebar-content { height: 100%; display: flex; align-items: center; justify-content: center; width: 100%; }
+                    .orb-pulse { width: 50px; height: 50px; }
+                    .sidebar-content {
+                        flex: 1;
+                        height: 100%;
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
+                    }
                 }
             `}</style>
         </div>
