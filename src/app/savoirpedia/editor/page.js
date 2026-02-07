@@ -12,6 +12,10 @@ const Editor = dynamic(() => import('primereact/editor').then(mod => mod.Editor)
 import 'primereact/resources/themes/lara-dark-cyan/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
+import { Sparkles, X } from 'lucide-react';
+
+// Import SavoirCopilot (Dynamic to avoid SSR)
+const SavoirCopilot = dynamic(() => import('../../../components/Savoirpedia/SavoirCopilot'), { ssr: false });
 
 const ALLOWED_ADMINS = ['anasnide@gmail.com', 'ceo@anasnidir.com'];
 
@@ -35,6 +39,8 @@ function PublicWikiEditorContent() {
     const [category, setCategory] = useState('');
     const [content, setContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [showCopilot, setShowCopilot] = useState(false);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (u) => {
@@ -134,84 +140,144 @@ function PublicWikiEditorContent() {
         <div className="wiki-container">
             <style jsx global>{` body { padding-top: 0 !important; } `}</style> 
             <header className="editor-header">
-                <h1>{editId ? 'Edit Article' : 'Create New Article'}</h1>
-                <p>Contributing as <strong>{user.email}</strong></p>
+                <div className="header-left">
+                    <h1>{editId ? 'Edit Article' : 'Create New Article'}</h1>
+                    <p>Contributing as <strong>{user.email}</strong></p>
+                </div>
+                <button 
+                    className={`btn-copilot ${showCopilot ? 'active' : ''}`} 
+                    onClick={() => setShowCopilot(!showCopilot)}
+                >
+                    <Sparkles size={16} /> NEX EDITOR
+                </button>
             </header>
             
-            {/* Added style override just in case PrimeReact z-index issues happen */}
             <style jsx global>{`
                 .p-editor-toolbar { border-radius: 8px 8px 0 0; }
                 .p-editor-content { border-radius: 0 0 8px 8px; }
             `}</style>
 
-            <form onSubmit={handlePublish} className="wiki-form">
-                <div className="form-group">
-                    <label>Article Title</label>
-                    <input 
-                        value={title}
-                        onChange={e => setTitle(e.target.value)}
-                        placeholder="e.g., Quantum Computing"
-                        className="wiki-input"
-                        required
-                    />
+            <div className={`editor-layout ${showCopilot ? 'with-sidebar' : ''}`}>
+                <div className="main-column">
+                    <form onSubmit={handlePublish} className="wiki-form">
+                        <div className="form-group">
+                            <label>Article Title</label>
+                            <input 
+                                value={title}
+                                onChange={e => setTitle(e.target.value)}
+                                placeholder="e.g., Quantum Computing"
+                                className="wiki-input"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Category (Custom)</label>
+                            <input 
+                                value={category}
+                                onChange={e => setCategory(e.target.value)}
+                                placeholder="e.g. Astrophysics"
+                                className="wiki-input"
+                                required 
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label style={{marginBottom: '10px', display: 'block'}}>Content</label>
+                            <div className="editor-wrapper">
+                                <Editor 
+                                    value={content} 
+                                    onTextChange={(e) => setContent(e.htmlValue)} 
+                                    style={{ height: '500px', fontSize: '1.1rem' }} 
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-actions">
+                            <button type="button" onClick={(e) => handlePublish(e, 'draft')} className="btn-draft" disabled={isSubmitting}>
+                                {isSubmitting ? 'Saving...' : 'Save Draft'}
+                            </button>
+                            <button type="submit" className="btn-publish" disabled={isSubmitting} onClick={(e) => handlePublish(e, 'active')}>
+                                {isSubmitting ? 'Publishing...' : 'Publish Article'}
+                            </button>
+                            <Link href="/savoirpedia/dashboard" className="btn-cancel">Cancel</Link>
+                        </div>
+                    </form>
                 </div>
 
-                <div className="form-group">
-                    <label>Category (Custom)</label>
-                    <input 
-                        value={category}
-                        onChange={e => setCategory(e.target.value)}
-                        placeholder="e.g. Astrophysics"
-                        className="wiki-input"
-                        required 
-                    />
-                </div>
+                {/* AI Sidebar */}
+                {showCopilot && (
+                    <aside className="ai-sidebar">
+                        <div className="sidebar-header">
+                            <h3>NEX ASSISTANT</h3>
+                            <button onClick={() => setShowCopilot(false)} className="close-btn"><X size={16}/></button>
+                        </div>
+                        <div className="sidebar-content">
+                            <SavoirCopilot 
+                                currentTitle={title}
+                                currentContent={content}
+                                onUpdate={(data) => {
+                                    if (data.title) setTitle(data.title);
+                                    if (data.category) setCategory(data.category);
+                                    if (data.content) setContent(data.content);
+                                }}
+                            />
+                        </div>
+                    </aside>
+                )}
+            </div>
 
-                <div className="form-group">
-                    <label style={{marginBottom: '10px', display: 'block'}}>Content</label>
-                    <div className="editor-wrapper">
-                        <Editor 
-                            value={content} 
-                            onTextChange={(e) => setContent(e.htmlValue)} 
-                            style={{ height: '500px', fontSize: '1.1rem' }} 
-                        />
-                    </div>
-                </div>
-
-                <div className="form-actions">
-                    <button type="button" onClick={(e) => handlePublish(e, 'draft')} className="btn-draft" disabled={isSubmitting}>
-                        {isSubmitting ? 'Saving...' : 'Save Draft'}
-                    </button>
-                    <button type="submit" className="btn-publish" disabled={isSubmitting} onClick={(e) => handlePublish(e, 'active')}>
-                        {isSubmitting ? 'Publishing...' : 'Publish Article'}
-                    </button>
-                    <Link href="/savoirpedia/dashboard" className="btn-cancel">Cancel</Link>
-                </div>
-            </form>
-
-            <style jsx global>{`
-                .p-editor-toolbar { border-radius: 8px 8px 0 0; }
-                .p-editor-content { border-radius: 0 0 8px 8px; }
-            `}</style>
-            
             <style jsx>{`
-                /* ... other styles start ... */
+                /* Layout */
+                .editor-layout { display: flex; gap: 20px; position: relative; }
+                .main-column { flex: 1; min-width: 0; transition: width 0.3s; }
+                
+                .editor-header { 
+                    border-bottom: 1px solid #333; margin-bottom: 20px; 
+                    display: flex; justify-content: space-between; align-items: center;
+                }
+                .editor-header h1 { font-family: 'Georgia', serif; font-size: 2rem; margin: 0; }
+                
+                .btn-copilot {
+                    background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3);
+                    color: #00f0ff; padding: 8px 16px; border-radius: 20px; cursor: pointer;
+                    display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem;
+                    transition: all 0.2s;
+                }
+                .btn-copilot:hover, .btn-copilot.active { background: rgba(0, 240, 255, 0.2); box-shadow: 0 0 10px rgba(0, 240, 255, 0.2); }
+
+                /* Sidebar */
+                .ai-sidebar {
+                    width: 350px;
+                    background: #111; border: 1px solid #333; border-radius: 8px;
+                    display: flex; flex-direction: column; overflow: hidden;
+                    height: calc(100vh - 150px); position: sticky; top: 20px;
+                }
+                .sidebar-header {
+                    padding: 10px 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;
+                    background: #1a1a1a;
+                }
+                .sidebar-header h3 { margin: 0; font-size: 0.9rem; color: #aaa; letter-spacing: 1px; }
+                .close-btn { background: transparent; border: none; color: #666; cursor: pointer; }
+                .close-btn:hover { color: #fff; }
+                
+                .sidebar-content { flex: 1; overflow: hidden; }
+
+                /* Existing Styles */
                 .btn-draft {
                     background: transparent; border: 1px solid #666; color: #ccc;
                     padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px;
                 }
                 .btn-draft:hover { border-color: #fff; color: #fff; }
-                /* ... other styles ... */
+
                 .wiki-container {
                     max-width: 100%;
                     width: 100%;
                     margin: 0;
-                    padding: 40px 20px;
+                    padding: 20px 40px;
                     color: #e0e0e0;
                     min-height: 100vh;
                 }
-                .editor-header { border-bottom: 1px solid #333; margin-bottom: 30px; }
-                .editor-header h1 { font-family: 'Georgia', serif; font-size: 2rem; margin-bottom: 10px; }
                 
                 .form-group { margin-bottom: 20px; }
                 .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #aaa; }
@@ -251,6 +317,11 @@ function PublicWikiEditorContent() {
                 
                 .btn-cancel { color: #aaa; text-decoration: none; }
                 .btn-cancel:hover { color: #fff; }
+                
+                @media (max-width: 1000px) {
+                    .editor-layout { flex-direction: column; }
+                    .ai-sidebar { width: 100%; height: 500px; position: static; }
+                }
             `}</style>
         </div>
     );
