@@ -210,9 +210,18 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
                         }
                         return { role: m.role, content: m.content };
                     }
+                    
+                    // Safe Parse for Assistant
+                    let parsedContent = m.content;
+                    try {
+                        const json = JSON.parse(m.content);
+                        parsedContent = json.message || m.content;
+                    } catch (e) {
+                        // maintain original content if parse fails
+                    }
                     return { 
                         role: m.role, 
-                        content: m.role === 'assistant' ? JSON.parse(m.content).message : m.content 
+                        content: parsedContent
                     };
                 }),
                 currentContext: {
