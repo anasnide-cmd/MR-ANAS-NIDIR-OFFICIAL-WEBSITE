@@ -144,6 +144,9 @@ export default function BuildDashboard() {
                             <p className="profile-handle">{user.email}</p>
                             
                             <button className="btn-block-action">Edit profile</button> 
+                            <Link href="/mr-build/subscription" className="btn-block-action btn-sub">
+                                💎 Manage Subscription
+                            </Link> 
                              
                             <div className="profile-stats">
                                 <span className="stat-item"><Star size={14} className="icon-star"/> <strong>{sites.reduce((acc, s) => acc + (s.views || 0), 0)}</strong> stars</span>
@@ -406,6 +409,17 @@ export default function BuildDashboard() {
                     transition: 0.2s;
                 }
                 .btn-block-action:hover { background: var(--btn-hover); border-color: var(--text-muted); }
+                .btn-sub {
+                    background: rgba(0, 240, 255, 0.1);
+                    border-color: rgba(0, 240, 255, 0.3);
+                    color: #00f0ff;
+                    margin-top: 8px;
+                    display: flex; justify-content: center; align-items: center; text-decoration: none;
+                }
+                .btn-sub:hover {
+                    background: rgba(0, 240, 255, 0.2);
+                    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+                }
 
                 .profile-stats { font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 12px; }
                 .stat-item { display: flex; align-items: center; gap: 8px; }
