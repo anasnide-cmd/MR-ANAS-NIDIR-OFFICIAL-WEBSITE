@@ -76,6 +76,33 @@ function PublicWikiEditorContent() {
         return () => unsub();
     }, [editId, router]);
 
+    // 1. Auto-Save Logic
+    useEffect(() => {
+        if (!editId && !title && !content) {
+            // Load from localStorage if starting fresh
+            const savedData = localStorage.getItem('savoir_pedia_draft');
+            if (savedData) {
+                try {
+                    const { title: t, category: c, content: cont } = JSON.parse(savedData);
+                    setTitle(t || '');
+                    setCategory(c || '');
+                    setContent(cont || '');
+                } catch (e) {
+                    console.error("Failed to parse draft:", e);
+                }
+            }
+        }
+    }, [editId]);
+
+    useEffect(() => {
+        if (title || content || category) {
+            const timer = setTimeout(() => {
+                localStorage.setItem('savoir_pedia_draft', JSON.stringify({ title, category, content }));
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [title, category, content]);
+
     const handlePublish = async (e, status = 'active') => {
         if (e) e.preventDefault();
         // Validation
@@ -84,18 +111,20 @@ function PublicWikiEditorContent() {
         setIsSubmitting(true);
         try {
             const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+            const now = new Date().toISOString();
             const postData = {
                 title,
                 category,
                 content,
-                author: user.displayName || user.email, // Use Display Name if available
-                // authorId: user.uid, // Keep original owner
-                date: new Date().toISOString(),
+                author: user.displayName || user.email, 
+                date: now,
+                updatedAt: now, // Add Versioning Tracking
                 status: status
             };
 
             if (editId) {
                 // Update
+                delete postData.date; // Don't overwrite original creation date
                 await updateDoc(doc(db, 'posts', editId), postData);
             } else {
                 // Create
@@ -106,11 +135,51 @@ function PublicWikiEditorContent() {
                 });
             }
             
-            router.push('/savoirpedia/dashboard'); // Go to dashboard after save
+            localStorage.removeItem('savoir_pedia_draft'); // Clear draft on success
+            router.push('/savoirpedia/dashboard'); 
         } catch (err) {
             alert('Error publishing: ' + err.message);
             setIsSubmitting(false);
         }
+    };
+
+    const handleSuggestCategory = async () => {
+        if (!content || isSubmitting) return;
+        setIsSubmitting(true);
+        try {
+            const res = await fetch('/api/nex-ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [{ role: 'user', content: `Based on this content, suggest a single short category name (like "Astrophysics" or "Web Development"). Respond ONLY with the category name: ${content.substring(0, 1000)}` }],
+                    mode: 'chat'
+                })
+            });
+            const data = await res.json();
+            if (data.message) {
+                setCategory(data.message.trim().replace(/^"|"$/g, ''));
+            }
+        } catch (err) {
+            console.error("AI Category Suggestion failed:", err);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const insertBlock = (type) => {
+        let blockHtml = '';
+        switch(type) {
+            case 'alert':
+                blockHtml = '<div class="nex-alert"><div class="alert-icon">⚠️</div><div class="alert-content"><strong>SYSTEM ALERT:</strong> Enter critical notification here...</div></div><p></p>';
+                break;
+            case 'data':
+                blockHtml = '<div class="nex-data-scan"><div class="data-header">DATA SCAN</div><div class="data-body">Intelligence payload goes here...</div></div><p></p>';
+                break;
+            case 'code':
+                blockHtml = '<pre class="nex-code"><code>// Initializing neural sequence...\nconsole.log("Hello, NEX-AI");</code></pre><p></p>';
+                break;
+        }
+        setContent(prev => prev + blockHtml);
     };
 
     if (loading) return <div className="wiki-container">Checking credentials...</div>;
@@ -173,13 +242,33 @@ function PublicWikiEditorContent() {
 
                         <div className="form-group">
                             <label>Category (Custom)</label>
-                            <input 
-                                value={category}
-                                onChange={e => setCategory(e.target.value)}
-                                placeholder="e.g. Astrophysics"
-                                className="wiki-input"
-                                required 
-                            />
+                            <div className="input-with-button">
+                                <input 
+                                    value={category}
+                                    onChange={e => setCategory(e.target.value)}
+                                    placeholder="e.g. Astrophysics"
+                                    className="wiki-input"
+                                    required 
+                                />
+                                <button type="button" onClick={handleSuggestCategory} className="btn-suggest" title="AI Suggest Category">
+                                    <Sparkles size={14} /> AI SUGGEST
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Content Macros</label>
+                            <div className="macro-toolbar">
+                                <button type="button" onClick={() => insertBlock('alert')} className="macro-btn alert">
+                                    [!] SYSTEM ALERT
+                                </button>
+                                <button type="button" onClick={() => insertBlock('data')} className="macro-btn data">
+                                    [i] DATA SCAN
+                                </button>
+                                <button type="button" onClick={() => insertBlock('code')} className="macro-btn code">
+                                    [CODE] NEURAL SNIPPET
+                                </button>
+                            </div>
                         </div>
 
                         <div className="form-group">
@@ -270,6 +359,26 @@ function PublicWikiEditorContent() {
                 }
                 .btn-draft:hover { border-color: #fff; color: #fff; }
 
+                .input-with-button { display: flex; gap: 10px; }
+                .btn-suggest {
+                    background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3);
+                    color: #00f0ff; padding: 0 15px; border-radius: 4px; cursor: pointer;
+                    font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 5px;
+                    transition: all 0.2s; white-space: nowrap;
+                }
+                .btn-suggest:hover { background: rgba(0, 240, 255, 0.25); border-color: #00f0ff; }
+
+                .macro-toolbar { display: flex; gap: 10px; margin-bottom: 5px; }
+                .macro-btn {
+                    padding: 6px 12px; font-size: 0.7rem; font-weight: 800; border-radius: 4px;
+                    cursor: pointer; transition: all 0.2s; font-family: 'Orbitron', sans-serif;
+                    letter-spacing: 1px;
+                }
+                .macro-btn.alert { background: rgba(255, 50, 50, 0.1); border: 1px solid rgba(255, 50, 50, 0.3); color: #ff3232; }
+                .macro-btn.data { background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3); color: #00f0ff; }
+                .macro-btn.code { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; }
+                .macro-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
                 .wiki-container {
                     max-width: 100%;
                     width: 100%;
@@ -295,6 +404,25 @@ function PublicWikiEditorContent() {
                 }
                 .editor-wrapper :global(.ql-snow .ql-stroke) { stroke: #ccc; }
                 .editor-wrapper :global(.ql-snow .ql-fill) { fill: #ccc; }
+
+                /* Modular Blocks in Editor */
+                :global(.nex-alert) {
+                    background: rgba(255, 50, 50, 0.1) !important; border: 1px solid rgba(255, 50, 50, 0.2) !important;
+                    padding: 15px !important; border-radius: 8px; margin: 20px 0; display: flex; gap: 15px;
+                    align-items: center; border-left: 4px solid #ff3232 !important;
+                }
+                :global(.nex-data-scan) {
+                    background: rgba(0, 240, 255, 0.1) !important; border: 1px solid rgba(0, 240, 255, 0.2) !important;
+                    padding: 0 !important; border-radius: 8px; margin: 20px 0; overflow: hidden;
+                    border-left: 4px solid #00f0ff !important;
+                }
+                :global(.data-header) { background: rgba(0, 240, 255, 0.2); padding: 5px 15px; font-weight: bold; color: #00f0ff; }
+                :global(.data-body) { padding: 10px 15px; }
+
+                :global(.nex-code) {
+                    background: #111 !important; padding: 15px !important; border-radius: 8px; 
+                    margin: 20px 0; border: 1px solid rgba(255,255,255,0.1); color: #00ff88 !important;
+                }
 
                 .wiki-input {
                     width: 100%;

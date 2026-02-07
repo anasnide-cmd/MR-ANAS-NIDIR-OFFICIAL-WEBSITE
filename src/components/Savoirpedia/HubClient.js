@@ -5,12 +5,14 @@ import { db } from '../../lib/firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
 import Image from 'next/image';
+import GalaxyView from './GalaxyView';
 
 export default function HubClient() {
     const [posts, setPosts] = useState([]);
     const [filteredPosts, setFilteredPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showGalaxy, setShowGalaxy] = useState(false);
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -91,12 +93,25 @@ export default function HubClient() {
                         </Link>
                     </MagneticWrapper>
                     <MagneticWrapper strength={0.2}>
+                        <button onClick={() => setShowGalaxy(true)} className="action-btn galaxy-btn">
+                            <span>🌌 GALAXY VIEW</span>
+                        </button>
+                    </MagneticWrapper>
+                    <MagneticWrapper strength={0.2}>
                         <Link href="/savoirpedia/editor" className="action-btn create-btn">
                             <span>+ NEW ENTRY</span>
                         </Link>
                     </MagneticWrapper>
                 </div>
             </header>
+
+            {/* GALAXY MODAL */}
+            {showGalaxy && (
+                <GalaxyView 
+                    articles={posts} 
+                    onClose={() => setShowGalaxy(false)} 
+                />
+            )}
 
             {/* CONTROL BAR: SEARCH & FILTERS */}
             <section className="control-bar">
@@ -273,6 +288,10 @@ export default function HubClient() {
                 }
                 .dashboard-btn { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
                 .dashboard-btn:hover { background: #fff; color: #000; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+                
+                .galaxy-btn { background: rgba(0, 240, 255, 0.1); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3); }
+                .galaxy-btn:hover { background: rgba(0, 240, 255, 0.2); box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
+
                 .create-btn { background: #00f0ff; color: #000; border: 1px solid #00f0ff; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); }
                 .create-btn:hover { background: #fff; border-color: #fff; color: #000; box-shadow: 0 0 30px rgba(255,255,255,0.5); }
 

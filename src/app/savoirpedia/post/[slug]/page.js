@@ -36,6 +36,18 @@ async function getArticle(slug) {
     return null;
 }
 
+// Helper function to fetch all article titles for auto-linking
+async function getAllArticleTitles() {
+    try {
+        const q = query(collection(db, 'posts'));
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ title: d.data().title, slug: d.data().slug }));
+    } catch (err) {
+        console.error("Error fetching article titles:", err);
+        return [];
+    }
+}
+
 export async function generateMetadata({ params }) {
     // Next.js 15+ demands awaiting params
     const resolvedParams = await params;
@@ -86,6 +98,7 @@ export default async function WikiPostPage({ params }) {
     const { slug } = resolvedParams;
     
     const article = await getArticle(slug);
+    const allTitles = await getAllArticleTitles();
 
-    return <WikiArticle article={article} />;
+    return <WikiArticle article={article} allArticles={allTitles} />;
 }
