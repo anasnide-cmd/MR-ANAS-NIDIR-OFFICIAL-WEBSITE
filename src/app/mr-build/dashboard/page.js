@@ -7,6 +7,21 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Loader from '../../../components/Loader';
 import SkeletonLoader from '../../../components/SkeletonLoader';
+import { 
+    Book, 
+    Star, 
+    GitBranch, 
+    Eye, 
+    Clock, 
+    Box, 
+    Settings, 
+    LogOut,
+    Plus,
+    Search,
+    Code,
+    Layout,
+    ChevronDown
+} from 'lucide-react';
 
 export default function BuildDashboard() {
     const router = useRouter();
@@ -14,18 +29,17 @@ export default function BuildDashboard() {
     const [sites, setSites] = useState([]);
     const [userLimit, setUserLimit] = useState(1);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState('repositories'); // 'repositories', 'stars', 'projects'
 
     useEffect(() => {
         const checkUser = onAuthStateChanged(auth, async (u) => {
             if (u) {
                 setUser(u);
-
-                // Fetch User Config (Limit) & Sync Profile
                 try {
                     const userRef = doc(db, 'users', u.uid);
                     const userDoc = await getDoc(userRef);
-
-                    // Sync basic profile data (safe fields)
+                    
                     const profileUpdate = {
                         email: u.email,
                         displayName: u.displayName || u.email?.split('@')[0] || 'Anonymous',
@@ -34,10 +48,8 @@ export default function BuildDashboard() {
 
                     if (userDoc.exists()) {
                         setUserLimit(userDoc.data().siteLimit || 1);
-                        // Update profile if changed (merge)
                         await setDoc(userRef, profileUpdate, { merge: true });
                     } else {
-                        // Create initial doc (rules allow this for safe fields)
                         await setDoc(userRef, profileUpdate);
                     }
                 } catch (err) {
@@ -56,307 +68,552 @@ export default function BuildDashboard() {
         return () => checkUser();
     }, [router]);
 
-    // InitialAuth Loader before we even know if we are logged in
-    // However, we want to show the dashboard skeleton if we are just fetching data.
-    // user state is null initially, so we need to be careful.
-    // If loading is true, we might return null or the skeleton structure if we want a skeleton dashboard.
-    // Use standard Loader only for initial auth check if needed, but here we want skeleton inside the layout.
-    
-    if (loading && !user) return <Loader text="Authenticating..." />; 
+    const handleNewRepo = () => {
+        // In a real app, this might open a modal or redirect to a creation wizard
+        router.push('/mr-build/editor?new=true'); 
+    };
+
+    if (loading && !user) return <Loader text="Initializing Nexus Interface..." />; 
     if (!user) return null;
 
+    // Filter Logic
+    let displaySites = sites.filter(site => 
+        (site.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (site.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (activeTab === 'stars') {
+        displaySites = displaySites.filter(site => (site.views || 0) > 0);
+    }
+
     return (
-        <div className="dashboard-container">
-            <header className="dashboard-header animate-reveal">
-                <div className="user-persona">
-                    <div className="avatar-glow">
-                        <span className="avatar-initial">{user.email?.charAt(0).toUpperCase()}</span>
+        <div className="nebula-container">
+            {/* Top Navigation Bar */}
+            <header className="nebula-header">
+                <div className="header-left">
+                    <div className="logo-section">
+                        <Box size={24} className="logo-icon" />
+                        <span className="logo-text">Mr Build <span className="highlight">OS</span></span>
                     </div>
-                    <div className="welcome-text">
-                        <span className="protocol-tag">AUTHORIZED ARCHITECT</span>
-                        <h1>Command Center</h1>
-                        <p>Welcome back, {user.email?.split('@')[0]}. System status is optimal.</p>
+                     <div className="search-bar">
+                        <Search size={14} className="search-icon" />
+                        <input 
+                            placeholder="Search repositories..." 
+                            className="nebula-search-input"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <span className="shortcut">/</span>
                     </div>
+                    <nav className="header-nav">
+                        <button className="nav-item">Pull requests</button>
+                        <button className="nav-item">Issues</button>
+                        <button className="nav-item">Codespaces</button>
+                        <button className="nav-item">Marketplace</button>
+                        <button className="nav-item">Explore</button>
+                    </nav>
                 </div>
-                <div className="header-actions">
-                    <button onClick={async () => {
+                <div className="header-right">
+                    <div className="user-menu" onClick={async () => {
                         await signOut(auth);
                         router.push('/mr-build/login');
-                    }} className="btn-signout">Terminate Session</button>
+                    }}>
+                        <img 
+                            src={`https://ui-avatars.com/api/?name=${user.email}&background=00f0ff&color=000`} 
+                            alt="User" 
+                            className="header-avatar" 
+                        />
+                    </div>
                 </div>
             </header>
 
-            <div className="status-grid">
-                <div className="status-card glass site-card animate-reveal-delay">
-                    <div className="card-header">
-                        <h3>ACTIVE DEPLOYMENTS</h3>
-                        <div className="header-badges">
-                            <span className="status-badge pulse">LIVE</span>
+            <main className="nebula-main">
+                <div className="nebula-layout">
+                    
+                    {/* Left Sidebar */}
+                    <aside className="nebula-sidebar">
+                        <div className="profile-section">
+                            <div className="profile-avatar-large">
+                                <img 
+                                    src={`https://ui-avatars.com/api/?name=${user.email}&background=050505&color=00f0ff&size=200`} 
+                                    alt="Profile" 
+                                />
+                                <div className="online-indicator"></div>
+                            </div>
+                            <h2 className="profile-name">{user.displayName || user.email?.split('@')[0]}</h2>
+                            <p className="profile-handle">{user.email}</p>
+                            
+                            <button className="btn-block-action">Edit profile</button> 
+                             
+                            <div className="profile-stats">
+                                <span className="stat-item"><Star size={14} className="icon-star"/> <strong>{sites.reduce((acc, s) => acc + (s.views || 0), 0)}</strong> stars</span>
+                                <span className="stat-item"><Eye size={14} className="icon-eye"/> <strong>{sites.length}</strong> repos</span>
+                            </div>
                         </div>
-                    </div>
 
-                    {loading ? (
-                         <div className="sites-grid-list">
-                            {Array(3).fill(0).map((_, i) => (
-                                <div key={i} className="site-item-card glass skeleton-card" style={{height: '110px', display: 'flex', alignItems: 'center', gap: '15px'}}>
-                                    <SkeletonLoader height={50} width={50} style={{borderRadius: '10px'}} />
-                                    <div style={{flex: 1}}>
-                                        <SkeletonLoader height={24} width="60%" style={{marginBottom: '8px'}} />
-                                        <SkeletonLoader height={14} width="40%" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : sites.length > 0 ? (
-                        <div className="sites-grid-list">
-                            {sites.map(site => (
-                                <div key={site.id} className={`site-item-card glass ${site.adminStatus === 'banned' ? 'banned' : ''}`}>
-                                    <div className="site-mini-preview">
-                                        <span className="preview-logo">{site.name?.charAt(0) || 'N'}</span>
-                                    </div>
-                                    <div className="site-info-col">
-                                        <h4 className="site-name">{site.name || site.title || 'Untitled'}</h4>
-                                        <div className="site-meta-row">
-                                            <span className="slug-tag">/s/{site.slug}</span>
-                                            <div className="analytics-pill" title="Traffic Activity">
-                                                <span className="views-count">👁️ {site.views || 0}</span>
-                                                <svg viewBox="0 0 60 20" className="sparkline">
-                                                    <path 
-                                                        d={`M0,15 C10,15 10,${Math.max(2, 20 - ((site.views || 0) % 15))} 20,10 S40,${Math.max(2, 20 - ((site.views || 0) % 20))} 60,5`} 
-                                                        fill="none" 
-                                                        stroke="#00f0ff" 
-                                                        strokeWidth="1.5" 
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <span className={`status-pill ${site.status}`}>
-                                                {site.status === 'public' ? '🌐' : site.status === 'private' ? '🔒' : '📝'}
-                                            </span>
-                                            {site.adminStatus === 'banned' && <span className="banned-pill">SUSPENDED</span>}
-                                        </div>
-                                        <div className="site-actions-row small">
-                                            <Link href={`/mr-build/editor?id=${site.id}`} className="btn-action primary compact">MANAGE</Link>
-                                            {site.slug && site.adminStatus !== 'banned' && (
-                                                <Link href={`/s/${site.slug}`} target="_blank" className="btn-action secondary compact">VIEW</Link>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="no-site">
-                            <div className="construct-icon">🏗️</div>
-                            <h3>No Active Nodes</h3>
-                            <p>Initialize your first digital architecture.</p>
-                        </div>
-                    )}
+                        <div className="divider"></div>
 
-                    {/* Only show 'New Deployment' button if not loading strings attached */}
-                    {!loading && sites.length < userLimit && (
-                        <div className="add-site-container">
-                            <Link href="/mr-build/editor" className="btn-construct small">+ NEW DEPLOYMENT</Link>
+                        <div className="achievements">
+                            <h3>Achievements</h3>
+                            <div className="badge-grid">
+                                <div className="badge tooltip-trigger" title="First Deployment">🚀</div>
+                                <div className="badge tooltip-trigger" title="Quick Starter">⚡</div>
+                                {sites.length >= 3 && <div className="badge tooltip-trigger" title="Prolific Builder">🏗️</div>}
+                            </div>
                         </div>
-                    )}
-                     <div style={{marginTop: '20px', textAlign: 'center'}}>
-                        <Link href="/mr-build/analytics" className="btn-text-link">📊 VIEW SYSTEM ANALYTICS</Link>
-                    </div>
-                </div>
+                    </aside>
 
-                <div className="status-card glass quota-card animate-reveal-delay-2">
-                    <h3>SYSTEM RESOURCES</h3>
-                    <div className="resource-item">
-                        <div className="res-header">
-                            <span>Node Quota</span>
-                            {loading ? <SkeletonLoader width={40} /> : <span>{sites.length}/{userLimit}</span>}
+                    {/* Main Content */}
+                    <div className="nebula-content">
+                        {/* Tab Switcher */}
+                        <div className="content-tabs">
+                            <button 
+                                className={`tab-btn ${activeTab === 'repositories' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('repositories')}
+                            >
+                                <Book size={16}/>
+                                Repositories
+                                <span className="counter">{sites.length}</span>
+                            </button>
+                            <button 
+                                className={`tab-btn ${activeTab === 'projects' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('projects')}
+                            >
+                                <Layout size={16}/>
+                                Projects
+                            </button>
+                            <button className="tab-btn">
+                                <Box size={16}/>
+                                Packages
+                            </button>
+                            <button 
+                                className={`tab-btn ${activeTab === 'stars' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('stars')}
+                            >
+                                <Star size={16}/>
+                                Stars
+                            </button>
                         </div>
-                        <div className="res-bar">
+
+                        {/* Search & Filters */}
+                        <div className="repo-controls">
+                            <div className="search-wrapper">
+                                <input 
+                                    placeholder="Find a repository..." 
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="repo-search-input"
+                                />
+                            </div>
+                            <div className="filter-buttons">
+                                <button className="btn-filter">Type <ChevronDown size={12}/></button>
+                                <button className="btn-filter">Language <ChevronDown size={12}/></button>
+                                <button className="btn-filter">Sort <ChevronDown size={12}/></button>
+                                <button onClick={handleNewRepo} className="btn-new-repo">
+                                    <Book size={16} /> New
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="repo-list">
                             {loading ? (
-                                <SkeletonLoader height={4} />
+                                Array(3).fill(0).map((_, i) => (
+                                    <div key={i} className="repo-item skeleton">
+                                        <SkeletonLoader height={24} width={200} />
+                                        <SkeletonLoader height={16} width="60%" style={{marginTop: 8}} />
+                                    </div>
+                                ))
+                            ) : displaySites.length > 0 ? (
+                                displaySites.map(site => (
+                                    <div key={site.id} className="repo-item">
+                                        <div className="repo-main">
+                                            <div className="repo-header">
+                                                <h3>
+                                                    <Link href={`/mr-build/editor?id=${site.id}`} className="repo-link">
+                                                        {site.name || site.title || 'untitled-repo'}
+                                                    </Link>
+                                                </h3>
+                                                <span className="repo-visibility">
+                                                    {site.status === 'public' ? 'Public' : 'Private'}
+                                                </span>
+                                            </div>
+                                            <p className="repo-desc">
+                                                {site.description || 'No description provided.'}
+                                            </p>
+                                            <div className="repo-meta">
+                                                <span className="meta-item language">
+                                                    <span className="lang-color" style={{background: '#00f0ff'}}></span>
+                                                    HTML/NEX
+                                                </span>
+                                                <span className="meta-item hover-accent">
+                                                    <Star size={14} /> {site.views || 0}
+                                                </span>
+                                                <span className="meta-item hover-accent">
+                                                    <GitBranch size={14} /> 1
+                                                </span>
+                                                <span className="meta-item">
+                                                    Updated {new Date(site.updatedAt || Date.now()).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="repo-stats-graph">
+                                             <div className="activity-bar"></div>
+                                        </div>
+                                    </div>
+                                ))
                             ) : (
-                                <div className="res-fill" style={{ width: `${(sites.length / userLimit) * 100}%` }}></div>
+                                <div className="no-repos">
+                                    <h3>{activeTab === 'stars' ? "You haven't starred any repositories yet." : "No repositories matching your search."}</h3>
+                                    {activeTab === 'repositories' && (
+                                        <button onClick={handleNewRepo} className="btn-create-first">Create a new repository</button>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
-                    <div className="resource-item">
-                        <div className="res-header">
-                            <span>Bandwidth</span>
-                            <span>Optimal</span>
-                        </div>
-                        <div className="res-bar">
-                             <div className="res-fill glow" style={{ width: '85%' }}></div>
-                        </div>
-                    </div>
-                    
-                    <div className="billing-box glass">
-                        <p>Current Protocol: <strong>{userLimit > 1 ? 'PREMIUM-X' : 'TRIAL-X'}</strong></p>
-                        <Link href="/mr-build/subscription" className="btn-upgrade">EXPAND FLEET (UPGRADE)</Link>
-                    </div>
                 </div>
-            </div>
+            </main>
 
             <style jsx>{`
-                .dashboard-container { max-width: 1200px; margin: 0 auto; padding-bottom: 100px; }
-                
-                .dashboard-header { 
-                    display: flex; 
-                    justify-content: space-between; 
-                    align-items: center; 
-                    margin-bottom: 60px;
-                    padding: 40px 0;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                /* Dark Nebula Palette */
+                .nebula-container {
+                    --bg-page: #050505;
+                    --bg-panel: rgba(22, 27, 34, 0.6);
+                    --border: rgba(48, 54, 61, 0.6);
+                    --text-main: #e6edf3;
+                    --text-muted: #8b949e;
+                    --brand: #00f0ff;
+                    --brand-glow: rgba(0, 240, 255, 0.2);
+                    --btn-bg: rgba(33, 38, 45, 0.8);
+                    --btn-hover: #30363d;
+                    
+                    min-height: 100vh;
+                    background: radial-gradient(circle at 10% 10%, rgba(9,23,37,1) 0%, rgba(0,0,0,1) 100%);
+                    color: var(--text-main);
+                    font-family: 'Inter', sans-serif;
                 }
-                .user-persona { display: flex; align-items: center; gap: 25px; }
-                .avatar-glow {
-                    width: 70px; height: 70px;
-                    background: linear-gradient(135deg, #00f0ff 0%, #0064e0 100%);
-                    border-radius: 20px;
-                    display: flex; align-items: center; justify-content: center;
-                    box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
-                }
-                .avatar-initial { font-size: 2rem; font-weight: 900; color: #fff; }
-                .protocol-tag { font-size: 0.65rem; color: #00f0ff; letter-spacing: 2px; font-weight: 800; }
-                .welcome-text h1 { font-family: var(--font-orbitron); font-size: 2.2rem; margin: 5px 0; }
-                .welcome-text p { opacity: 0.5; font-size: 0.95rem; }
 
-                .btn-signout {
-                    background: rgba(255, 50, 50, 0.1);
-                    color: #ff3232;
-                    border: 1px solid rgba(255, 50, 50, 0.2);
-                    padding: 10px 20px;
-                    border-radius: 10px;
-                    font-weight: 700;
+                /* Header */
+                .nebula-header {
+                    background: rgba(1, 4, 9, 0.8);
+                    backdrop-filter: blur(10px);
+                    padding: 12px 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    border-bottom: 1px solid var(--border);
+                    position: sticky; top: 0; z-index: 50;
+                }
+                .header-left { display: flex; align-items: center; gap: 20px; }
+                .logo-section { 
+                    display: flex; align-items: center; gap: 8px; font-weight: 700; color: #fff; font-family: 'Orbitron', sans-serif; 
+                }
+                .logo-icon { color: var(--brand); filter: drop-shadow(0 0 5px var(--brand)); } 
+                .highlight { color: var(--brand); font-size: 0.8em; margin-left: 2px; }
+                
+                .search-bar {
+                    background: var(--btn-bg);
+                    border: 1px solid var(--border);
+                    border-radius: 6px;
+                    padding: 4px 12px;
+                    display: flex;
+                    align-items: center;
+                    width: 320px;
+                    transition: 0.3s;
+                }
+                .search-bar:focus-within { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-glow); }
+                .search-icon { color: var(--text-muted); margin-right: 8px; }
+                .nebula-search-input {
+                    background: transparent;
+                    border: none;
+                    color: var(--text-main);
+                    width: 100%;
+                    font-size: 13px;
+                    outline: none;
+                }
+                .shortcut { 
+                    border: 1px solid var(--border); 
+                    border-radius: 4px; padding: 0 6px; font-size: 10px; color: var(--text-muted); 
+                }
+                
+                .header-nav { display: flex; gap: 4px; }
+                .nav-item { 
+                    background: transparent; border: none; color: var(--text-main); 
+                    font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 10px; border-radius: 6px;
+                    transition: 0.2s;
+                }
+                .nav-item:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.1); }
+
+                .header-avatar {
+                    width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border);
+                    cursor: pointer; transition: 0.2s;
+                }
+                .header-avatar:hover { box-shadow: 0 0 10px var(--brand); border-color: var(--brand); }
+
+                /* Layout */
+                .nebula-main {
+                    padding: 0;
+                    width: 100%;
+                    max-width: 100%;
+                }
+                .nebula-layout {
+                    display: grid;
+                    grid-template-columns: 320px 1fr;
+                    gap: 0;
+                    min-height: calc(100vh - 60px);
+                }
+
+                /* Sidebar */
+                .nebula-sidebar { 
+                    padding: 32px;
+                    border-right: 1px solid var(--border);
+                    background: rgba(0,0,0,0.3);
+                } 
+                .profile-avatar-large { position: relative; width: 100%; margin-bottom: 20px; }
+                .profile-avatar-large img {
+                    width: 100%; height: auto;
+                    border-radius: 50%;
+                    border: 2px solid var(--border);
+                }
+                .online-indicator {
+                    position: absolute; bottom: 10%; right: 10%;
+                    width: 32px; height: 32px;
+                    background: var(--brand);
+                    border: 4px solid #0d1117;
+                    border-radius: 50%;
+                    box-shadow: 0 0 15px var(--brand);
+                }
+                .profile-name { font-size: 26px; font-weight: 700; margin-bottom: 4px; color: #fff; letter-spacing: -0.5px; }
+                .profile-handle { font-size: 20px; color: var(--text-muted); font-weight: 300; margin-bottom: 24px; }
+                
+                .btn-block-action {
+                    width: 100%;
+                    background: var(--btn-bg);
+                    border: 1px solid var(--border);
+                    color: var(--text-main);
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    font-weight: 500;
                     cursor: pointer;
-                    transition: all 0.3s;
+                    margin-bottom: 24px;
+                    transition: 0.2s;
                 }
-                .btn-signout:hover { background: #ff3232; color: #fff; }
+                .btn-block-action:hover { background: var(--btn-hover); border-color: var(--text-muted); }
 
-                .status-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 40px; }
-                .status-card { padding: 40px; border-radius: 35px; border: 1px solid rgba(255, 255, 255, 0.05); }
+                .profile-stats { font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 12px; }
+                .stat-item { display: flex; align-items: center; gap: 8px; }
+                .stat-item strong { color: var(--text-main); }
+                .icon-star, .icon-eye { color: var(--text-muted); }
+
+                .divider { height: 1px; background: var(--border); margin: 32px 0; }
                 
-                .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-                .card-header h3 { font-family: var(--font-orbitron); font-size: 1rem; letter-spacing: 2px; opacity: 0.7; }
-                .status-badge { 
-                    font-size: 0.6rem; font-weight: 900; background: #00f0ff; color: #000; 
-                    padding: 4px 10px; border-radius: 100px; box-shadow: 0 0 15px #00f0ff;
+                .achievements h3 { font-size: 16px; margin-bottom: 16px; font-weight: 600; }
+                .badge-grid { display: flex; gap: 12px; }
+                .badge { 
+                    width: 48px; height: 48px; 
+                    background: rgba(255,255,255,0.03); 
+                    border: 1px solid var(--border); 
+                    border-radius: 50%; 
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 20px;
+                    cursor: help;
+                    transition: 0.2s;
                 }
+                .badge:hover { border-color: var(--brand); box-shadow: 0 0 10px var(--brand-glow); transform: translateY(-2px); }
 
-                .sites-grid-list { display: grid; gap: 15px; margin-top: 20px; }
-                .site-item-card { 
-                    padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px;
-                    border: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;
-                }
-                .site-item-card:hover { background: rgba(255,255,255,0.05); }
-                .site-item-card.banned { border-color: #ff3232; background: rgba(255,50,50,0.05); }
+                /* Content Area */
+                .nebula-content { padding: 32px 48px; }
                 
-                .site-mini-preview { 
-                    width: 50px; height: 50px; background: linear-gradient(135deg,rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
-                    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+                .content-tabs {
+                    display: flex;
+                    gap: 8px;
+                    border-bottom: 1px solid var(--border);
+                    margin-bottom: 32px;
                 }
-                .site-info-col { flex: 1; }
-                .site-meta-row { display: flex; gap: 10px; align-items: center; margin: 5px 0 10px; }
-                .slug-tag { font-family: monospace; opacity: 0.5; font-size: 0.8rem; }
-                .analytics-pill {
-                    display: flex; align-items: center; gap: 8px;
-                    background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.1);
-                    padding: 2px 8px; border-radius: 6px;
+                .tab-btn {
+                    background: transparent;
+                    border: none;
+                    color: var(--text-main);
+                    padding: 10px 20px;
+                    font-size: 14px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    cursor: pointer;
+                    border-bottom: 2px solid transparent;
+                    transition: all 0.2s;
                 }
-                .views-count { font-size: 0.8rem; font-weight: 600; color: #fff; }
-                .sparkline { width: 50px; height: 20px; opacity: 0.8; }
+                .tab-btn:hover { background: rgba(255,255,255,0.03); border-radius: 6px 6px 0 0; }
+                .tab-btn.active { font-weight: 600; border-bottom-color: var(--brand); }
+                .counter {
+                    background: rgba(110,118,129,0.4);
+                    padding: 2px 8px;
+                    border-radius: 2em;
+                    font-size: 11px;
+                }
                 
-                .status-pill { font-size: 0.8rem; }
-                .banned-pill { background: #ff3232; color: #fff; font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 800; }
+                .repo-controls {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 24px;
+                    gap: 16px;
+                }
+                .search-wrapper { flex: 1; }
+                .repo-search-input {
+                    box-sizing: border-box;
+                    width: 100%;
+                    padding: 8px 16px;
+                    font-size: 14px;
+                    line-height: 20px;
+                    color: var(--text-main);
+                    background: var(--bg-page);
+                    border: 1px solid var(--border);
+                    border-radius: 6px;
+                    transition: 0.2s;
+                }
+                .repo-search-input:focus { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-glow); outline: none; }
+
+                .filter-buttons { display: flex; gap: 8px; }
+                .btn-filter {
+                    background: var(--btn-bg);
+                    color: var(--text-main);
+                    border: 1px solid var(--border);
+                    padding: 6px 16px;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    display: flex; align-items: center; gap: 6px;
+                    transition: 0.2s;
+                }
+                .btn-filter:hover { border-color: var(--text-muted); background: var(--btn-hover); }
+
+                .btn-new-repo {
+                    background: #238636;
+                    color: #fff;
+                    border: 1px solid rgba(240,246,252,0.1);
+                    padding: 6px 20px;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    cursor: pointer;
+                    transition: 0.2s;
+                    box-shadow: 0 0 15px rgba(35, 134, 54, 0.4);
+                }
+                .btn-new-repo:hover { background: #2ea043; transform: translateY(-1px); box-shadow: 0 0 20px rgba(35, 134, 54, 0.6); }
+
+                /* Repo List */
+                .repo-item {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 32px 0;
+                    border-top: 1px solid var(--border);
+                    transition: 0.2s;
+                }
+                .repo-item:hover { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.01)); }
+                .repo-item:last-child { border-bottom: none; }
                 
-                .site-actions-row.small { display: flex; gap: 10px; }
-                .btn-action.compact { padding: 6px 15px; font-size: 0.75rem; }
-                .add-site-container { margin-top: 20px; text-align: center; }
-                .btn-construct.small { padding: 10px 20px; font-size: 0.8rem; }
-
-                .resource-item { margin-bottom: 30px; }
-                .res-header { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; margin-bottom: 10px; color: rgba(255, 255, 255, 0.5); }
-                .res-bar { height: 4px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden; }
-                .res-fill { height: 100%; background: #00f0ff; border-radius: 10px; }
-                .res-fill.glow { box-shadow: 0 0 10px #00f0ff; }
-                .res-fill.shield { background: #7000ff; box-shadow: 0 0 10px #7000ff; }
-                .res-fill.danger { background: #ff3232; box-shadow: 0 0 10px #ff3232; }
-
-                .billing-box { margin-top: 40px; padding: 25px; border-radius: 20px; text-align: center; }
-                .billing-box p { font-size: 0.9rem; margin-bottom: 15px; }
-                .btn-upgrade { 
-                    width: 100%; padding: 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.2);
-                    font-weight: 800; font-size: 0.75rem; letter-spacing: 1px; cursor: pointer;
-                    transition: all 0.3s;
-                    text-decoration: none; display: block;
-                    margin-bottom: 10px;
-                }
-                .btn-upgrade:hover {
-                    background: rgba(0, 240, 255, 0.1);
-                    color: #00f0ff;
-                    border-color: #00f0ff;
-                }
-                .note { font-size: 0.7rem; opacity: 0.3; }
-
-                .no-site { text-align: center; padding: 40px 0; }
-                .construct-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.5; }
-                .btn-construct { 
-                    display: inline-block; background: #00f0ff; color: #000; text-decoration: none;
-                    padding: 16px 35px; border-radius: 14px; font-weight: 900; margin-top: 25px;
-                    box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
-                }
-                .btn-text-link {
-                    display: inline-block; color: rgba(255,255,255,0.5); text-decoration: none; 
-                    font-size: 0.8rem; font-weight: 700; transition: color 0.3s; margin-top: 10px;
-                }
-                .btn-text-link:hover { color: #00f0ff; }
-
-                .animate-reveal { animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-                .animate-reveal-delay { animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards; }
-                .animate-reveal-delay-2 { animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s backwards; }
-                @keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+                .repo-header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+                .repo-link { color: var(--brand); font-size: 20px; font-weight: 600; text-decoration: none; transition: 0.2s; word-break: break-word; }
+                .repo-link:hover { text-decoration: underline; text-shadow: 0 0 8px var(--brand-glow); }
                 
+                .repo-visibility {
+                    border: 1px solid var(--border);
+                    border-radius: 2em;
+                    padding: 0 10px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    color: var(--text-muted);
+                    line-height: 20px;
+                }
+                
+                .repo-desc { color: var(--text-muted); font-size: 14px; margin-bottom: 16px; max-width: 80%; line-height: 1.5; word-break: break-word; }
+                
+                .repo-meta { display: flex; align-items: center; gap: 24px; font-size: 12px; color: var(--text-muted); }
+                .meta-item { display: flex; align-items: center; gap: 6px; }
+                .lang-color {
+                    width: 12px; height: 12px; border-radius: 50%; display: inline-block;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    box-shadow: 0 0 5px var(--brand);
+                }
+                .hover-accent:hover { color: var(--brand); cursor: pointer; }
+
+                .activity-bar {
+                    width: 120px; height: 10px;
+                    background: rgba(255,255,255,0.05);
+                    border-radius: 2px;
+                    overflow: hidden;
+                    position: relative;
+                }
+                .activity-bar::after {
+                    content: ''; position: absolute; top:0; left:0; height:100%; width: 40%;
+                    background: linear-gradient(90deg, transparent, var(--brand), transparent);
+                    animation: scanning 2s linear infinite;
+                }
+                @keyframes scanning { 0% { left: -50%; } 100% { left: 150%; } }
+
+                .no-repos { padding: 60px; text-align: center; border: 1px solid var(--border); border-radius: 6px; margin-top: 30px; background: rgba(0,0,0,0.2); }
+                .btn-create-first { color: var(--brand); background: transparent; border: 1px solid var(--brand); padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 16px; display: inline-block; }
+                .btn-create-first:hover { background: var(--brand); color: #000; }
+
+                /* Mobile/Tablet Responsive */
                 @media (max-width: 1024px) {
-                    .status-grid { grid-template-columns: 1fr; }
+                    .nebula-layout { grid-template-columns: 1fr; }
+                    .nebula-sidebar { 
+                        display: flex; flex-direction: column; align-items: center; text-align: center;
+                        border-right: none; border-bottom: 1px solid var(--border);
+                        padding: 16px 24px;
+                        width: 100%;
+                        background: radial-gradient(circle at top, rgba(1, 4, 9, 0.8), rgba(1, 4, 9, 0.4));
+                    }
+                    .profile-section { 
+                        display: flex; 
+                        flex-direction: column; 
+                        align-items: center; 
+                        width: 100%; 
+                        gap: 12px; 
+                    }
+                    .profile-avatar-large { 
+                        width: 72px; 
+                        height: 72px; 
+                        font-size: 20px;
+                        margin-bottom: 0;
+                        box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+                    }
+                    .profile-name { font-size: 18px; }
+                    .profile-handle { font-size: 14px; }
+                    .btn-edit-profile { width: 100%; justify-content: center; }
+                    
+                    .profile-details { width: 100%; max-width: 400px; }
+                    .nebula-content { padding: 16px; }
                 }
 
                 @media (max-width: 768px) {
-                    .dashboard-container { padding-bottom: 60px; }
-                    .dashboard-header {
-                        flex-direction: column;
-                        align-items: flex-start;
-                        gap: 20px;
-                        padding: 25px 0;
-                        margin-bottom: 40px;
+                    .repo-controls { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 16px; }
+                    .search-wrapper { width: 100%; }
+                    .filter-buttons { 
+                        display: flex; 
+                        overflow-x: auto; 
+                        gap: 8px; 
+                        padding-bottom: 4px;
+                        -webkit-overflow-scrolling: touch;
+                        scrollbar-width: none; 
                     }
-                    .user-persona { gap: 15px; }
-                    .avatar-glow { width: 50px; height: 50px; border-radius: 15px; }
-                    .avatar-initial { font-size: 1.4rem; }
-                    .welcome-text h1 { font-size: 1.6rem; }
-                    .welcome-text p { font-size: 0.85rem; }
-                    .header-actions { width: 100%; }
-                    .btn-signout { width: 100%; }
-                    .status-card { padding: 25px; border-radius: 25px; }
-                    .card-header { margin-bottom: 25px; }
-                    .card-header h3 { font-size: 0.85rem; }
-                    .site-item-card { flex-direction: column; align-items: flex-start; gap: 12px; }
-                    .site-mini-preview { width: 40px; height: 40px; }
-                    .site-meta-row { flex-wrap: wrap; gap: 8px; }
-                    .site-actions-row.small { width: 100%; }
-                    .btn-action.compact { flex: 1; text-align: center; }
-                    .billing-box { padding: 20px; }
-                }
-
-                @media (max-width: 480px) {
-                    .dashboard-header { padding: 20px 0; margin-bottom: 30px; }
-                    .avatar-glow { width: 45px; height: 45px; }
-                    .welcome-text h1 { font-size: 1.4rem; }
-                    .protocol-tag { font-size: 0.55rem; }
-                    .status-card { padding: 20px; border-radius: 20px; }
-                    .site-name { font-size: 0.95rem; }
-                    .slug-tag { font-size: 0.7rem; }
-                    .btn-construct.small { padding: 12px 16px; width: 100%; }
-                    .add-site-container { margin-top: 15px; }
-                    .res-header { font-size: 0.7rem; }
+                    .filter-buttons::-webkit-scrollbar { display: none; }
+                    .btn-filter { 
+                        white-space: nowrap; flex-shrink: 0; 
+                        padding: 6px 12px; font-size: 13px;
+                        background: rgba(33, 38, 45, 0.5);
+                    }
+                    .repo-item { flex-direction: column; gap: 12px; padding: 16px; }
+                    .repo-header { flex-wrap: wrap; gap: 8px; }
+                    .repo-meta { flex-wrap: wrap; gap: 12px; }
+                    .activity-bar { display: none; } /* Hide fixed width element */
+                    
+                    .btn-new-repo { margin-left: 0; width: 100%; justify-content: center; margin-top: 4px; }
                 }
             `}</style>
         </div>

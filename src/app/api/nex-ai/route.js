@@ -63,7 +63,8 @@ export async function POST(req) {
             },
             body: JSON.stringify({
                 model: model || "openai/gpt-3.5-turbo",
-                messages: messages
+                messages: messages,
+                max_tokens: 1000
             })
         });
 
