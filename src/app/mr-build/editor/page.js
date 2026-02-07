@@ -14,6 +14,12 @@ import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-markup';
 import AICopilot from './AICopilot';
+import dynamic from 'next/dynamic';
+
+const Terminal = dynamic(() => import('./Terminal'), { 
+    ssr: false, 
+    loading: () => <div style={{padding: '20px', color: '#666'}}>Initializing Terminal...</div>
+});
 import 'prismjs/themes/prism-tomorrow.css'; 
 import { 
     GitBranch, 
@@ -35,7 +41,11 @@ import {
     ChevronDown,
     Save,
     ExternalLink,
-    Terminal
+    Terminal as TerminalIcon, // Rename icon to avoid conflict
+    Sparkles,
+    X,
+    Maximize,
+    Minimize
 } from 'lucide-react';
 
 /* --- ICONS & STYLES --- */
@@ -55,8 +65,10 @@ function EditorContent() {
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('code'); // code, issues, pr, settings
     const [activeFile, setActiveFile] = useState('index.html'); 
-    const [showPreview, setShowPreview] = useState(false);
+    const [showPreview, setShowPreview] = useState(false); // Default to FALSE
     const [copilotOpen, setCopilotOpen] = useState(false);
+    const [terminalOpen, setTerminalOpen] = useState(false); // Default to FALSE
+    const [previewKey, setPreviewKey] = useState(0); // For forcing iframe reload
     const [successMsg, setSuccessMsg] = useState('');
 
     const [siteData, setSiteData] = useState({
@@ -68,12 +80,26 @@ function EditorContent() {
         files: {} // Virtual File System: { "filename": { content: "...", language: "..." } }
     });
 
-    const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+    const [showSidebar, setShowSidebar] = useState(false);
     
     // UI States
     const [isCreating, setIsCreating] = useState(false);
     const [newFileName, setNewFileName] = useState('');
     const [deletingFile, setDeletingFile] = useState(null); // filename
+
+    // Terminal Listener
+    useEffect(() => {
+        const handleMessage = (event) => {
+            if (event.data?.type === 'CONSOLE_LOG') {
+                event.data.args.forEach(arg => window.terminalWrite?.(`\x1b[2m[LOG]\x1b[0m ${arg}`));
+            }
+            if (event.data?.type === 'CONSOLE_ERR') {
+                event.data.args.forEach(arg => window.terminalWrite?.(`\x1b[31m[ERR]\x1b[0m ${arg}`));
+            }
+        };
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
 
     // Load Data & Migrate
     useEffect(() => {
@@ -215,7 +241,7 @@ function EditorContent() {
             {/* 1. Header (Breadcrumbs + Actions) */}
             <header className="repo-header">
                 <div className="header-left">
-                    <button className="mobile-menu-btn" onClick={() => setShowMobileSidebar(!showMobileSidebar)}>
+                    <button className="mobile-menu-btn" onClick={() => setShowSidebar(!showSidebar)} title="Toggle File Explorer">
                         <Layout size={20} />
                     </button>
                     <div className="repo-breadcrumb">
@@ -305,8 +331,8 @@ function EditorContent() {
                 {/* CODE VIEW */}
                 {activeTab === 'code' && (
                     <div className="code-layout">
-                        {/* 3a. File Explorer Sidebar */}
-                        <aside className={`file-explorer ${showMobileSidebar ? 'mobile-visible' : ''}`}>
+                        {/* 3a. File Explorer Sidebar (Modal) */}
+                        <aside className={`file-explorer ${showSidebar ? 'visible' : ''}`}>
                             <div className="explorer-header">
                                 <span>FILES</span>
                                 <button onClick={startCreating} className="btn-icon-add" title="New File">+</button>
@@ -329,7 +355,7 @@ function EditorContent() {
                                     <div 
                                         key={fileName}
                                         className={`file-item ${activeFile === fileName ? 'active' : ''}`} 
-                                        onClick={() => { setActiveFile(fileName); setShowMobileSidebar(false); }}
+                                        onClick={() => { setActiveFile(fileName); setShowSidebar(false); }}
                                     >
                                         <div className="file-name-wrap">
                                             {fileName.endsWith('.html') && <Code size={14} className="icon-file icon-html" />}
@@ -359,7 +385,7 @@ function EditorContent() {
                             </div>
                         </aside>
 
-                        {/* 3b. Editor / Preview Area */}
+            {/* 3b. Editor / Preview Area */}
                         <div className="editor-main">
                             {/* Toolbar */}
                             <div className="editor-toolbar">
@@ -375,8 +401,11 @@ function EditorContent() {
                                             <Eye size={14}/> {showPreview ? 'Hide Preview' : 'Preview'}
                                         </button>
                                     )}
+                                    <button className={`btn-tool ${terminalOpen ? 'active' : ''}`} onClick={() => setTerminalOpen(!terminalOpen)}>
+                                        <TerminalIcon size={14}/> Terminal
+                                    </button>
                                     <button className="btn-tool" onClick={() => setCopilotOpen(!copilotOpen)}>
-                                        <Terminal size={14}/> Copilot
+                                        <Sparkles size={14}/> Copilot
                                     </button>
                                     <button className="btn-primary-sm" onClick={handleSave} disabled={saving}>
                                         <Save size={14}/> {saving ? 'Committing...' : 'Commit changes'}
@@ -393,71 +422,122 @@ function EditorContent() {
 
                             <div className={`workspace ${copilotOpen ? 'with-copilot' : ''}`}>
                                 
-                                {/* The Editor */}
-                                <div className={`editor-pane ${showPreview ? 'split' : ''}`}>
-                                    {activeFile === 'README.md' ? (
-                                        <div className="readme-preview">
-                                            <h1>{siteData.title || 'Untitled Project'}</h1>
-                                            <p>{siteData.description || 'No description found.'}</p>
-                                            <hr/>
-                                            <h3>Status</h3>
-                                            <p>This project is currently <strong>{siteData.status}</strong>.</p>
-                                            <div style={{marginTop: '20px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px'}}>
-                                                <pre style={{whiteSpace: 'pre-wrap'}}>{currentFile.content}</pre>
+                                <div className="editor-layout-col">
+                                    <div className="editor-upper">
+                                        {/* The Editor */}
+                                        <div className={`editor-pane ${showPreview ? 'split' : ''}`}>
+                                            {activeFile === 'README.md' ? (
+                                                <div className="readme-preview">
+                                                    <h1>{siteData.title || 'Untitled Project'}</h1>
+                                                    <p>{siteData.description || 'No description found.'}</p>
+                                                    <hr/>
+                                                    <h3>Status</h3>
+                                                    <p>This project is currently <strong>{siteData.status}</strong>.</p>
+                                                    <div style={{marginTop: '20px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px'}}>
+                                                        <pre style={{whiteSpace: 'pre-wrap'}}>{currentFile.content}</pre>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <Editor
+                                                    value={currentFile.content}
+                                                    onValueChange={code => updateFileContent(activeFile, code)}
+                                                    highlight={code => {
+                                                        if (currentFile.language === 'html') return highlight(code, languages.markup);
+                                                        if (currentFile.language === 'css') return highlight(code, languages.css);
+                                                        if (currentFile.language === 'javascript') return highlight(code, languages.javascript);
+                                                        return highlight(code, languages.markup);
+                                                    }}
+                                                    padding={20}
+                                                    className="code-editor"
+                                                    style={{
+                                                        fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+                                                        fontSize: 14,
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+
+                                        {/* The Live Preview (Iframe) */}
+                                        {showPreview && activeFile !== 'README.md' && (
+                                            <div className="preview-pane">
+                                                <div className="preview-header">
+                                                    <span>Browser Preview</span>
+                                                    <div className="traffic-lights">
+                                                        <span className="light red"></span>
+                                                        <span className="light yellow"></span>
+                                                        <span className="light green"></span>
+                                                    </div>
+                                                </div>
+                                                <iframe 
+                                                    key={previewKey} // Force reload on run
+                                                    title="Live Preview"
+                                                    srcDoc={`
+                                                        <html>
+                                                            <head>
+                                                                <style>${siteData.files['styles.css']?.content || ''}</style>
+                                                            </head>
+                                                            <body>
+                                                                ${siteData.files['index.html']?.content || ''}
+                                                                
+                                                                <!-- Console Hijack -->
+                                                                <script>
+                                                                    (function() {
+                                                                        const oldLog = console.log;
+                                                                        const oldError = console.error;
+                                                                        
+                                                                        console.log = function(...args) {
+                                                                            window.parent.postMessage({ type: 'CONSOLE_LOG', args: args.map(a => String(a)) }, '*');
+                                                                            oldLog.apply(console, args);
+                                                                        };
+                                                                        
+                                                                        console.error = function(...args) {
+                                                                            window.parent.postMessage({ type: 'CONSOLE_ERR', args: args.map(a => String(a)) }, '*');
+                                                                            oldError.apply(console, args);
+                                                                        };
+
+                                                                        window.onerror = function(msg, source, lineno, colno, error) {
+                                                                            window.parent.postMessage({ type: 'CONSOLE_ERR', args: [msg] }, '*');
+                                                                        };
+                                                                    })();
+                                                                </script>
+
+                                                                <!-- Inject JS -->
+                                                                <script>
+                                                                    ${Object.keys(siteData.files)
+                                                                        .filter(f => f.endsWith('.js'))
+                                                                        .map(f => `
+                                                                            try {
+                                                                                // Virtual File: ${f}
+                                                                                ${siteData.files[f].content}
+                                                                            } catch(e) { console.error("Error in ${f}:", e); }
+                                                                        `).join('\n')}
+                                                                </script>
+                                                            </body>
+                                                        </html>
+                                                    `}
+                                                    className="preview-iframe"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Terminal Panel */}
+                                    {terminalOpen && (
+                                        <div className="terminal-pane">
+                                            <div className="terminal-header">
+                                                <span>TERMINAL</span>
+                                                <button onClick={() => setTerminalOpen(false)}><X size={12}/></button>
+                                            </div>
+                                            <div className="terminal-body">
+                                                <Terminal 
+                                                    files={siteData.files} 
+                                                    onUpdateFiles={updateFileContent} 
+                                                    onRun={() => setPreviewKey(k => k + 1)}
+                                                />
                                             </div>
                                         </div>
-                                    ) : (
-                                        <Editor
-                                            value={currentFile.content}
-                                            onValueChange={code => updateFileContent(activeFile, code)}
-                                            highlight={code => {
-                                                if (currentFile.language === 'html') return highlight(code, languages.markup);
-                                                if (currentFile.language === 'css') return highlight(code, languages.css);
-                                                if (currentFile.language === 'javascript') return highlight(code, languages.javascript);
-                                                return highlight(code, languages.markup);
-                                            }}
-                                            padding={20}
-                                            className="code-editor"
-                                            style={{
-                                                fontFamily: '"JetBrains Mono", "Fira Code", monospace',
-                                                fontSize: 14,
-                                            }}
-                                        />
                                     )}
                                 </div>
-
-                                {/* The Live Preview (Iframe) */}
-                                {showPreview && activeFile !== 'README.md' && (
-                                    <div className="preview-pane">
-                                        <div className="preview-header">Browser Preview</div>
-                                        <iframe 
-                                            title="Live Preview"
-                                            srcDoc={`
-                                                <html>
-                                                    <head>
-                                                        <style>${siteData.files['styles.css']?.content || ''}</style>
-                                                    </head>
-                                                    <body>
-                                                        ${siteData.files['index.html']?.content || ''}
-                                                        
-                                                        <!-- Inject JS -->
-                                                        <script>
-                                                            ${Object.keys(siteData.files)
-                                                                .filter(f => f.endsWith('.js'))
-                                                                .map(f => `
-                                                                    try {
-                                                                        // Virtual File: ${f}
-                                                                        ${siteData.files[f].content}
-                                                                    } catch(e) { console.error("Error in ${f}:", e); }
-                                                                `).join('\n')}
-                                                        </script>
-                                                    </body>
-                                                </html>
-                                            `}
-                                            className="preview-iframe"
-                                        />
-                                    </div>
-                                )}
 
                                 {copilotOpen && (
                                     <div className="copilot-sidebar">
@@ -466,11 +546,11 @@ function EditorContent() {
                                             onCodeUpdate={(file, code) => {
                                                 // Handle Multi-File Updates
                                                 if (!siteData.files[file]) {
-                                                    // Create new if doesn't exist? Yes.
                                                     const ext = file.split('.').pop();
                                                     let lang = 'javascript';
                                                     if (ext === 'html') lang = 'html';
                                                     if (ext === 'css') lang = 'css';
+                                                    if (ext === 'json') lang = 'json';
                                                     
                                                     setSiteData(prev => ({
                                                         ...prev,
@@ -617,21 +697,46 @@ function EditorContent() {
                 /* Code View Layout */
                 .code-layout {
                     display: grid;
-                    grid-template-columns: 260px 1fr;
-                    gap: 20px;
+                    grid-template-columns: 1fr; /* Single column now */
+                    gap: 0;
                     height: calc(100vh - 140px);
+                    position: relative;
                 }
                 
-                /* File Explorer */
-                .file-explorer {
-                    border: 1px solid var(--border-color);
-                    border-radius: 6px;
-                    background: rgba(0,0,0,0.4); 
-                    overflow: hidden;
+                .editor-main {
                     display: flex;
                     flex-direction: column;
-                    backdrop-filter: blur(5px);
+                    min-width: 0;
+                    height: 100%;
                 }
+                
+                /* File Explorer Modal */
+                .file-explorer {
+                    position: absolute;
+                    top: 0; left: 0; bottom: 0;
+                    width: 300px;
+                    background: rgba(13, 17, 23, 0.95);
+                    border-right: 1px solid var(--border-color);
+                    z-index: 50;
+                    transform: translateX(-100%);
+                    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                    backdrop-filter: blur(10px);
+                    display: flex;
+                    flex-direction: column;
+                    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+                }
+                .file-explorer.visible { transform: translateX(0); }
+
+                /* Backdrop */
+                .file-explorer.visible::before {
+                    content: '';
+                    position: fixed;
+                    top: 0; left: 300px; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.3);
+                    z-index: -1;
+                    pointer-events: auto;
+                }
+                
                 .explorer-header {
                      padding: 10px 16px;
                      background: rgba(255,255,255,0.03);
@@ -897,7 +1002,7 @@ function EditorContent() {
                     .preview-pane { position: absolute; inset: 0; z-index: 10; }
                 }
                 .mobile-menu-btn {
-                    display: none;
+                    display: flex; /* Always visible */
                     background: transparent;
                     border: 1px solid var(--border-color);
                     color: var(--text-secondary);
@@ -922,9 +1027,153 @@ function EditorContent() {
                         -webkit-overflow-scrolling: touch;
                     }
                     .header-right::-webkit-scrollbar { display: none; }
+                }
                     
                     .code-layout { grid-template-columns: 1fr; position: relative; height: calc(100vh - 180px); }
                     
+                /* Workspace */
+                .workspace {
+                    display: flex;
+                    flex: 1;
+                    overflow: hidden;
+                    position: relative;
+                }
+                
+                .editor-layout-col {
+                    display: flex;
+                    flex-direction: column;
+                    flex: 1;
+                    min-width: 0;
+                    height: 100%;
+                }
+                
+                .editor-upper {
+                    flex: 1;
+                    display: flex;
+                    min-height: 0; 
+                    position: relative;
+                }
+
+                .editor-pane {
+                    flex: 1;
+                    overflow: auto;
+                    position: relative;
+                }
+                .editor-pane.split { border-right: 1px solid var(--border-color); }
+
+                /* Preview Pane */
+                .preview-pane {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    background: #fff;
+                    overflow: hidden;
+                }
+                .preview-header {
+                    background: #e1e4e8;
+                    color: #24292e;
+                    padding: 6px 12px;
+                    font-size: 11px;
+                    font-weight: 600;
+                    border-bottom: 1px solid #d1d5da;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                
+                .traffic-lights { display: flex; gap: 6px; }
+                .light { width: 10px; height: 10px; border-radius: 50%; }
+                .light.red { background: #ff5f56; border: 1px solid #e0443e; }
+                .light.yellow { background: #ffbd2e; border: 1px solid #dea123; }
+                .light.green { background: #27c93f; border: 1px solid #1aab29; }
+
+                .preview-iframe {
+                    flex: 1;
+                    border: none;
+                    background: #fff;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                /* Terminal Pane */
+                .terminal-pane {
+                    height: 240px;
+                    min-height: 100px;
+                    border-top: 1px solid var(--border-color);
+                    background: #0d1117;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .terminal-header {
+                    background: var(--bg-header);
+                    padding: 6px 12px;
+                    font-size: 11px;
+                    font-weight: 600;
+                    border-bottom: 1px solid var(--border-color);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    color: var(--text-secondary);
+                }
+                .terminal-header button {
+                     background: transparent; border: none; color: var(--text-secondary); cursor: pointer;
+                }
+                .terminal-header button:hover { color: #fff; }
+                
+                .terminal-body {
+                    flex: 1;
+                    position: relative;
+                    overflow: hidden;
+                    padding: 4px;
+                }
+
+                /* Copilot Sidebar */
+                .copilot-sidebar {
+                    width: 350px;
+                    border-left: 1px solid var(--border-color);
+                    background: rgba(0,0,0,0.5);
+                    backdrop-filter: blur(10px);
+                    display: flex;
+                    flex-direction: column;
+                    z-index: 10;
+                }
+                .workspace:not(.with-copilot) .copilot-sidebar { display: none; }
+
+                /* Code Editor Override */
+                :global(.code-editor) {
+                    min-height: 100%;
+                }
+                :global(textarea) { outline: none !important; }
+                
+                .readme-preview {
+                    padding: 40px;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    color: var(--text-primary);
+                    line-height: 1.6;
+                }
+                .readme-preview h1 { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px; }
+                .readme-preview hr { border: 0; border-top: 1px solid var(--border-color); margin: 24px 0; }
+
+                .flash-msg {
+                    position: absolute;
+                    top: 60px;
+                    right: 20px;
+                    background: var(--btn-primary);
+                    color: #fff;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    animation: slideIn 0.3s ease-out;
+                    z-index: 100;
+                }
+                @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+                /* Mobile Responsive */
+                @media (max-width: 768px) {
+                .mobile-responsive-wrapper { display: contents; } /* Hack placeholder to attach comment */
+
                     /* Mobile File Explorer Slide-in */
                     .file-explorer {
                         display: none;
@@ -942,6 +1191,12 @@ function EditorContent() {
                     .editor-pane.split:first-child { display: block; flex: 1; }
 
                     /* Backdrop for mobile sidebar */
+                    .file-explorer.mobile-visible::before {
+                        content: '';
+                        position: fixed;
+                        top: 0; left: 250px; right: 0; bottom: 0;
+                        background: rgba(0,0,0,0.5);
+                        z-index: -1;
                     .file-explorer.mobile-visible::before {
                         content: '';
                         position: fixed;
