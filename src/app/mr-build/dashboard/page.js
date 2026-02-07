@@ -565,8 +565,10 @@ export default function BuildDashboard() {
                     .nebula-sidebar { 
                         display: flex; flex-direction: column; align-items: center; text-align: center;
                         border-right: none; border-bottom: 1px solid var(--border);
-                        padding: 16px 24px;
+                        padding: 16px;
                         width: 100%;
+                        max-width: 100vw;
+                        overflow-x: hidden;
                         background: radial-gradient(circle at top, rgba(1, 4, 9, 0.8), rgba(1, 4, 9, 0.4));
                     }
                     .profile-section { 
@@ -574,6 +576,7 @@ export default function BuildDashboard() {
                         flex-direction: column; 
                         align-items: center; 
                         width: 100%; 
+                        max-width: 100%;
                         gap: 12px; 
                     }
                     .profile-avatar-large { 
@@ -583,8 +586,8 @@ export default function BuildDashboard() {
                         margin-bottom: 0;
                         box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
                     }
-                    .profile-name { font-size: 18px; }
-                    .profile-handle { font-size: 14px; }
+                    .profile-name { font-size: 18px; word-break: break-all; max-width: 100%; line-height: 1.2; }
+                    .profile-handle { font-size: 14px; word-break: break-all; max-width: 100%; }
                     .btn-edit-profile { width: 100%; justify-content: center; }
                     
                     .profile-details { width: 100%; max-width: 400px; }
