@@ -5,6 +5,16 @@ const ENV_KEY = process.env.OPENROUTER_API_KEY;
 
 export async function POST(req) {
     try {
+        // --- SECURITY: ORIGIN CHECK ---
+        const origin = req.headers.get('origin');
+        const host = req.headers.get('host');
+        
+        // Allow requests only from same origin (or localhost for dev)
+        // Production: origin should match host protocol
+        if (origin && !origin.includes(host) && !origin.includes('localhost')) {
+            return new NextResponse("Forbidden: Invalid Origin", { status: 403 });
+        }
+
         const { messages, model } = await req.json();
 
         let apiKey = ENV_KEY;
