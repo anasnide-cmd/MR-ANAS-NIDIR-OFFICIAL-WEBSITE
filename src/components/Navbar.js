@@ -122,6 +122,7 @@ export default function Navbar() {
   if (pathname?.startsWith('/s/')) return null;
   if (pathname?.startsWith('/admin')) return null;
   if (pathname?.startsWith('/nex-ai')) return null;
+  if (pathname?.startsWith('/web-store')) return null;
 
   const navLinks = [
     { href: '/', label: 'Home', icon: '🏠' },
