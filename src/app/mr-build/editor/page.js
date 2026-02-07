@@ -54,23 +54,28 @@ function EditorContent() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('code'); // code, issues, pr, settings
-    const [activeFile, setActiveFile] = useState('index.html'); // index.html, styles.css, README.md
+    const [activeFile, setActiveFile] = useState('index.html'); 
     const [showPreview, setShowPreview] = useState(false);
     const [copilotOpen, setCopilotOpen] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
 
     const [siteData, setSiteData] = useState({
         name: '', slug: '', title: '', description: '',
-        customHtml: '', customCss: '',
         status: 'draft',
         theme: 'dark-nebula',
         socials: {},
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        files: {} // Virtual File System: { "filename": { content: "...", language: "..." } }
     });
 
     const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+    
+    // UI States
+    const [isCreating, setIsCreating] = useState(false);
+    const [newFileName, setNewFileName] = useState('');
+    const [deletingFile, setDeletingFile] = useState(null); // filename
 
-    // Load Data
+    // Load Data & Migrate
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (u) => {
             if (!u) { router.push('/mr-build/login'); return; }
@@ -81,14 +86,102 @@ function EditorContent() {
                     const docRef = await getDoc(doc(db, 'user_sites', querySiteId));
                     if (docRef.exists()) {
                         setSiteId(docRef.id);
-                        setSiteData({ ...docRef.data(), id: docRef.id });
+                        const data = docRef.data();
+                        
+                        // --- MIGRATION LOGIC (V1 -> V2) ---
+                        if (!data.files) {
+                            console.log("Migrating to V2 File System...");
+                            data.files = {
+                                'index.html': { content: data.customHtml || '', language: 'html' },
+                                'styles.css': { content: data.customCss || '', language: 'css' },
+                                'README.md': { content: `# ${data.title || 'Project'}\n${data.description || ''}`, language: 'markdown' }
+                            };
+                        }
+                        
+                        setSiteData({ ...data, id: docRef.id });
                     }
                 } catch (err) { console.error(err); }
+            } else {
+                // New Project Init
+                setSiteData(prev => ({
+                    ...prev,
+                    files: {
+                        'index.html': { content: '<!-- New Project -->\n<h1>Hello World</h1>', language: 'html' },
+                        'styles.css': { content: 'body { background: #000; color: #fff; }', language: 'css' },
+                        'README.md': { content: '# New Project', language: 'markdown' }
+                    }
+                }));
             }
             setLoading(false);
         });
         return () => unsub();
     }, [querySiteId, router]);
+
+    // File Management Functions
+    const startCreating = () => {
+        setIsCreating(true);
+        setNewFileName('');
+    };
+
+    const confirmCreate = () => {
+        if (!newFileName.trim()) { setIsCreating(false); return; }
+        if (siteData.files[newFileName]) { alert("File already exists!"); return; }
+
+        const ext = newFileName.split('.').pop();
+        let lang = 'javascript';
+        if (ext === 'html') lang = 'html';
+        if (ext === 'css') lang = 'css';
+        if (ext === 'md') lang = 'markdown';
+        if (ext === 'json') lang = 'json';
+
+        setSiteData(prev => ({
+            ...prev,
+            files: {
+                ...prev.files,
+                [newFileName]: { content: '', language: lang }
+            }
+        }));
+        setActiveFile(newFileName);
+        setIsCreating(false);
+        setNewFileName('');
+    };
+
+    const cancelCreate = () => {
+        setIsCreating(false);
+        setNewFileName('');
+    };
+
+    const startDelete = (e, fileName) => {
+        e.stopPropagation();
+        if (fileName === 'index.html') { alert("Cannot delete main entry file!"); return; }
+        setDeletingFile(fileName);
+    };
+
+    const confirmDelete = (e, fileName) => {
+        e.stopPropagation();
+        setSiteData(prev => {
+            const newFiles = { ...prev.files };
+            delete newFiles[fileName];
+            return { ...prev, files: newFiles };
+        });
+        if (activeFile === fileName) setActiveFile('index.html');
+        setDeletingFile(null);
+    };
+
+    const cancelDelete = (e) => {
+        e.stopPropagation();
+        setDeletingFile(null);
+    };
+
+    const updateFileContent = (fileName, newContent) => {
+        setSiteData(prev => ({
+            ...prev,
+            files: {
+                ...prev.files,
+                [fileName]: { ...prev.files[fileName], content: newContent }
+            }
+        }));
+    };
 
     // Save Function
     const handleSave = async () => {
@@ -113,6 +206,7 @@ function EditorContent() {
     // Derived Logic
     const repoName = siteData.slug || 'untitled-repo';
     const userName = user?.displayName || user?.email?.split('@')[0] || 'user';
+    const currentFile = siteData.files[activeFile] || { content: '', language: 'text' };
 
     if (loading) return <Loader text="Loading Repository..." />;
 
@@ -215,18 +309,53 @@ function EditorContent() {
                         <aside className={`file-explorer ${showMobileSidebar ? 'mobile-visible' : ''}`}>
                             <div className="explorer-header">
                                 <span>FILES</span>
-                                <span className="branch-badge"><GitBranch size={10}/> main</span>
+                                <button onClick={startCreating} className="btn-icon-add" title="New File">+</button>
                             </div>
                             <div className="explorer-list">
-                                <div className={`file-item ${activeFile === 'index.html' ? 'active' : ''}`} onClick={() => { setActiveFile('index.html'); setShowMobileSidebar(false); }}>
-                                    <Code size={14} className="icon-file icon-html" /> index.html
-                                </div>
-                                <div className={`file-item ${activeFile === 'styles.css' ? 'active' : ''}`} onClick={() => { setActiveFile('styles.css'); setShowMobileSidebar(false); }}>
-                                    <Code size={14} className="icon-file icon-css" /> styles.css
-                                </div>
-                                <div className={`file-item ${activeFile === 'README.md' ? 'active' : ''}`} onClick={() => { setActiveFile('README.md'); setShowMobileSidebar(false); }}>
-                                    <Book size={14} className="icon-file" /> README.md
-                                </div>
+                                {isCreating && (
+                                    <div className="file-creation-row">
+                                        <input 
+                                            autoFocus
+                                            value={newFileName}
+                                            onChange={e => setNewFileName(e.target.value)}
+                                            onKeyDown={e => { if(e.key === 'Enter') confirmCreate(); if(e.key === 'Escape') cancelCreate(); }}
+                                            onBlur={cancelCreate}
+                                            className="new-file-input"
+                                            placeholder="filename.ext"
+                                        />
+                                    </div>
+                                )}
+                                {Object.keys(siteData.files).sort().map(fileName => (
+                                    <div 
+                                        key={fileName}
+                                        className={`file-item ${activeFile === fileName ? 'active' : ''}`} 
+                                        onClick={() => { setActiveFile(fileName); setShowMobileSidebar(false); }}
+                                    >
+                                        <div className="file-name-wrap">
+                                            {fileName.endsWith('.html') && <Code size={14} className="icon-file icon-html" />}
+                                            {fileName.endsWith('.css') && <Code size={14} className="icon-file icon-css" />}
+                                            {fileName.endsWith('.js') && <FileCode size={14} className="icon-file icon-js" />}
+                                            {fileName.endsWith('.md') && <Book size={14} className="icon-file" />}
+                                            {!['.html','.css','.js','.md'].some(ext => fileName.endsWith(ext)) && <FileText size={14} className="icon-file" />}
+                                            {fileName}
+                                        </div>
+                                        {fileName !== 'index.html' && (
+                                            deletingFile === fileName ? (
+                                                <div className="delete-confirm">
+                                                    <button className="btn-confirm-del warn" onClick={(e) => confirmDelete(e, fileName)}>Del</button>
+                                                    <button className="btn-confirm-del" onClick={cancelDelete}>X</button>
+                                                </div>
+                                            ) : (
+                                                <button 
+                                                    className="btn-delete-file"
+                                                    onClick={(e) => startDelete(e, fileName)}
+                                                >
+                                                    &times;
+                                                </button>
+                                            )
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         </aside>
 
@@ -266,38 +395,27 @@ function EditorContent() {
                                 
                                 {/* The Editor */}
                                 <div className={`editor-pane ${showPreview ? 'split' : ''}`}>
-                                    {activeFile === 'README.md' && (
+                                    {activeFile === 'README.md' ? (
                                         <div className="readme-preview">
                                             <h1>{siteData.title || 'Untitled Project'}</h1>
                                             <p>{siteData.description || 'No description found.'}</p>
                                             <hr/>
                                             <h3>Status</h3>
                                             <p>This project is currently <strong>{siteData.status}</strong>.</p>
-                                            <p style={{marginTop: '20px', color: '#8b949e', fontSize: '0.9em'}}>
-                                                This <code>README.md</code> is auto-generated from your repository settings.
-                                            </p>
+                                            <div style={{marginTop: '20px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px'}}>
+                                                <pre style={{whiteSpace: 'pre-wrap'}}>{currentFile.content}</pre>
+                                            </div>
                                         </div>
-                                    )}
-
-                                    {activeFile === 'index.html' && (
+                                    ) : (
                                         <Editor
-                                            value={siteData.customHtml}
-                                            onValueChange={code => setSiteData({ ...siteData, customHtml: code })}
-                                            highlight={code => highlight(code, languages.markup)}
-                                            padding={20}
-                                            className="code-editor"
-                                            style={{
-                                                fontFamily: '"JetBrains Mono", "Fira Code", monospace',
-                                                fontSize: 14,
+                                            value={currentFile.content}
+                                            onValueChange={code => updateFileContent(activeFile, code)}
+                                            highlight={code => {
+                                                if (currentFile.language === 'html') return highlight(code, languages.markup);
+                                                if (currentFile.language === 'css') return highlight(code, languages.css);
+                                                if (currentFile.language === 'javascript') return highlight(code, languages.javascript);
+                                                return highlight(code, languages.markup);
                                             }}
-                                        />
-                                    )}
-
-                                    {activeFile === 'styles.css' && (
-                                        <Editor
-                                            value={siteData.customCss}
-                                            onValueChange={code => setSiteData({ ...siteData, customCss: code })}
-                                            highlight={code => highlight(code, languages.css)}
                                             padding={20}
                                             className="code-editor"
                                             style={{
@@ -317,10 +435,22 @@ function EditorContent() {
                                             srcDoc={`
                                                 <html>
                                                     <head>
-                                                        <style>${siteData.customCss}</style>
+                                                        <style>${siteData.files['styles.css']?.content || ''}</style>
                                                     </head>
                                                     <body>
-                                                        ${siteData.customHtml}
+                                                        ${siteData.files['index.html']?.content || ''}
+                                                        
+                                                        <!-- Inject JS -->
+                                                        <script>
+                                                            ${Object.keys(siteData.files)
+                                                                .filter(f => f.endsWith('.js'))
+                                                                .map(f => `
+                                                                    try {
+                                                                        // Virtual File: ${f}
+                                                                        ${siteData.files[f].content}
+                                                                    } catch(e) { console.error("Error in ${f}:", e); }
+                                                                `).join('\n')}
+                                                        </script>
                                                     </body>
                                                 </html>
                                             `}
@@ -329,18 +459,34 @@ function EditorContent() {
                                     </div>
                                 )}
 
-                                {/* Copilot Sidebar */}
                                 {copilotOpen && (
                                     <div className="copilot-sidebar">
-                                         <AICopilot onApplyCode={(code) => {
-                                             if (activeFile === 'index.html') {
-                                                 setSiteData(prev => ({ ...prev, customHtml: prev.customHtml + '\n' + code }));
-                                             } else if (activeFile === 'styles.css') {
-                                                 setSiteData(prev => ({ ...prev, customCss: prev.customCss + '\n' + code }));
-                                             } else {
-                                                 alert('Switch to index.html or styles.css to apply code.');
-                                             }
-                                         }} />
+                                         <AICopilot 
+                                            siteData={siteData}
+                                            onCodeUpdate={(file, code) => {
+                                                // Handle Multi-File Updates
+                                                if (!siteData.files[file]) {
+                                                    // Create new if doesn't exist? Yes.
+                                                    const ext = file.split('.').pop();
+                                                    let lang = 'javascript';
+                                                    if (ext === 'html') lang = 'html';
+                                                    if (ext === 'css') lang = 'css';
+                                                    
+                                                    setSiteData(prev => ({
+                                                        ...prev,
+                                                        files: {
+                                                            ...prev.files,
+                                                            [file]: { content: code, language: lang }
+                                                        }
+                                                    }));
+                                                    setSuccessMsg(`AI created ${file}`);
+                                                } else {
+                                                    updateFileContent(file, code);
+                                                    setSuccessMsg(`AI updated ${file}`);
+                                                }
+                                                setTimeout(() => setSuccessMsg(''), 3000);
+                                            }} 
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -508,13 +654,13 @@ function EditorContent() {
                 .branch-badge:hover { background: rgba(255,255,255,0.2); }
 
                 .file-item {
-                    padding: 8px 16px;
+                    padding: 8px 12px;
                     font-size: 13px;
                     border-bottom: 1px solid rgba(255,255,255,0.02);
                     cursor: pointer;
                     display: flex;
                     align-items: center;
-                    gap: 10px;
+                    justify-content: space-between;
                     color: var(--text-secondary);
                     transition: 0.15s;
                 }
@@ -524,11 +670,63 @@ function EditorContent() {
                     background: rgba(0, 240, 255, 0.1); 
                     color: #fff; 
                     border-left: 2px solid var(--accent); 
-                    padding-left: 14px; 
                 }
+                .file-name-wrap { display: flex; align-items: center; gap: 8px; }
+
                 .icon-file { color: var(--text-secondary); }
                 .icon-html { color: #e34c26; }
                 .icon-css { color: #563d7c; }
+                .icon-js { color: #f7df1e; }
+                
+                .btn-icon-add {
+                    background: transparent;
+                    border: 1px solid var(--border-color);
+                    color: var(--text-primary);
+                    width: 20px; height: 20px;
+                    display: flex; align-items: center; justify-content: center;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+                .btn-icon-add:hover { background: var(--btn-bg); border-color: var(--accent); }
+
+                .btn-delete-file {
+                    background: transparent;
+                    border: none;
+                    color: #ef4444;
+                    opacity: 0;
+                    cursor: pointer;
+                    font-size: 16px;
+                }
+                .file-item:hover .btn-delete-file { opacity: 1; }
+                .btn-delete-file:hover { color: #ff0000; }
+                
+                .file-creation-row {
+                    padding: 8px 12px;
+                    border-bottom: 1px solid rgba(255,255,255,0.02);
+                }
+                .new-file-input {
+                    width: 100%;
+                    background: rgba(0,0,0,0.3);
+                    border: 1px solid var(--accent);
+                    color: #fff;
+                    padding: 4px 8px;
+                    font-size: 12px;
+                    border-radius: 4px;
+                    outline: none;
+                }
+                
+                .delete-confirm { display: flex; gap: 4px; }
+                .btn-confirm-del {
+                    background: rgba(255,255,255,0.1);
+                    border: none;
+                    color: #fff;
+                    font-size: 10px;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+                .btn-confirm-del.warn { background: #ef4444; }
+                .btn-confirm-del:hover { opacity: 0.8; }
 
                 /* Editor Main */
                 .editor-main {

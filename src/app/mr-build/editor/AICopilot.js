@@ -1,16 +1,21 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, Bot, User, ChevronRight, Mic, Volume2, VolumeX } from 'lucide-react';
+import { Sparkles, Send, Bot, User, ChevronRight, Mic, Volume2, VolumeX, Paperclip, X } from 'lucide-react';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
+import { db } from '../../../lib/firebase'; // Added db import
+import { doc, getDoc } from 'firebase/firestore'; // Added firestore imports
 
-export default function AICopilot({ onApplyCode }) {
+export default function AICopilot({ siteData, onCodeUpdate }) {
   const [messages, setMessages] = useState([
     {
       id: 'welcome',
       role: 'assistant',
-      content: "I'm your NEX AI Architect. Describe the component you want to build, and I'll generate the code for you."
+      content: JSON.stringify({
+            message: "I'm your NEX AI Architect. I can read your code and make changes directly. What should we build?",
+            thought: "Initialized."
+        })
     }
   ]);
   const [input, setInput] = useState('');
@@ -21,6 +26,43 @@ export default function AICopilot({ onApplyCode }) {
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   
+  // Model State
+  const [selectedModel, setSelectedModel] = useState('openai/gpt-4o-mini');
+  const [models, setModels] = useState([]); // Dynamic models
+
+  // Fetch Models from Admin Config
+  useEffect(() => {
+    const fetchModels = async () => {
+        try {
+            const docRef = doc(db, 'system_config', 'nex_ai');
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+                const data = snap.data();
+                if (data.models) {
+                    const activeModels = data.models.filter(m => m.active);
+                    setModels(activeModels);
+                    if (activeModels.length > 0) {
+                        setSelectedModel(activeModels[0].id);
+                    }
+                }
+            } else {
+                // Fallback if no config found
+                setModels([
+                    { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini (Default)' },
+                    { id: 'openai/gpt-4o', name: 'GPT-4o (Fallback)' }
+                ]);
+            }
+        } catch (err) {
+            console.error("Error fetching AI models:", err);
+            // Fallback
+             setModels([
+                { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' }
+            ]);
+        }
+    };
+    fetchModels();
+  }, []);
+
   const scrollRef = useRef(null);
   const recognitionRef = useRef(null);
 
@@ -69,13 +111,7 @@ export default function AICopilot({ onApplyCode }) {
   const speakText = (text) => {
     if (!voiceEnabled || typeof window === 'undefined') return;
     
-    // Clean text for speech
-    const cleanText = text
-        .replace(/```[\s\S]*?```/g, 'Here is the code.')
-        .replace(/<think>[\s\S]*?<\/think>/g, '') 
-        .replace(/[*#`_]/g, '');
-
-    const utterance = new SpeechSynthesisUtterance(cleanText);
+    const utterance = new SpeechSynthesisUtterance(text);
     const voices = window.speechSynthesis.getVoices();
     const preferredVoice = voices.find(v => v.name.includes('Google US English')) || voices[0];
     if (preferredVoice) utterance.voice = preferredVoice;
@@ -94,24 +130,62 @@ export default function AICopilot({ onApplyCode }) {
     }
   };
 
-  const extractCode = (text) => {
-    if (!text) return null;
-    const match = text.match(/```(?:html|jsx|tsx|css)?\n([\s\S]*?)```/);
-    return match ? match[1] : null;
+  const [attachments, setAttachments] = useState([]);
+  const fileInputRef = useRef(null);
+
+  // File Handlers
+  const handleFileSelect = async (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+
+      const newAttachments = await Promise.all(files.map(async (file) => {
+          return new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                  resolve({
+                      name: file.name,
+                      type: file.type,
+                      content: reader.result // Base64
+                  });
+              };
+              reader.readAsDataURL(file);
+          });
+      }));
+
+      setAttachments([...attachments, ...newAttachments]);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeAttachment = (index) => {
+      setAttachments(attachments.filter((_, i) => i !== index));
   };
 
   // Chat Handler
   const handleSend = async (e) => {
     e?.preventDefault();
-    if (!input.trim() || loading) return;
+    if ((!input.trim() && attachments.length === 0) || loading) return;
 
     cancelSpeech();
 
-    const userMsg = { role: 'user', content: input, id: Date.now().toString() };
+    // Construct user message with attachments
+    const userMsgContent = {
+        text: input,
+        attachments: attachments
+    };
+
+    // For display, we might just show text, or show an indicator
+    const userMsg = { 
+        role: 'user', 
+        content: input || (attachments.length > 0 ? `[Sent ${attachments.length} files]` : ''), 
+        id: Date.now().toString(),
+        attachments: attachments // Store for rendering if needed
+    };
+    
     const newMessages = [...messages, userMsg];
     
     setMessages(newMessages);
     setInput('');
+    setAttachments([]);
     setLoading(true);
 
     try {
@@ -119,29 +193,55 @@ export default function AICopilot({ onApplyCode }) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                messages: newMessages.filter(m => m.role !== 'error').map(m => ({ role: m.role, content: m.content })),
-                model: 'openai/gpt-4o', // Default to smarter model for coding
-                system: `You are the NEX AI Architect for Mr Build.
-                Your goal is to generate high-quality HTML and CSS code for the user.
-                
-                RULES:
-                1. Output CLEAN, MODERN, and RESPONSIVE code.
-                2. Use the "Dark Nebula" aesthetic (dark backgrounds, neon accents, glassmorphism) unless requested otherwise.
-                3. IMPORTANT: Provide a SINGLE HTML block with embedded <style> tags. Do NOT use external CSS files.
-                4. Use 'https://placehold.co/600x400' for images. Do NOT use local paths like 'image.jpg'.
-                5. If explaining, be concise.`
+                messages: newMessages.filter(m => m.role !== 'error').map(m => {
+                    if (m.role === 'user') {
+                        // If it has attachments, send structured content
+                        if (m.attachments && m.attachments.length > 0) {
+                            return {
+                                role: 'user',
+                                content: [
+                                    { type: "text", text: m.content || "Analyze these files." },
+                                    ...m.attachments.map(att => ({
+                                        type: "image_url",
+                                        image_url: { url: att.content }
+                                    }))
+                                ]
+                            };
+                        }
+                        return { role: m.role, content: m.content };
+                    }
+                    return { 
+                        role: m.role, 
+                        content: m.role === 'assistant' ? JSON.parse(m.content).message : m.content 
+                    };
+                }),
+                currentContext: {
+                    files: siteData?.files ? Object.keys(siteData.files).reduce((acc, filename) => {
+                        acc[filename] = siteData.files[filename].content;
+                        return acc;
+                    }, {}) : {}
+                },
+                model: selectedModel 
             })
         });
 
         if (!res.ok) throw new Error(await res.text());
 
         const data = await res.json();
-        const aiMsg = { role: 'assistant', content: data.content, id: (Date.now() + 1).toString() };
+        const aiMsg = { role: 'assistant', content: JSON.stringify(data), id: (Date.now() + 1).toString() };
         
         setMessages([...newMessages, aiMsg]);
         
-        if (voiceEnabled) {
-            speakText(data.content);
+        if (voiceEnabled && data.message) {
+            speakText(data.message);
+        }
+
+        // Handle File Updates
+        if (data.action === 'UPDATE_FILE' && data.modifications) {
+            // Automatically apply updates
+            data.modifications.forEach(mod => {
+                onCodeUpdate(mod.file, mod.code);
+            });
         }
 
     } catch (err) {
@@ -153,51 +253,35 @@ export default function AICopilot({ onApplyCode }) {
 
   // specialized renderer for the copilot to handle thinking blocks and code buttons
   const MessageContent = ({ content, role }) => {
-      const parts = [];
-      const thinkRegex = /<think>([\s\S]*?)<\/think>/g;
-      let lastIndex = 0;
-      let match;
-
-      while ((match = thinkRegex.exec(content)) !== null) {
-          if (match.index > lastIndex) {
-              parts.push({ type: 'text', content: content.slice(lastIndex, match.index) });
+      if (role === 'assistant') {
+          try {
+              // Try parsing as JSON first (New Agent Logic)
+              const data = typeof content === 'string' ? JSON.parse(content) : content;
+              return (
+                  <div className="agent-response">
+                      {data.thought && (
+                          <details className="think-block">
+                              <summary>Thinking Process</summary>
+                              <div className="think-content">{data.thought}</div>
+                          </details>
+                      )}
+                      <div className="text-content">{data.message}</div>
+                      {data.modifications && data.modifications.length > 0 && (
+                          <div className="action-badge">
+                              <Sparkles size={10} />
+                              <span>Updated {data.modifications.map(m => m.file).join(', ')}</span>
+                          </div>
+                      )}
+                  </div>
+              );
+          } catch (e) {
+              // Fallback for old text-based messages or partial streams
+              return <div className="text-content">{content}</div>;
           }
-          parts.push({ type: 'think', content: match[1] });
-          lastIndex = match.index + match[0].length;
-      }
-      if (lastIndex < content.length) {
-          parts.push({ type: 'text', content: content.slice(lastIndex) });
       }
 
-      return (
-          <>
-              {parts.map((part, i) => (
-                  part.type === 'think' ? (
-                      <details key={i} className="think-block">
-                          <summary>Thinking Process</summary>
-                          <div className="think-content">{part.content}</div>
-                      </details>
-                  ) : (
-                      <div key={i} className="text-content">
-                          {part.content.split('```').map((chunk, j) => {
-                              if (j % 2 === 1) {
-                                  // Code block logic is handled by extractCode for the button, 
-                                  // but here we just render it nicely or hide it if it's too long?
-                                  // For sidebar, maybe just show "Code Block Generated" and the apply button?
-                                  // Let's show a preview.
-                                  return (
-                                     <div key={j} className="code-preview">
-                                         {chunk.replace(/^(html|css|js|jsx)/, '')}
-                                     </div>
-                                  );
-                              }
-                              return <span key={j}>{chunk}</span>;
-                          })}
-                      </div>
-                  )
-              ))}
-          </>
-      );
+      // User messages
+      return <div className="text-content">{content}</div>;
   };
 
   return (
@@ -206,14 +290,24 @@ export default function AICopilot({ onApplyCode }) {
       <div className="header">
         <div className="brand">
           <Sparkles className="icon-sparkles" size={16} />
-          <h2 className="title">NEX AI ARCHITECT</h2>
+          <h2 className="title">NEX AI ARCT</h2>
         </div>
-        <button 
-            onClick={toggleVoice} 
-            className={`voice-btn ${voiceEnabled ? 'active' : ''}`}
-        >
-            {voiceEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
-        </button>
+        <div className="header-controls">
+            <select 
+                value={selectedModel} 
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="model-select"
+            >
+                {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+            <button 
+                onClick={toggleVoice} 
+                className={`voice-btn ${voiceEnabled ? 'active' : ''}`}
+                title="Toggle Voice"
+            >
+                {voiceEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+            </button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -233,14 +327,6 @@ export default function AICopilot({ onApplyCode }) {
                 
                 <MessageContent content={m.content} role={m.role} />
                 
-                {m.role === 'assistant' && extractCode(m.content) && (
-                  <button
-                    onClick={() => onApplyCode(extractCode(m.content))}
-                    className="apply-btn"
-                  >
-                    Apply to Canvas <ChevronRight size={12} />
-                  </button>
-                )}
                 {m.role === 'error' && <div className="error-text">Error processing request</div>}
               </div>
             </div>
@@ -257,6 +343,20 @@ export default function AICopilot({ onApplyCode }) {
         )}
       </div>
 
+      {/* Attachments Preview */}
+      {attachments.length > 0 && (
+          <div className="attachments-preview">
+              {attachments.map((file, index) => (
+                  <div key={index} className="attachment-chip">
+                      <span className="file-name">{file.name}</span>
+                      <button onClick={() => removeAttachment(index)} className="remove-btn">
+                          <X size={12} />
+                      </button>
+                  </div>
+              ))}
+          </div>
+      )}
+
       {/* Input */}
       <div className="input-area">
         <div className={`input-wrapper ${isListening ? 'listening' : ''}`}>
@@ -272,7 +372,24 @@ export default function AICopilot({ onApplyCode }) {
             }}
           />
           
+          <input 
+              type="file" 
+              ref={fileInputRef}
+              className="hidden-file-input"
+              multiple
+              onChange={handleFileSelect}
+              style={{ display: 'none' }}
+          />
+
           <div className="input-actions">
+            <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="action-btn"
+                title="Attach file"
+            >
+                <Paperclip size={16} />
+            </button>
             <button
                 type="button"
                 onClick={toggleListening}
@@ -283,7 +400,7 @@ export default function AICopilot({ onApplyCode }) {
             <button
                 type="button"
                 onClick={handleSend}
-                disabled={loading || !input.trim()}
+                disabled={loading || (!input.trim() && attachments.length === 0)}
                 className="action-btn send"
             >
                 <Send size={16} />
@@ -298,247 +415,298 @@ export default function AICopilot({ onApplyCode }) {
             display: flex;
             flex-direction: column;
             height: 100%;
-            width: 320px;
-            background: rgba(10, 10, 12, 0.95);
-            backdrop-filter: blur(16px);
-            border-left: 1px solid rgba(139, 92, 246, 0.2);
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-            position: relative;
-            color: #fff;
+            width: 100%;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.6);
+            color: #e2e8f0;
             font-family: 'Inter', sans-serif;
+            overflow: hidden;
         }
 
         /* Header */
         .header {
-            padding: 16px;
-            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: linear-gradient(90deg, rgba(88, 28, 135, 0.1), transparent);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0) 100%);
         }
+        .header-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .model-select {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #94a3b8;
+            font-size: 11px;
+            border-radius: 4px;
+            padding: 4px 8px;
+            outline: none;
+            cursor: pointer;
+        }
+        .model-select:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .model-select option {
+            background: #1a1a20;
+            color: #fff;
+        }
+
         .brand {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
         .title {
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.1em;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.15em;
             color: #fff;
+            background: linear-gradient(90deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             text-transform: uppercase;
-            font-style: italic;
             margin: 0;
         }
-        /* Using global global css variable or explicit color if not available */
         :global(.icon-sparkles) {
-            color: #22d3ee;
-            animation: pulse 2s infinite;
+            color: #00f0ff;
+            filter: drop-shadow(0 0 5px rgba(0, 240, 255, 0.5));
+            animation: pulse 3s infinite ease-in-out;
         }
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
         }
 
         .voice-btn {
-            padding: 6px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
-            background: transparent;
-            border: none;
-            color: #6b7280;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.05);
+            color: #94a3b8;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .voice-btn:hover { color: #d1d5db; }
+        .voice-btn:hover { 
+            background: rgba(255,255,255,0.1); 
+            color: #fff; 
+        }
         .voice-btn.active {
-            background: rgba(34, 211, 238, 0.2);
+            background: rgba(34, 211, 238, 0.15);
+            border-color: rgba(34, 211, 238, 0.3);
             color: #22d3ee;
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.15);
         }
 
         /* Messages Area */
         .messages-area {
             flex: 1;
             overflow-y: auto;
-            padding: 16px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 24px;
             scroll-behavior: smooth;
         }
         .message-row {
             display: flex;
             width: 100%;
+            animation: fadeIn 0.3s ease-out;
         }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
         .message-row.user { justify-content: flex-end; }
         .message-row.assistant { justify-content: flex-start; }
 
         .message-bubble {
-            max-width: 90%;
-            padding: 12px;
+            max-width: 88%;
+            padding: 12px 16px;
             border-radius: 12px;
             font-size: 13px;
-            line-height: 1.5;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            backdrop-filter: blur(4px);
+            line-height: 1.6;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            position: relative;
         }
         .message-bubble.user {
-            background: rgba(124, 58, 237, 0.8); /* purple-600 */
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
             color: white;
-            border-top-right-radius: 0;
-            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-top-right-radius: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .message-bubble.assistant {
-            background: rgba(21, 21, 24, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #e5e7eb;
-            border-top-left-radius: 0;
+            background: rgba(20, 20, 25, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #e2e8f0;
+            border-top-left-radius: 2px;
+            backdrop-filter: blur(10px);
         }
 
         .message-meta {
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin-bottom: 6px;
-            opacity: 0.6;
+            gap: 8px;
+            margin-bottom: 8px;
+            opacity: 0.5;
             font-size: 10px;
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.1em;
         }
-
-        /* Content Styling */
-        .text-content { white-space: pre-wrap; }
         
+        /* Thinking Block */
         .think-block {
-            margin-bottom: 8px;
-            background: rgba(0,0,0,0.2);
-            padding: 8px;
-            border-radius: 4px;
+            margin-bottom: 10px;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s;
+        }
+        .think-block[open] {
+            background: rgba(0,0,0,0.5);
+            border-color: rgba(255,255,255,0.1);
         }
         .think-block summary {
             font-size: 10px;
             font-style: italic;
-            color: #6b7280;
+            color: #64748b;
             cursor: pointer;
-        }
-        .think-block summary:hover { color: #9ca3af; }
-        .think-content {
-            margin-top: 4px;
-            padding-left: 8px;
-            border-left: 2px solid rgba(139, 92, 246, 0.3);
-            font-size: 11px;
-            color: #9ca3af;
-        }
-
-        .code-preview {
-            margin: 8px 0;
-            padding: 8px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 10px;
-            overflow-x: auto;
-            border: 1px solid rgba(255,255,255,0.1);
-            white-space: pre;
-        }
-
-        .apply-btn {
-            margin-top: 12px;
-            width: 100%;
-            padding: 8px;
-            background: linear-gradient(90deg, #0891b2, #2563eb); /* cyan-600 to blue-600 */
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 6px;
-            color: white;
-            font-weight: 700;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: -0.02em;
-            cursor: pointer;
+            user-select: none;
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 6px;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-            transition: all 0.2s;
         }
-        .apply-btn:hover {
-            filter: brightness(1.1);
-            transform: translateY(-1px);
+        .think-block summary::before {
+            content: '💭';
+            font-style: normal;
+        }
+        .think-block summary:hover { color: #94a3b8; }
+        
+        .think-content {
+            margin-top: 8px;
+            padding-left: 8px;
+            border-left: 2px solid rgba(139, 92, 246, 0.2);
+            font-size: 11px;
+            color: #94a3b8;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.5;
         }
 
-        .error-text {
-            color: #ef4444;
+        /* Action Badge */
+        .action-badge {
+            margin-top: 8px;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            padding: 6px 10px;
+            border-radius: 6px;
             font-size: 11px;
-            margin-top: 4px;
+            font-weight: 500;
+            color: #22d3ee;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            animation: slideUp 0.3s ease-out;
         }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Loading */
         .loading-indicator {
-            display: flex;
-            justify-content: flex-start;
+            padding: 4px 16px;
         }
         .dots {
-            background: rgba(21, 21, 24, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 14px;
             border-radius: 12px;
-            border-top-left-radius: 0;
-            display: flex;
+            border-top-left-radius: 2px;
+            display: inline-flex;
             gap: 4px;
         }
         .dot {
-            width: 6px;
-            height: 6px;
+            width: 4px;
+            height: 4px;
+            background: #94a3b8;
             border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out both;
         }
-        .dot-1 { background-color: #06b6d4; animation-delay: -0.32s; }
-        .dot-2 { background-color: #8b5cf6; animation-delay: -0.16s; }
-        .dot-3 { background-color: #3b82f6; }
+        .dot-1 { animation-delay: -0.32s; }
+        .dot-2 { animation-delay: -0.16s; }
         
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
+        .attachments-preview {
+            display: flex;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            overflow-x: auto;
+        }
+        .attachment-chip {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .file-name {
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .remove-btn {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
         }
 
         /* Input Area */
         .input-area {
-            padding: 16px;
-            background: #0a0a0c;
-            border-top: 1px solid rgba(139, 92, 246, 0.1);
+            padding: 16px 20px 24px 20px;
+            background: linear-gradient(0deg, rgba(0,0,0,0.8), rgba(0,0,0,0));
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
         }
         .input-wrapper {
             position: relative;
-            background: #151518;
+            background: rgba(30, 30, 36, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            transition: all 0.2s;
+            border-radius: 10px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         .input-wrapper:focus-within {
-            border-color: rgba(139, 92, 246, 0.5);
+            background: rgba(30, 30, 36, 0.9);
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3), 0 8px 20px rgba(0,0,0,0.3);
         }
-        .input-wrapper.listening {
-            border-color: rgba(34, 211, 238, 0.8);
-            box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
-        }
-
+        
         .chat-input {
             width: 100%;
             background: transparent;
             border: none;
-            padding: 12px 16px;
-            padding-right: 80px; /* Space for buttons */
-            color: white;
+            padding: 14px 16px;
+            padding-right: 86px;
+            color: #f1f5f9;
             font-size: 13px;
+            line-height: 1.5;
             outline: none;
         }
-        .chat-input::placeholder { color: #4b5563; }
+        .chat-input::placeholder { color: #64748b; }
 
         .input-actions {
             position: absolute;
@@ -546,38 +714,45 @@ export default function AICopilot({ onApplyCode }) {
             top: 50%;
             transform: translateY(-50%);
             display: flex;
-            gap: 4px;
+            gap: 6px;
         }
         .action-btn {
-            padding: 6px;
+            width: 28px;
+            height: 28px;
             border-radius: 6px;
             border: none;
             background: transparent;
-            color: #6b7280;
+            color: #64748b;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .action-btn:hover { color: #d1d5db; }
+        .action-btn:hover { background: rgba(255,255,255,0.05); color: #94a3b8; }
         
         .action-btn.mic.active {
-            background: rgba(34, 211, 238, 0.2);
+            background: rgba(34, 211, 238, 0.15);
             color: #22d3ee;
+            animation: pulse-mic 1.5s infinite;
+        }
+        @keyframes pulse-mic {
+            0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(34, 211, 238, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
         }
         
         .action-btn.send {
-            background: rgba(139, 92, 246, 0.2);
             color: #a78bfa;
         }
         .action-btn.send:hover {
-            background: rgba(139, 92, 246, 0.8);
-            color: white;
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
         }
-        .action-btn:disabled {
+        .action-btn.send:disabled {
             opacity: 0.3;
             cursor: not-allowed;
+            background: transparent;
         }
 
         /* Scrollbar */
@@ -585,8 +760,9 @@ export default function AICopilot({ onApplyCode }) {
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { 
             background: rgba(255,255,255,0.1); 
-            border-radius: 2px; 
+            border-radius: 10px; 
         }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
       `}</style>
     </div>
   );
