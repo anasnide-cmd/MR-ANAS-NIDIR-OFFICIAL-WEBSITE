@@ -100,7 +100,6 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin(); // Only admins can view/manage logs
     }
 
-    // System Config (Secure Storage for API Keys)
     match /system_config/{configId} {
       allow read, write: if isAdmin();
     }
@@ -123,6 +122,12 @@ service cloud.firestore {
       // Allow public to create (apply), but only admins/staff can read/manage
       allow create: if true;
       allow read, update, delete: if isStaff();
+    }
+
+    // NEX AI User Chats
+    match /user_chats/{chatId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
   }
 }

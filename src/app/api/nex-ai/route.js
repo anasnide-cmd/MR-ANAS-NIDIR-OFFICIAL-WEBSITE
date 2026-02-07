@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/firebase'; // Client SDK (No Service Account needed)
+import { doc, getDoc } from 'firebase/firestore'; 
 
 // Fallback Key from Environment
 const ENV_KEY = process.env.OPENROUTER_API_KEY;
@@ -10,7 +12,6 @@ export async function POST(req) {
         const host = req.headers.get('host');
         
         // Allow requests only from same origin (or localhost for dev)
-        // Production: origin should match host protocol
         if (origin && !origin.includes(host) && !origin.includes('localhost')) {
             return new NextResponse("Forbidden: Invalid Origin", { status: 403 });
         }
@@ -18,32 +19,20 @@ export async function POST(req) {
         const { messages, model } = await req.json();
 
         let apiKey = ENV_KEY;
-        let usedSource = 'env'; // logging helper
+        let usedSource = 'env'; 
         
-        // 1. Try fetching keys from Admin Firestore
+        // 1. Try fetching keys from Admin Firestore using Client SDK
         try {
-            // Dynamic import to prevent build crash if package missing
-            const admin = await import('firebase-admin');
-            const { getFirestore } = await import('firebase-admin/firestore');
-            const { getApps, initializeApp } = await import('firebase-admin/app');
-
-            if (getApps().length === 0) {
-                 initializeApp(); 
-            }
+            const docRef = doc(db, 'system_config', 'nex_ai');
+            const docSnap = await getDoc(docRef);
             
-            const db = getFirestore();
-            const docRefs = await db.collection('system_config').doc('nex_ai').get();
-            
-            if (docRefs.exists) {
-                const data = docRefs.data();
+            if (docSnap.exists()) {
+                const data = docSnap.data();
                 
                 // MULTI-KEY SUPPORT
                 if (data.keys && Array.isArray(data.keys)) {
-                    // Filter ACTIVE keys
                     const activeKeys = data.keys.filter(k => k.status === 'active');
-                    
                     if (activeKeys.length > 0) {
-                        // RANDOM ROTATION LOGIC
                         const randomIndex = Math.floor(Math.random() * activeKeys.length);
                         apiKey = activeKeys[randomIndex].key;
                         usedSource = `db-rotated-${randomIndex}`;
@@ -55,23 +44,21 @@ export async function POST(req) {
                     usedSource = 'db-legacy';
                 }
             }
-        } catch (adminError) {
-            console.warn("DB Key Load Failed, using ENV:", adminError.message);
+        } catch (dbError) {
+            console.warn("DB Key Load Failed (Client SDK):", dbError.message);
         }
 
         if (!apiKey) {
-            return new NextResponse("Configuration Error: No active API Keys found. Check Admin Settings.", { status: 500 });
+            return new NextResponse("Configuration Error: No active API Keys found. Check Admin Settings or .env.local", { status: 500 });
         }
 
         // 2. Call OpenRouter
-        console.log(`[NEX-AI] Using Key Source: ${usedSource}`); // Debug log
-        
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://anasnidir.com", // Required by OpenRouter
+                "HTTP-Referer": "https://anasnidir.com",
                 "X-Title": "NEX AI",
             },
             body: JSON.stringify({
