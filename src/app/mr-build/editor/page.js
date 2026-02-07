@@ -41,7 +41,9 @@ import {
 /* --- ICONS & STYLES --- */
 // Using local styled-jsx at the bottom
 
-export default function MrBuildEditorContent() {
+import { Suspense } from 'react';
+
+function EditorContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const querySiteId = searchParams.get('id');
@@ -721,6 +723,14 @@ export default function MrBuildEditorContent() {
                 @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
             `}</style>
         </div>
+    );
+}
+
+export default function MrBuildEditorPage() {
+    return (
+        <Suspense fallback={<Loader text="Initializing Editor..." />}>
+            <EditorContent />
+        </Suspense>
     );
 }
 
