@@ -13,10 +13,20 @@ async function getArticle(slug) {
             const doc = snap.docs[0];
             const data = doc.data();
             
+            // Extract first image from content if 'image' field is missing
+            let featuredImage = data.image;
+            if (!featuredImage && data.content) {
+                const imgMatch = data.content.match(/<img[^>]+src="([^">]+)"/);
+                if (imgMatch && imgMatch[1]) {
+                    featuredImage = imgMatch[1];
+                }
+            }
+
             // Serialize for passing to client component
             return {
                 id: doc.id,
                 ...data,
+                image: featuredImage,
                 date: data.date ? (data.date.seconds ? data.date.seconds * 1000 : data.date) : Date.now(),
             };
         }

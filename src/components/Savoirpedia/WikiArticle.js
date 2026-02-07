@@ -231,20 +231,41 @@ export default function WikiArticle({ article }) {
 
                 @media (max-width: 1024px) {
                     .article-layout { grid-template-columns: 1fr; }
-                    .side-col { order: -1; }
+                    /* Move sidebar to bottom on mobile/tablet */
+                    .side-col { order: 2; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 40px; }
+                    
                     .meta-card { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; }
                     .meta-row { border: none; margin: 0; padding: 0; gap: 10px; }
+                    
+                    /* Make TOC horizontal scrollable or wrapped on mobile */
                     .toc-card { 
                         position: relative; top: 0; 
-                        margin-top: 20px; padding: 15px; 
+                        margin-top: 20px; padding: 20px; 
                     }
-                    .toc-list { flex-direction: row; flex-wrap: wrap; gap: 20px; }
+                    .toc-list { flex-direction: row; flex-wrap: wrap; gap: 15px 25px; }
+                    .toc-list a { padding: 5px 0; }
                 }
 
                 @media (max-width: 768px) {
-                    .hero-title { font-size: 2.2rem; }
-                    .article-hero { height: 50vh; min-height: 300px; }
-                    .intro-block { padding: 20px; border-left-width: 2px; }
+                    .article-hero { height: 40vh; min-height: 250px; margin-bottom: 40px; }
+                    .hero-content { padding: 20px; bottom: 0; }
+                    .hero-title { font-size: 2rem; margin-bottom: 20px; }
+                    .hero-meta { font-size: 0.8rem; flex-wrap: wrap; gap: 10px; }
+                    .hero-actions { width: 100%; flex-wrap: wrap; gap: 10px; }
+                    .back-btn { font-size: 0.8rem; padding: 6px 14px; }
+                    
+                    .article-layout { gap: 30px; padding: 0 15px; }
+                    
+                    .intro-block { padding: 20px; border-left-width: 3px; border-radius: 12px; }
+                    .lead-paragraph { font-size: 1rem; line-height: 1.6; }
+                    
+                    .wiki-content-render { font-size: 1rem; margin-top: 20px; }
+                    .wiki-content-render h2 { font-size: 1.3rem; margin-top: 30px; }
+                    
+                    /* Sidebar Mobile specific */
+                    .meta-card { flex-direction: column; align-items: flex-start; gap: 0; }
+                    .meta-row { width: 100%; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 10px 0; justify-content: space-between; }
+                    .meta-row:last-child { border-bottom: none; }
                 }
             `}</style>
         </article>

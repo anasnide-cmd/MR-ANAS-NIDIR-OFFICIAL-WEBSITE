@@ -16,6 +16,7 @@ const exo2 = Exo_2({
 });
 
 export const metadata = {
+  metadataBase: new URL('https://mr-anas-nidir-official-website.web.app'),
   title: {
     template: '%s | MR ANAS NIDIR',
     default: 'MR ANAS NIDIR | Official Site',

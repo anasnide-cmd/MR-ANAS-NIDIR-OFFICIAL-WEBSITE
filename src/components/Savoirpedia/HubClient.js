@@ -378,20 +378,66 @@ export default function HubClient() {
                 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
                 @media (max-width: 768px) {
-                    .glass-panel { flex-direction: column; align-items: flex-start; padding: 30px 20px; }
-                    .hero-actions { width: 100%; flex-direction: column; }
-                    .action-btn { width: 100%; text-align: center; }
-                    .control-bar { flex-direction: column; align-items: stretch; }
+                    .wiki-container { padding: 20px 10px; }
+                    .glass-panel { 
+                        flex-direction: column; 
+                        align-items: flex-start; 
+                        padding: 25px 20px; 
+                        margin-bottom: 30px;
+                        gap: 25px;
+                    }
+                    .hero-actions { 
+                        width: 100%; 
+                        flex-direction: column; 
+                        gap: 12px;
+                    }
+                    .action-btn { 
+                        width: 100%; 
+                        text-align: center; 
+                        padding: 14px 20px; /* Larger touch target */
+                    }
+                    
+                    /* Control Bar Mobile */
+                    .control-bar { 
+                        flex-direction: column; 
+                        align-items: stretch; 
+                        top: 10px; 
+                        padding: 12px;
+                        margin-bottom: 30px;
+                        gap: 15px;
+                    }
                     .search-wrapper { max-width: 100%; }
-                    .posts-masonry { grid-template-columns: 1fr; }
+                    .spotlight-search { font-size: 16px; /* Prevent IOS zoom */ }
+                    
+                    /* Grid Mobile */
+                    .posts-masonry { 
+                        grid-template-columns: 1fr; 
+                        gap: 20px;
+                    }
+                    .post-card { border-radius: 16px; }
+                    .card-image-wrapper { height: 180px; }
+                    .card-content { padding: 20px; }
+                    .card-title { font-size: 1.2rem; }
                     
                     /* Mobile Header Fixes */
-                    .wiki-logo { gap: 15px; }
-                    .logo-symbol { font-size: 2.5rem; }
-                    .logo-text h1 { font-size: 1.8rem; word-break: break-word; }
-                    .logo-text p { font-size: 0.65rem; }
-                    .hero-stats { gap: 20px; flex-wrap: wrap; }
-                    .stat-val { font-size: 1.5rem; }
+                    .wiki-logo { gap: 15px; flex-wrap: wrap; }
+                    .logo-symbol { font-size: 2.2rem; }
+                    .logo-text h1 { font-size: 1.6rem; word-break: break-word; line-height: 1.2; }
+                    .logo-text p { font-size: 0.6rem; letter-spacing: 2px; margin-top: 5px; }
+                    
+                    .hero-stats { 
+                        width: 100%; 
+                        justify-content: space-between; 
+                        gap: 10px; 
+                        border-top: 1px solid rgba(255,255,255,0.05);
+                        padding-top: 20px;
+                        margin-top: 10px;
+                    }
+                    .stat-item { align-items: center; }
+                    .stat-val { font-size: 1.4rem; }
+                    .stat-label { font-size: 0.6rem; }
+                    
+                    .filter-pills { padding-bottom: 10px; }
                 }
             `}</style>
         </main>

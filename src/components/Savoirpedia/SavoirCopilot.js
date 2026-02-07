@@ -537,8 +537,34 @@ export default function SavoirCopilot({ currentTitle, currentContent, onUpdate }
         .action-btn.send:hover { color: #c4b5fd; background: rgba(139, 92, 246, 0.2); }
         .action-btn.upload:hover { color: #34d399; }
         
+        /* Scrollbar styling */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+        @media (max-width: 768px) {
+            .copilot-container {
+                height: 100dvh; /* Use dynamic viewport height for mobile browsers */
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                border-left: none;
+                z-index: 9999; /* Ensure it overlays nicely if used in modal/fullscreen */
+            }
+            
+            .header { padding: 12px 15px; }
+            .model-select { max-width: 100px; text-overflow: ellipsis; overflow: hidden; }
+            
+            .messages-area { padding: 15px; gap: 15px; }
+            .message-bubble { max-width: 92%; font-size: 14px; padding: 10px 14px; }
+            
+            .input-area { padding: 12px 15px 20px 15px; }
+            .input-wrapper { border-radius: 25px; }
+            .chat-input { padding: 12px 16px; padding-right: 110px; font-size: 16px; /* Prevent Zoom */ }
+            
+            .input-actions { right: 5px; gap: 2px; }
+            .action-btn { width: 32px; height: 32px; /* Larger touch target */ }
+            
+            /* Hide non-essential elements on very small screens if needed */
+            .image-preview-container { bottom: 70px; left: 15px; }
+        }
       `}</style>
     </div>
   );
