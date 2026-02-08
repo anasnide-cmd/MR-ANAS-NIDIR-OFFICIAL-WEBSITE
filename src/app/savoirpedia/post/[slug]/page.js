@@ -70,6 +70,7 @@ export async function generateMetadata({ params }) {
 
     // Default image if none exists
     const ogImage = article.image; 
+    const isPng = ogImage.toLowerCase().endsWith('.png');
     
     return {
         title: `${article.title} - Savoirpedia`,
@@ -82,9 +83,11 @@ export async function generateMetadata({ params }) {
             images: [
                 {
                     url: ogImage,
+                    secureUrl: ogImage,
                     width: 1200,
                     height: 630,
                     alt: article.title,
+                    type: isPng ? 'image/png' : 'image/jpeg',
                 },
             ],
             type: 'article',
