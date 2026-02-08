@@ -14,19 +14,25 @@ async function getArticle(slug) {
             const data = doc.data();
             
             // Extract first image from content if 'image' field is missing
-            let featuredImage = data.image;
-            if (!featuredImage && data.content) {
+            // Extract first image from content if 'image' field is missing
+            let imageUrl = data.image;
+            if (!imageUrl && data.content) {
                 const imgMatch = data.content.match(/<img[^>]+src="([^">]+)"/);
                 if (imgMatch && imgMatch[1]) {
-                    featuredImage = imgMatch[1];
+                    imageUrl = imgMatch[1];
                 }
+            }
+
+            // Ensure absolute image URL
+            if (imageUrl && !imageUrl.startsWith('http')) {
+                imageUrl = `https://mr-anas-nidir-official-website.web.app${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
             }
 
             // Serialize for passing to client component
             return {
                 id: doc.id,
                 ...data,
-                image: featuredImage,
+                image: imageUrl || 'https://mr-anas-nidir-official-website.web.app/assets/logo.jpg',
                 date: data.date ? (data.date.seconds ? data.date.seconds * 1000 : data.date) : Date.now(),
             };
         }
@@ -63,7 +69,7 @@ export async function generateMetadata({ params }) {
     }
 
     // Default image if none exists
-    const ogImage = article.image || '/assets/logo.jpg'; 
+    const ogImage = article.image; 
     
     return {
         title: `${article.title} - Savoirpedia`,
@@ -76,8 +82,8 @@ export async function generateMetadata({ params }) {
             images: [
                 {
                     url: ogImage,
-                    width: 800,
-                    height: 600,
+                    width: 1200,
+                    height: 630,
                     alt: article.title,
                 },
             ],
