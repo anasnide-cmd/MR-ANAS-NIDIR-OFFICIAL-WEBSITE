@@ -211,13 +211,46 @@ function EditorContent() {
 
     // Save Function
     const handleSave = async () => {
-        if (!user || !siteId) return;
+        if (!user) return;
         setSaving(true);
         try {
-            await setDoc(doc(db, 'user_sites', siteId), {
-                ...siteData,
-                updatedAt: new Date().toISOString()
-            }, { merge: true });
+            let targetId = siteId;
+            
+            // If new project, create the document first
+            if (!targetId) {
+                const newSiteRef = doc(collection(db, 'user_sites'));
+                targetId = newSiteRef.id;
+                
+                // Secondary Guard: Double check limit on save
+                const userRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userRef);
+                const limit = userDoc.data()?.siteLimit || 1;
+                
+                const q = query(collection(db, 'user_sites'), where('userId', '==', user.uid));
+                const snap = await getDocs(q);
+                
+                if (snap.size >= limit) {
+                    alert(`Limit reached! You can only have ${limit} sites on your current plan.`);
+                    router.push('/mr-build/subscription');
+                    return;
+                }
+
+                await setDoc(newSiteRef, {
+                    ...siteData,
+                    userId: user.uid,
+                    id: targetId,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+                setSiteId(targetId);
+                // Redirect to official editor URL for this site
+                router.replace(`/mr-build/editor?id=${targetId}`);
+            } else {
+                await setDoc(doc(db, 'user_sites', targetId), {
+                    ...siteData,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+            }
             
             setSuccessMsg('Changes committed successfully.');
             setTimeout(() => setSuccessMsg(''), 3000);

@@ -69,7 +69,12 @@ export default function BuildDashboard() {
     }, [router]);
 
     const handleNewRepo = () => {
-        // In a real app, this might open a modal or redirect to a creation wizard
+        if (sites.length >= userLimit) {
+            if (confirm(`You've reached your site limit (${userLimit}). Upgrade to Premium-X to deploy up to 5 sites?`)) {
+                router.push('/mr-build/subscription');
+            }
+            return;
+        }
         router.push('/mr-build/editor?new=true'); 
     };
 
@@ -151,6 +156,7 @@ export default function BuildDashboard() {
                             <div className="profile-stats">
                                 <span className="stat-item"><Star size={14} className="icon-star"/> <strong>{sites.reduce((acc, s) => acc + (s.views || 0), 0)}</strong> stars</span>
                                 <span className="stat-item"><Eye size={14} className="icon-eye"/> <strong>{sites.length}</strong> repos</span>
+                                <span className="stat-item"><Box size={14} className="icon-box"/> <strong>{sites.length} / {userLimit}</strong> sites used</span>
                             </div>
                         </div>
 

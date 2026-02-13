@@ -15,17 +15,23 @@ export default function SubscriptionPage() {
     const [selectedPlan, setSelectedPlan] = useState('pro'); // default to pro
     const [paymentProcessing, setPaymentProcessing] = useState(false);
 
+    const [userData, setUserData] = useState(null);
+
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, (u) => {
+        const unsub = onAuthStateChanged(auth, async (u) => {
             if (!u) {
                 router.push('/mr-build/login');
             } else {
                 setUser(u);
+                const snap = await getDoc(doc(db, 'users', u.uid));
+                if (snap.exists()) setUserData(snap.data());
             }
             setLoading(false);
         });
         return () => unsub();
     }, [router]);
+
+    const isPro = userData?.plan === 'pro';
 
     const handlePaymentSuccess = async (details) => {
         setPaymentProcessing(true);
@@ -75,7 +81,9 @@ export default function SubscriptionPage() {
                         <li>❌ Custom Domains</li>
                         <li>❌ Priority Support</li>
                     </ul>
-                    <button className="btn-plan current" disabled>CURRENT PROTOCOL</button>
+                    <button className={`btn-plan ${!isPro ? 'current' : ''}`} disabled={!isPro}>
+                        {!isPro ? 'CURRENT PROTOCOL' : 'TRIAL STATUS'}
+                    </button>
                 </div>
 
                 {/* Pro Plan */}
@@ -100,8 +108,14 @@ export default function SubscriptionPage() {
                     </ul>
                     
                     <div className="payment-area">
-                        <p className="pay-label">INITIALIZE UPGRADE:</p>
-                        <PayPalButton amount="9.99" onSuccess={handlePaymentSuccess} />
+                        {isPro ? (
+                            <button className="btn-plan current" disabled>CURRENT PROTOCOL ACTIVE</button>
+                        ) : (
+                            <>
+                                <p className="pay-label">INITIALIZE UPGRADE:</p>
+                                <PayPalButton amount="9.99" onSuccess={handlePaymentSuccess} />
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
