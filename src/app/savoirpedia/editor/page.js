@@ -93,7 +93,7 @@ function PublicWikiEditorContent() {
                 }
             }
         }
-    }, [editId]);
+    }, [editId, title, content]); // Fixed: Added title and content to dependencies
 
     useEffect(() => {
         if (title || content || category) {

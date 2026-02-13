@@ -14,7 +14,6 @@ async function getArticle(slug) {
             const data = doc.data();
             
             // Extract first image from content if 'image' field is missing
-            // Extract first image from content if 'image' field is missing
             let imageUrl = data.image;
             if (!imageUrl && data.content) {
                 const imgMatch = data.content.match(/<img[^>]+src="([^">]+)"/);
@@ -23,16 +22,11 @@ async function getArticle(slug) {
                 }
             }
 
-            // Ensure absolute image URL
-            if (imageUrl && !imageUrl.startsWith('http')) {
-                imageUrl = `https://mr-anas-nidir-official-website.web.app${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
-            }
-
             // Serialize for passing to client component
             return {
                 id: doc.id,
                 ...data,
-                image: imageUrl || 'https://mr-anas-nidir-official-website.web.app/assets/logo.jpg',
+                image: imageUrl || '/assets/logo.jpg',
                 date: data.date ? (data.date.seconds ? data.date.seconds * 1000 : data.date) : Date.now(),
             };
         }
@@ -69,7 +63,10 @@ export async function generateMetadata({ params }) {
     }
 
     // Default image if none exists
-    const ogImage = article.image; 
+    let ogImage = article.image; 
+    if (ogImage && !ogImage.startsWith('http')) {
+        ogImage = `https://mr-anas-nidir-official-website.web.app${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
+    }
     const isPng = ogImage.toLowerCase().endsWith('.png');
     
     return {

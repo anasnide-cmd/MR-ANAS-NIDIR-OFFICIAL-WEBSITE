@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Terminal as XTerminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
@@ -11,6 +11,92 @@ export default function Terminal({ files, onUpdateFiles, onRun }) {
     
     // Log buffer for messages that arrive before terminal is ready
     const logBuffer = useRef([]);
+
+    const prompt = useCallback((term) => {
+        term.write('\r\n\x1b[1;32muser@mr-build\x1b[0m:\x1b[1;34m~/project\x1b[0m$ ');
+    }, []);
+
+    const handleCommand = useCallback((cmd, term) => {
+        if (!cmd) {
+            prompt(term);
+            return;
+        }
+
+        const args = cmd.split(' ');
+        const command = args[0];
+
+        switch (command) {
+            case 'help':
+                term.writeln('Available commands:');
+                term.writeln('  \x1b[36mls\x1b[0m              List files');
+                term.writeln('  \x1b[36mcat [file]\x1b[0m      View file content');
+                term.writeln('  \x1b[36mtouch [file]\x1b[0m    Create new file');
+                term.writeln('  \x1b[36mrm [file]\x1b[0m       Remove file');
+                term.writeln('  \x1b[36mnode [file]\x1b[0m     Run JS file (reload preview)');
+                term.writeln('  \x1b[36mclear\x1b[0m           Clear terminal');
+                break;
+
+            case 'ls':
+                const fileList = Object.keys(files || {}).join('  ');
+                term.writeln(fileList);
+                break;
+
+            case 'cat':
+                if (args[1]) {
+                    const file = files[args[1]];
+                    if (file) {
+                        term.writeln(file.content);
+                    } else {
+                        term.writeln(`cat: ${args[1]}: No such file`);
+                    }
+                } else {
+                    term.writeln('usage: cat [file]');
+                }
+                break;
+
+            case 'touch':
+                if (args[1]) {
+                    if (files[args[1]]) {
+                        term.writeln(`touch: ${args[1]}: File exists`);
+                    } else {
+                        onUpdateFiles(args[1], '', 'javascript');
+                        term.writeln(`Created ${args[1]}`);
+                    }
+                } else {
+                    term.writeln('usage: touch [file]');
+                }
+                break;
+
+            case 'rm':
+                if (args[1]) {
+                    if (files[args[1]]) {
+                        onUpdateFiles(args[1], null);
+                        term.writeln(`Removed ${args[1]}`);
+                    } else {
+                        term.writeln(`rm: ${args[1]}: No such file`);
+                    }
+                } else {
+                    term.writeln('usage: rm [file]');
+                }
+                break;
+            
+            case 'node':
+            case 'npm':
+            case 'run':
+                term.writeln('>> Restarting Preview environment...');
+                if (onRun) onRun();
+                break;
+
+            case 'clear':
+                term.clear();
+                break;
+
+            default:
+                term.writeln(`command not found: ${command}`);
+        }
+
+        prompt(term);
+    }, [files, onRun, onUpdateFiles, prompt]);
 
     useEffect(() => {
         if (!terminalRef.current) return;
@@ -111,93 +197,8 @@ export default function Terminal({ files, onUpdateFiles, onRun }) {
             xtermRef.current = null;
             fitAddonRef.current = null;
         };
-    }, []);
+    }, [handleCommand]); // Fixed: Added handleCommand to dependencies
 
-    const prompt = (term) => {
-        term.write('\r\n\x1b[1;32muser@mr-build\x1b[0m:\x1b[1;34m~/project\x1b[0m$ ');
-    };
-
-    const handleCommand = (cmd, term) => {
-        if (!cmd) {
-            prompt(term);
-            return;
-        }
-
-        const args = cmd.split(' ');
-        const command = args[0];
-
-        switch (command) {
-            case 'help':
-                term.writeln('Available commands:');
-                term.writeln('  \x1b[36mls\x1b[0m              List files');
-                term.writeln('  \x1b[36mcat [file]\x1b[0m      View file content');
-                term.writeln('  \x1b[36mtouch [file]\x1b[0m    Create new file');
-                term.writeln('  \x1b[36mrm [file]\x1b[0m       Remove file');
-                term.writeln('  \x1b[36mnode [file]\x1b[0m     Run JS file (reload preview)');
-                term.writeln('  \x1b[36mclear\x1b[0m           Clear terminal');
-                break;
-
-            case 'ls':
-                const fileList = Object.keys(files || {}).join('  ');
-                term.writeln(fileList);
-                break;
-
-            case 'cat':
-                if (args[1]) {
-                    const file = files[args[1]];
-                    if (file) {
-                        term.writeln(file.content);
-                    } else {
-                        term.writeln(`cat: ${args[1]}: No such file`);
-                    }
-                } else {
-                    term.writeln('usage: cat [file]');
-                }
-                break;
-
-            case 'touch':
-                if (args[1]) {
-                    if (files[args[1]]) {
-                        term.writeln(`touch: ${args[1]}: File exists`);
-                    } else {
-                        onUpdateFiles(args[1], '', 'javascript');
-                        term.writeln(`Created ${args[1]}`);
-                    }
-                } else {
-                    term.writeln('usage: touch [file]');
-                }
-                break;
-
-            case 'rm':
-                if (args[1]) {
-                    if (files[args[1]]) {
-                        onUpdateFiles(args[1], null);
-                        term.writeln(`Removed ${args[1]}`);
-                    } else {
-                        term.writeln(`rm: ${args[1]}: No such file`);
-                    }
-                } else {
-                    term.writeln('usage: rm [file]');
-                }
-                break;
-            
-            case 'node':
-            case 'npm':
-            case 'run':
-                term.writeln('>> Restarting Preview environment...');
-                if (onRun) onRun();
-                break;
-
-            case 'clear':
-                term.clear();
-                break;
-
-            default:
-                term.writeln(`command not found: ${command}`);
-        }
-
-        prompt(term);
-    };
 
     // Expose method to write logs safely
     useEffect(() => {
@@ -210,7 +211,7 @@ export default function Terminal({ files, onUpdateFiles, onRun }) {
                 logBuffer.current.push(text);
             }
         };
-    }, []);
+    }, [prompt]); // Fixed: Added prompt to dependencies
 
     return (
         <div 

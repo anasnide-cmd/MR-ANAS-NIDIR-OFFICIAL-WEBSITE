@@ -16,6 +16,32 @@ const DEFAULT_MODELS = [
     { id: 'anthropic/claude-3-opus', name: 'Claude 3 Opus', description: 'Strong reasoning' }
 ];
 
+class Particle {
+    constructor(canvas) {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 0.1;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.speedY = Math.random() * 0.5 - 0.25;
+        this.opacity = Math.random() * 0.5 + 0.1;
+        this.canvas = canvas;
+    }
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x > this.canvas.width) this.x = 0;
+        if (this.x < 0) this.x = this.canvas.width;
+        if (this.y > this.canvas.height) this.y = 0;
+        if (this.y < 0) this.y = this.canvas.height;
+    }
+    draw(ctx) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
 export default function NexAI() {
     // --- STATE ---
     const [user, setUser] = useState(null);
@@ -98,7 +124,7 @@ export default function NexAI() {
             }
         };
         fetchModels();
-    }, []);
+    }, [selectedModel]); // Fixed: Added selectedModel to dependencies
 
     // 2. Auto-scroll
     const scrollToBottom = () => {
@@ -159,40 +185,15 @@ export default function NexAI() {
         const particles = [];
         const particleCount = 50; 
 
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2 + 0.1;
-                this.speedX = Math.random() * 0.5 - 0.25;
-                this.speedY = Math.random() * 0.5 - 0.25;
-                this.opacity = Math.random() * 0.5 + 0.1;
-            }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                if (this.x > canvas.width) this.x = 0;
-                if (this.x < 0) this.x = canvas.width;
-                if (this.y > canvas.height) this.y = 0;
-                if (this.y < 0) this.y = canvas.height;
-            }
-            draw() {
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
         for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
+            particles.push(new Particle(canvas));
         }
 
         const animate = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles.forEach(p => {
                 p.update();
-                p.draw();
+                p.draw(ctx);
             });
             animationFrameId = requestAnimationFrame(animate);
         };
@@ -492,7 +493,7 @@ export default function NexAI() {
                 }
             }, 5); 
             return () => clearInterval(timer);
-        }, [text]);
+        }, [text, onComplete]); // Fixed: Added onComplete to dependencies
 
         return <MarkdownRenderer content={display} />;
     };

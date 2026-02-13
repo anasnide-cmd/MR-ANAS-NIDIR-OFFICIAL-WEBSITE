@@ -23,7 +23,7 @@ export default function SavoirCopilot({ currentTitle, currentContent, onUpdate, 
     if (initialMessage && initialMessage !== input) {
       setInput(initialMessage);
     }
-  }, [initialMessage]);
+  }, [initialMessage, input]);
   
   // Voice State
   const [isListening, setIsListening] = useState(false);

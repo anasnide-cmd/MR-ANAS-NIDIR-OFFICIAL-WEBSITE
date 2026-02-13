@@ -450,7 +450,7 @@ export default function WikiArticle({ article, allArticles = [] }) {
                     display: flex; align-items: flex-end; justify-content: flex-start;
                     margin-bottom: 60px;
                 }
-                .hero-bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
+                .hero-bg { position: absolute; inset: 0; overflow: hidden; }
                 .hero-overlay {
                     position: absolute; inset: 0;
                     background: linear-gradient(to top, #050505 0%, rgba(5,5,5,0.8) 50%, rgba(5,5,5,0.3) 100%);

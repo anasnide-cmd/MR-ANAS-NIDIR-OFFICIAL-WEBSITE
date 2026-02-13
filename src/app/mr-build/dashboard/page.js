@@ -255,7 +255,7 @@ export default function BuildDashboard() {
                                                     <GitBranch size={14} /> 1
                                                 </span>
                                                 <span className="meta-item">
-                                                    Updated {new Date(site.updatedAt || Date.now()).toLocaleDateString()}
+                                                    Updated {new Date(site.updatedAt || 0).toLocaleDateString()}
                                                 </span>
                                             </div>
                                         </div>
