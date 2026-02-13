@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { updateProfile, onAuthStateChanged, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Loader from '../../components/Loader';
+import PayPalButton from '../../components/PayPalButton';
 
 export default function AccountClient() {
     const router = useRouter();
@@ -15,6 +16,14 @@ export default function AccountClient() {
     const [userData, setUserData] = useState(null);
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState({ type: '', text: '' });
+    const [showRefuelModal, setShowRefuelModal] = useState(false);
+    const [selectedPack, setSelectedPack] = useState(null);
+
+    const fuelPacks = [
+        { id: 'scout', name: 'Scout Pack', credits: 50, price: 2.99, desc: 'Entry-level neural boost.' },
+        { id: 'engine', name: 'Engine Pack', credits: 200, price: 9.99, desc: 'Power for the dedicated builder.' },
+        { id: 'titan', name: 'Titan Pack', credits: 1000, price: 39.99, desc: 'Infinite scale for AI masterminds.' }
+    ];
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (u) => {
@@ -61,6 +70,28 @@ export default function AccountClient() {
             setMsg({ type: 'success', text: 'Password reset email sent to ' + user.email });
         } catch (err) {
             setMsg({ type: 'error', text: err.message });
+        }
+    };
+
+    const handleRefuelSuccess = async (packId) => {
+        const pack = fuelPacks.find(p => p.id === packId);
+        if (!pack) return;
+
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                aiCredits: increment(pack.credits)
+            });
+            setShowRefuelModal(false);
+            setSelectedPack(null);
+            setMsg({ type: 'success', text: `Successfully refueled with ${pack.credits} Neural Credits!` });
+            
+            // Re-fetch user data to sync UI
+            const snap = await getDoc(userRef);
+            if (snap.exists()) setUserData(snap.data());
+        } catch (err) {
+            console.error("Refuel error:", err);
+            setMsg({ type: 'error', text: 'Payment successful but failed to update balance. Please contact support.' });
         }
     };
 
@@ -123,7 +154,13 @@ export default function AccountClient() {
                                 <div className="stat-val">{(userData.storageUsed || 0) / 1024} MB</div>
                                 <div className="progress-bar"><div style={{width: '5%'}}></div></div>
                             </div>
-                            <div className="card glass stat-card">
+                             <div className="card glass stat-card fuel-card">
+                                <h3>Neural Credits</h3>
+                                <div className="stat-val credits">{userData.aiCredits !== undefined ? userData.aiCredits : (userData.plan === 'pro' ? 500 : 50)}</div>
+                                <p>Available for NEX AI Engine</p>
+                                <button className="refuel-btn" onClick={() => setShowRefuelModal(true)}>Refuel Now</button>
+                            </div>
+                             <div className="card glass stat-card">
                                 <h3>Security Status</h3>
                                 <div className="stat-val safe">Protected</div>
                                 <p>2-Step Verification is off</p>
@@ -274,6 +311,43 @@ export default function AccountClient() {
                         </div>
                     )}
                 </div>
+
+                {/* Refuel Modal */}
+                {showRefuelModal && (
+                    <div className="modal-overlay" onClick={() => setShowRefuelModal(false)}>
+                        <div className="refuel-modal glass" onClick={e => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h2>RECHARGE NEURAL FUEL</h2>
+                                <button className="close-btn" onClick={() => setShowRefuelModal(false)}>×</button>
+                            </div>
+                            
+                            <div className="pack-list">
+                                {fuelPacks.map(pack => (
+                                    <div key={pack.id} className={`pack-card ${selectedPack === pack.id ? 'selected' : ''}`} onClick={() => setSelectedPack(pack.id)}>
+                                        <div className="pack-info">
+                                            <h3>{pack.name}</h3>
+                                            <p>{pack.desc}</p>
+                                        </div>
+                                        <div className="pack-price">
+                                            <div className="credits">+{pack.credits}</div>
+                                            <div className="cost">${pack.price}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {selectedPack && (
+                                <div className="payment-gateway">
+                                    <div className="payment-label">SECURE CHECKOUT:</div>
+                                    <PayPalButton 
+                                        amount={fuelPacks.find(p => p.id === selectedPack).price.toString()} 
+                                        onSuccess={() => handleRefuelSuccess(selectedPack)} 
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </main>
 
             <style jsx>{`
@@ -372,6 +446,21 @@ export default function AccountClient() {
                 .modern-input:focus { border-color: #00f0ff; outline: none; }
                 .btn-arrow { background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer; }
 
+                .fuel-card { border-color: rgba(0, 240, 255, 0.3); }
+                .stat-val.credits { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
+                .refuel-btn {
+                    margin-top: 15px;
+                    padding: 8px 16px;
+                    background: rgba(0, 240, 255, 0.1);
+                    border: 1px solid #00f0ff;
+                    color: #00f0ff;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 0.8rem;
+                    transition: 0.2s;
+                }
+                .refuel-btn:hover { background: #00f0ff; color: #000; }
+
                 .avatar-large {
                     width: 60px; height: 60px; background: #00f0ff; color: #000;
                     border-radius: 50%; display: flex; alignItems: center; justifyContent: center;
@@ -387,6 +476,37 @@ export default function AccountClient() {
                 }
                 .status-banner.success { color: #00ff88; border-color: #00ff88; }
                 .status-banner.error { color: #ff5555; border-color: #ff5555; }
+
+                .modal-overlay {
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+                    display: flex; align-items: center; justify-content: center; z-index: 1000;
+                }
+                .refuel-modal {
+                    width: 480px; max-width: 95%; padding: 40px; border-radius: 24px;
+                    border: 1px solid rgba(0, 240, 255, 0.3);
+                }
+                .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                .modal-header h2 { font-family: var(--font-orbitron); font-size: 1.1rem; letter-spacing: 2px; color: #00f0ff; }
+                .close-btn { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; opacity: 0.5; }
+                
+                .pack-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; }
+                .pack-card {
+                    display: flex; justify-content: space-between; align-items: center;
+                    padding: 16px 20px; border-radius: 12px; background: rgba(255,255,255,0.03);
+                    border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s;
+                }
+                .pack-card:hover { border-color: #00f0ff; background: rgba(0, 240, 255, 0.05); }
+                .pack-card.selected { border-color: #00f0ff; background: rgba(0, 240, 255, 0.1); box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
+                
+                .pack-info h3 { font-size: 1rem; margin-bottom: 4px; }
+                .pack-info p { font-size: 0.8rem; opacity: 0.5; }
+                .pack-price { text-align: right; }
+                .pack-price .credits { color: #00f0ff; font-weight: 800; font-size: 1.1rem; }
+                .pack-price .cost { font-size: 0.9rem; font-weight: 700; opacity: 0.8; }
+
+                .payment-gateway { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; }
+                .payment-label { text-align: center; font-size: 0.7rem; letter-spacing: 1.5px; opacity: 0.5; margin-bottom: 15px; font-weight: 700; }
 
                 @media (max-width: 768px) {
                     .account-shell { flex-direction: column; }

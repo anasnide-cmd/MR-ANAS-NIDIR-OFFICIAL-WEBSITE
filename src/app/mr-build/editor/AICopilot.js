@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Send, Bot, User, ChevronRight, Mic, Volume2, VolumeX, Paperclip, X } from 'lucide-react';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
-import { db } from '../../../lib/firebase'; // Added db import
-import { doc, getDoc } from 'firebase/firestore'; // Added firestore imports
+import { db, auth } from '../../../lib/firebase'; // Added db and auth import
+import { doc, getDoc, onSnapshot } from 'firebase/firestore'; // Added firestore imports
+import { onAuthStateChanged } from 'firebase/auth'; // Added auth import
 
 export default function AICopilot({ siteData, onCodeUpdate }) {
   const [messages, setMessages] = useState([
@@ -29,6 +30,25 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
   // Model State
   const [selectedModel, setSelectedModel] = useState('openai/gpt-4o-mini');
   const [models, setModels] = useState([]); // Dynamic models
+  const [user, setUser] = useState(null);
+  const [aiCredits, setAiCredits] = useState(null);
+
+  // Auth & Credit Sync
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (u) => {
+        setUser(u);
+        if (u) {
+            // Real-time credit listener
+            const unsubCredits = onSnapshot(doc(db, 'users', u.uid), (snap) => {
+                if (snap.exists()) {
+                    setAiCredits(snap.data().aiCredits);
+                }
+            });
+            return () => unsubCredits();
+        }
+    });
+    return () => unsubAuth();
+  }, []);
 
   // Fetch Models from Admin Config
   useEffect(() => {
@@ -230,9 +250,20 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
                         return acc;
                     }, {}) : {}
                 },
-                model: selectedModel 
+                model: selectedModel,
+                userId: user?.uid
             })
         });
+
+        if (res.status === 402) {
+            const errData = await res.json();
+            if (errData.action === 'OUT_OF_FUEL') {
+                if (confirm(errData.message)) {
+                    router.push('/mr-build/subscription');
+                }
+                return;
+            }
+        }
 
         if (!res.ok) throw new Error(await res.text());
 
@@ -302,6 +333,12 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
           <h2 className="title">NEX AI ARCT</h2>
         </div>
         <div className="header-controls">
+            {aiCredits !== null && (
+                <div className="fuel-gauge" title="Neural Fuel (Credits)">
+                    <div className="gauge-icon">⛽</div>
+                    <span className="gauge-val">{aiCredits}</span>
+                </div>
+            )}
             <select 
                 value={selectedModel} 
                 onChange={(e) => setSelectedModel(e.target.value)}
@@ -466,6 +503,21 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
             background: #1a1a20;
             color: #fff;
         }
+
+        .fuel-gauge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #00f0ff;
+            cursor: help;
+        }
+        .gauge-icon { font-size: 10px; }
 
         .brand {
             display: flex;

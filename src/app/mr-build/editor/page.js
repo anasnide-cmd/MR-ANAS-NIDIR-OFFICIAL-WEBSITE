@@ -101,7 +101,30 @@ function EditorContent() {
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
-    // Load Data & Migrate
+    // Load Template Logic
+    useEffect(() => {
+        const templateId = searchParams.get('template');
+        const isNew = searchParams.get('new') === 'true';
+
+        if (isNew && templateId) {
+            const fetchTemplate = async () => {
+                try {
+                    const tempRef = doc(db, 'system_templates', templateId);
+                    const snap = await getDoc(tempRef);
+                    if (snap.exists()) {
+                        setSiteData(prev => ({
+                            ...prev,
+                            files: { ...prev.files, ...snap.data().files }
+                        }));
+                    }
+                } catch (err) {
+                    console.error("Failed to load template:", err);
+                }
+            };
+            fetchTemplate();
+        }
+    }, [searchParams]);
+
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (u) => {
             if (!u) { router.push('/mr-build/login'); return; }
@@ -520,6 +543,15 @@ function EditorContent() {
                                                             </head>
                                                             <body>
                                                                 ${siteData.files['index.html']?.content || ''}
+                                                                
+                                                                <!-- Monetization Injection -->
+                                                                ${siteData.monetization?.enabled && siteData.monetization?.publisherId ? `
+                                                                    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${siteData.monetization.publisherId}" crossorigin="anonymous"></script>
+                                                                    <div id="ai-ad-slot" style="margin: 20px auto; padding: 20px; background: rgba(0,240,255,0.05); border: 1px dashed #00f0ff; color: #00f0ff; text-align: center; border-radius: 8px; font-family: sans-serif; font-size: 12px;">
+                                                                        <div style="font-weight: bold; margin-bottom: 5px;">[ NEX AD NETWORK SLOT ]</div>
+                                                                        <div>Monetization Active: ${siteData.monetization.publisherId}</div>
+                                                                    </div>
+                                                                ` : ''}
                                                                 
                                                                 <!-- Console Hijack -->
                                                                 <script>

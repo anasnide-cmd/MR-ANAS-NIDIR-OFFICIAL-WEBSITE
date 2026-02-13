@@ -20,7 +20,8 @@ import {
     Search,
     Code,
     Layout,
-    ChevronDown
+    ChevronDown,
+    X
 } from 'lucide-react';
 
 export default function BuildDashboard() {
@@ -28,6 +29,8 @@ export default function BuildDashboard() {
     const [user, setUser] = useState(null);
     const [sites, setSites] = useState([]);
     const [userLimit, setUserLimit] = useState(1);
+    const [unlockedTemplates, setUnlockedTemplates] = useState([]);
+    const [showNewModal, setShowNewModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('repositories'); // 'repositories', 'stars', 'projects'
@@ -48,6 +51,7 @@ export default function BuildDashboard() {
 
                     if (userDoc.exists()) {
                         setUserLimit(userDoc.data().siteLimit || 1);
+                        setUnlockedTemplates(userDoc.data().unlockedAssets || []);
                         await setDoc(userRef, profileUpdate, { merge: true });
                     } else {
                         await setDoc(userRef, profileUpdate);
@@ -75,7 +79,63 @@ export default function BuildDashboard() {
             }
             return;
         }
-        router.push('/mr-build/editor?new=true'); 
+        setShowNewModal(true); 
+    };
+
+    const startFromScratch = () => {
+        router.push('/mr-build/editor?new=true');
+    };
+
+    const startFromTemplate = (templateId) => {
+        router.push(`/mr-build/editor?new=true&template=${templateId}`);
+    };
+
+    const toggleMonetization = async (siteIdx) => {
+        const site = displaySites[siteIdx];
+        const newEnabled = !site.monetization?.enabled;
+        
+        try {
+            const siteRef = doc(db, 'user_sites', site.id);
+            await updateDoc(siteRef, {
+                'monetization.enabled': newEnabled,
+                updatedAt: new Date().toISOString()
+            });
+            // Local update for immediate feedback
+            const updatedSites = [...sites];
+            const originalIdx = updatedSites.findIndex(s => s.id === site.id);
+            if (originalIdx !== -1) {
+                updatedSites[originalIdx].monetization = {
+                    ...updatedSites[originalIdx].monetization,
+                    enabled: newEnabled
+                };
+                setSites(updatedSites);
+            }
+        } catch (err) {
+            console.error("Failed to toggle monetization:", err);
+        }
+    };
+
+    const updatePublisherId = async (siteIdx, pubId) => {
+        const site = displaySites[siteIdx];
+        try {
+            const siteRef = doc(db, 'user_sites', site.id);
+            await updateDoc(siteRef, {
+                'monetization.publisherId': pubId,
+                updatedAt: new Date().toISOString()
+            });
+            // Local update
+            const updatedSites = [...sites];
+            const originalIdx = updatedSites.findIndex(s => s.id === site.id);
+            if (originalIdx !== -1) {
+                updatedSites[originalIdx].monetization = {
+                    ...updatedSites[originalIdx].monetization,
+                    publisherId: pubId
+                };
+                setSites(updatedSites);
+            }
+        } catch (err) {
+            console.error("Failed to update publisher ID:", err);
+        }
     };
 
     if (loading && !user) return <Loader text="Initializing Nexus Interface..." />; 
@@ -242,9 +302,12 @@ export default function BuildDashboard() {
                                                         {site.name || site.title || 'untitled-repo'}
                                                     </Link>
                                                 </h3>
-                                                <span className="repo-visibility">
-                                                    {site.status === 'public' ? 'Public' : 'Private'}
-                                                </span>
+                                                <div className="repo-badges">
+                                                    {site.monetization?.enabled && <span className="badge-monetized">💰 Monetized</span>}
+                                                    <span className="repo-visibility">
+                                                        {site.status === 'public' ? 'Public' : 'Private'}
+                                                    </span>
+                                                </div>
                                             </div>
                                             <p className="repo-desc">
                                                 {site.description || 'No description provided.'}
@@ -265,7 +328,27 @@ export default function BuildDashboard() {
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="repo-stats-graph">
+                                        <div className="repo-actions-panel">
+                                            <div className="monetization-control">
+                                                <div className="toggle-row">
+                                                    <label className="toggle-label">Enable Ads</label>
+                                                    <button 
+                                                        className={`toggle-btn ${site.monetization?.enabled ? 'on' : 'off'}`}
+                                                        onClick={() => toggleMonetization(displaySites.indexOf(site))}
+                                                    >
+                                                        <div className="toggle-knob"></div>
+                                                    </button>
+                                                </div>
+                                                {site.monetization?.enabled && (
+                                                    <input 
+                                                        className="pub-id-input"
+                                                        placeholder="pub-00000000"
+                                                        value={site.monetization?.publisherId || ''}
+                                                        onChange={(e) => updatePublisherId(displaySites.indexOf(site), e.target.value)}
+                                                        title="Enter your AdSense Publisher ID"
+                                                    />
+                                                )}
+                                            </div>
                                              <div className="activity-bar"></div>
                                         </div>
                                     </div>
@@ -281,6 +364,46 @@ export default function BuildDashboard() {
                         </div>
                     </div>
                 </div>
+
+                {/* New Repo Modal */}
+                {showNewModal && (
+                    <div className="new-modal-overlay" onClick={() => setShowNewModal(false)}>
+                        <div className="new-modal glass" onClick={e => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h2>INITIALIZE NEW SECTOR</h2>
+                                <button className="close-btn" onClick={() => setShowNewModal(false)}><X size={18}/></button>
+                            </div>
+                            
+                            <div className="modal-options">
+                                <button className="option-card glass primary" onClick={startFromScratch}>
+                                    <div className="option-icon">📄</div>
+                                    <div className="option-info">
+                                        <h3>Blank Slate</h3>
+                                        <p>Start with a clean NEX engine core.</p>
+                                    </div>
+                                </button>
+                                
+                                <div className="templates-section">
+                                    <h4>UNLOCKED TEMPLATES</h4>
+                                    {unlockedTemplates.length === 0 ? (
+                                        <div className="no-templates">
+                                            <p>No templates unlocked. Visit the <Link href="/mr-shop" className="link-shop">Marketplace</Link> to upgrade your arsenal.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="template-grid">
+                                            {unlockedTemplates.map(tid => (
+                                                <button key={tid} className="template-card glass" onClick={() => startFromTemplate(tid)}>
+                                                    <div className="template-id">{tid.replace(/_/g, ' ').toUpperCase()}</div>
+                                                    <span className="launch-text">LAUNCH →</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
 
             <style jsx>{`
@@ -301,6 +424,45 @@ export default function BuildDashboard() {
                     color: var(--text-main);
                     font-family: 'Inter', sans-serif;
                 }
+
+                .new-modal-overlay {
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+                    display: flex; align-items: center; justify-content: center; z-index: 1000;
+                }
+                .new-modal {
+                    width: 500px; max-width: 90%; padding: 40px; border-radius: 20px;
+                    border: 1px solid rgba(0, 240, 255, 0.3);
+                }
+                .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                .modal-header h2 { font-family: var(--font-orbitron); font-size: 1.2rem; color: #00f0ff; letter-spacing: 2px; }
+                .close-btn { background: none; border: none; color: #fff; cursor: pointer; opacity: 0.5; transition: 0.2s; }
+                .close-btn:hover { opacity: 1; }
+                
+                .modal-options { display: flex; flex-direction: column; gap: 24px; }
+                .option-card {
+                    display: flex; gap: 20px; align-items: center; padding: 20px; border-radius: 12px;
+                    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+                    text-align: left; transition: 0.3s; cursor: pointer; width: 100%; color: #fff;
+                }
+                .option-card:hover { border-color: #00f0ff; background: rgba(0, 240, 255, 0.05); transform: translateY(-3px); }
+                .option-icon { font-size: 2rem; }
+                .option-info h3 { font-size: 1.1rem; margin-bottom: 4px; }
+                .option-info p { font-size: 0.85rem; opacity: 0.6; }
+                
+                .templates-section h4 { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1.5px; margin-bottom: 16px; }
+                .template-grid { display: grid; gap: 12px; }
+                .template-card {
+                    display: flex; justify-content: space-between; align-items: center; padding: 16px;
+                    border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);
+                    background: rgba(0,0,0,0.2); transition: 0.2s; color: #fff;
+                }
+                .template-card:hover { border-color: #00f0ff; background: rgba(0, 240, 255, 0.1); }
+                .template-id { font-weight: 700; font-size: 0.85rem; letter-spacing: 1px; }
+                .launch-text { font-size: 0.75rem; color: #00f0ff; font-weight: 900; }
+                
+                .link-shop { color: #00f0ff; text-decoration: none; font-weight: 700; }
+                .link-shop:hover { text-decoration: underline; }
 
                 /* Header */
                 .nebula-header {

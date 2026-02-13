@@ -59,6 +59,7 @@ export default function NexAI() {
     const [isListening, setIsListening] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(false); 
     const [isSpeaking, setIsSpeaking] = useState(false);
+    const [aiCredits, setAiCredits] = useState(null);
 
     // Chat History State
     const [chatHistory, setChatHistory] = useState([]);
@@ -96,7 +97,13 @@ export default function NexAI() {
                     });
                     setChatHistory(chats);
                 });
-                return () => unsubChats();
+                // Credit listener
+                const unsubCredits = onSnapshot(doc(db, 'users', currentUser.uid), (snap) => {
+                    if (snap.exists()) {
+                        setAiCredits(snap.data().aiCredits);
+                    }
+                });
+                return () => { unsubChats(); unsubCredits(); };
             } else {
                 setChatHistory([]);
                 setMessages([]);
@@ -348,9 +355,20 @@ export default function NexAI() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     messages: newMessages.filter(m => m.role !== 'system'),
-                    model: selectedModel
+                    model: selectedModel,
+                    userId: user.uid
                 })
             });
+
+            if (res.status === 402) {
+                const errData = await res.json();
+                if (errData.action === 'OUT_OF_FUEL') {
+                    if (confirm(errData.message)) {
+                        window.location.href = '/mr-build/subscription';
+                    }
+                    return;
+                }
+            }
 
             if (!res.ok) throw new Error(await res.text());
 
@@ -598,6 +616,12 @@ export default function NexAI() {
                     
                     {/* Voice Controls Header */}
                     <div className="voice-controls">
+                        {aiCredits !== null && (
+                            <div className="fuel-gauge" title="Neural Fuel (Credits)">
+                                <span className="fuel-icon">⛽</span>
+                                <span className="fuel-val">{aiCredits}</span>
+                            </div>
+                        )}
                         <button 
                             className={`icon-btn ${voiceEnabled ? 'active' : ''}`}
                             onClick={toggleVoice}

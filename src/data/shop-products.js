@@ -46,5 +46,35 @@ export const products = [
         category: "Wearables",
         image: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=1000&q=80",
         desc: "Augmented reality overlays for daily life."
+    },
+    {
+        id: 7,
+        name: "Cyberpunk UI Kit",
+        price: 19.99,
+        category: "Templates",
+        type: "TEMPLATE",
+        templateId: "cyberpunk_v1",
+        image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1000&q=80",
+        desc: "High-voltage aesthetic for your next digital rebellion."
+    },
+    {
+        id: 8,
+        name: "Minimalist SaaS",
+        price: 14.99,
+        category: "Templates",
+        type: "TEMPLATE",
+        templateId: "minimal_saas_v1",
+        image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80",
+        desc: "Clean, conversion-focused layout for modern software."
+    },
+    {
+        id: 9,
+        name: "Neural Dashboard",
+        price: 24.99,
+        category: "Templates",
+        type: "TEMPLATE",
+        templateId: "neural_dash_v1",
+        image: "https://images.unsplash.com/photo-1551288049-bbbda536ad41?auto=format&fit=crop&w=1000&q=80",
+        desc: "Advanced data visualization kit for AI-driven platforms."
     }
 ];

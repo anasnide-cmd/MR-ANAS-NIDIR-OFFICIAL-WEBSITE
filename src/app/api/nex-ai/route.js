@@ -16,7 +16,25 @@ export async function POST(req) {
             return new NextResponse("Forbidden: Invalid Origin", { status: 403 });
         }
 
-        const { messages, model, currentContext, mode, apiKey: clientApiKey } = await req.json();
+        const { messages, model, currentContext, mode, apiKey: clientApiKey, userId } = await req.json();
+
+        // --- SECURITY: CREDIT CHECK ---
+        if (!userId) {
+            return new NextResponse(JSON.stringify({ message: "Authentication required for AI access.", action: "NONE" }), { status: 401 });
+        }
+
+        const userRef = doc(db, 'users', userId);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.data() || {};
+        const credits = userData.aiCredits !== undefined ? userData.aiCredits : (userData.plan === 'pro' ? 500 : 50);
+
+        if (credits <= 0) {
+            return new NextResponse(JSON.stringify({ 
+                message: "Neural Engine Offline: Out of Fuel. Please refuel your credits to continue.", 
+                action: "OUT_OF_FUEL",
+                errorType: "OUT_OF_FUEL"
+            }), { status: 402 });
+        }
 
         let apiKey = process.env.OPENROUTER_API_KEY || clientApiKey;
         let usedSource = process.env.OPENROUTER_API_KEY ? 'env' : (clientApiKey ? 'client-provided' : 'none'); 
@@ -150,7 +168,16 @@ export async function POST(req) {
         }
 
         const data = await response.json();
-        return NextResponse.json(JSON.parse(data.choices[0].message.content));
+        const aiResponse = JSON.parse(data.choices[0].message.content);
+
+        // --- DECREMENT CREDITS ---
+        const { updateDoc } = await import('firebase/firestore');
+        await updateDoc(userRef, {
+            aiCredits: credits - 1,
+            lastAiUsage: new Date().toISOString()
+        });
+
+        return NextResponse.json(aiResponse);
 
     } catch (error) {
         console.error("NEX AI Error:", error);

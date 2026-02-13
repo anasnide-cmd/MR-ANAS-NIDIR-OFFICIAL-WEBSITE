@@ -1,11 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { products } from '../../data/shop-products';
+import { auth, db } from '../../lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import PayPalButton from '../PayPalButton';
 
 export default function ShopClient() {
     const [cart, setCart] = useState([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [user, setUser] = useState(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    useEffect(() => {
+        const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+        return () => unsub();
+    }, []);
 
     const addToCart = (product) => {
         setCart(prev => {
@@ -19,6 +30,30 @@ export default function ShopClient() {
     };
 
     const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+
+    const handlePaymentSuccess = async (details) => {
+        setIsProcessing(true);
+        try {
+            // Check for templates in cart
+            const templates = cart.filter(item => item.type === 'TEMPLATE');
+            
+            if (templates.length > 0) {
+                const userRef = doc(db, 'users', user.uid);
+                await updateDoc(userRef, {
+                    unlockedAssets: arrayUnion(...templates.map(t => t.templateId))
+                });
+            }
+
+            alert("Purchase successful! Your digital assets have been synchronized with your NEX profile.");
+            setCart([]);
+            setIsCartOpen(false);
+        } catch (err) {
+            console.error("Fulfillment error:", err);
+            alert("Payment recorded but asset fulfillment failed. Please contact support.");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
     return (
         <div className="mr-shop-container">
@@ -83,9 +118,16 @@ export default function ShopClient() {
                 <div className="cart-footer">
                     <div className="total-row">
                         <span>Total</span>
-                        <span className="total-amount">${cartTotal}</span>
+                        <span className="total-amount">${cartTotal.toFixed(2)}</span>
                     </div>
-                    <button className="checkout-btn glow-blue">Checkout Now</button>
+
+                    {!user ? (
+                        <p className="auth-notice">Please login to purchase items.</p>
+                    ) : cart.length > 0 ? (
+                        <div className="payment-wrapper">
+                            <PayPalButton amount={cartTotal.toFixed(2)} onSuccess={handlePaymentSuccess} />
+                        </div>
+                    ) : null}
                 </div>
             </div>
 
@@ -199,6 +241,10 @@ export default function ShopClient() {
                 .cart-item { display: flex; justify-content: space-between; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
                 .cart-footer { margin-top: 20px; }
                 .total-row { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; }
+                
+                .auth-notice { text-align: center; font-size: 0.8rem; color: #ff4d4d; margin-top: 10px; font-weight: 700; }
+                .payment-wrapper { margin-top: 10px; }
+
                 .checkout-btn {
                     width: 100%;
                     padding: 15px;
