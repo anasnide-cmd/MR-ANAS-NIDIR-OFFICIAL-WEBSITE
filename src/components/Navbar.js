@@ -282,6 +282,18 @@ export default function Navbar() {
               ))}
             </nav>
 
+
+
+            {/* Mobile Socials */}
+            <div className="mobile-social-section">
+              <a href="https://tiktok.com/@anasnide" target="_blank" rel="noopener noreferrer" className="mobile-social-link">
+                <span>🎵 TikTok</span>
+              </a>
+              <a href="https://www.instagram.com/anasnide" target="_blank" rel="noopener noreferrer" className="mobile-social-link">
+                <span>📸 Instagram</span>
+              </a>
+            </div>
+
             {/* Mobile CTA */}
             <div className="mobile-cta-section">
               <Link
@@ -780,6 +792,8 @@ export default function Navbar() {
         .mobile-menu-container.open {
           pointer-events: all;
           visibility: visible;
+          background: rgba(0, 0, 0, 0.6); /* Dim background */
+          backdrop-filter: blur(4px);
         }
 
         .mobile-menu-glass {
@@ -959,6 +973,41 @@ export default function Navbar() {
           opacity: 0.5;
         }
 
+        .mobile-nav-card:hover .card-glow {
+          opacity: 0.5;
+        }
+
+        /* Mobile Socials */
+        .mobile-social-section {
+          padding: 0 2.5rem 2rem 2.5rem;
+          display: flex;
+          gap: 1rem;
+        }
+
+        .mobile-social-link {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          padding: 1rem;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          color: rgba(255, 255, 255, 0.6);
+          text-decoration: none;
+          font-weight: 600;
+          font-size: 0.9rem;
+          transition: all 0.3s ease;
+        }
+
+        .mobile-social-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
         /* Mobile CTA */
         .mobile-cta-section {
           padding: 2.5rem;
@@ -1083,15 +1132,22 @@ export default function Navbar() {
           .mobile-nav-grid {
             grid-template-columns: 1fr;
             gap: 0.75rem;
-            padding: 2rem;
+            padding: 1.5rem; /* Reduced from 2rem */
           }
           
           .mobile-menu-header {
-            padding: 2rem;
+            padding: 1.5rem; /* Reduced from 2rem */
           }
           
-          .mobile-cta-section {
-            padding: 2rem;
+          .mobile-cta-section,
+          .mobile-social-section {
+            padding: 1.5rem; /* Reduced from 2rem */
+          }
+
+          .card-label {
+             font-size: 0.85rem;
+             word-break: break-word; /* Prevent overflow */
+             hyphens: auto;
           }
         }
 
@@ -1110,7 +1166,33 @@ export default function Navbar() {
           }
           
           .mobile-nav-link {
-            padding: 1.5rem 1rem;
+            padding: 1.25rem 0.75rem; /* Further reduced padding */
+          }
+          
+          .mobile-nav-grid {
+             grid-template-columns: repeat(2, 1fr); /* Keep 2 cols even on small screens if possible, or 1 if too small. User said "navcard frame", implied grid. */
+             /* Actually, previous css had 1fr for max-width 768px. If user sees overflow, maybe they want 2 cols? Or maybe 1 col is too wide? 
+                Wait, step 152 shows:
+                @media (max-width: 768px) {
+                  .mobile-nav-grid {
+                    grid-template-columns: 1fr;
+                  }
+                }
+                If it's 1 column, overflow is less likely unless padding is huge.
+                However, in step 153, the default .mobile-nav-grid (line 858) is `grid-template-columns: repeat(2, 1fr);`.
+                The media query at 768px overrides it to 1fr.
+                If the user is on a phone (likely < 768px), they see 1 column.
+                If the content is getting out, maybe the padding is too large?
+                Or maybe the "navcard frame" refers to the card itself.
+                Let's stick to reducing padding and ensuring text wrap.
+             */
+             grid-template-columns: repeat(2, 1fr); /* Revert to 2 cols for better density, or keep 1? 
+                If 2 columns on 480px (mobile portrait), 480/2 = 240px minus gaps/padding.
+                240px is tight. 
+                Let's keep the existing 768px override (1fr) but maybe the user *wants* 2 columns?
+                No, the issue is "content out of frame". 1 column avoids this better.
+                I will assume the issue is simply lack of space due to padding.
+             */
           }
         }
 

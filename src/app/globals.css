@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&display=swap');
 
+@import "tailwindcss";
+
 :root {
   /* Core Colors - HSL for harmony */
   --hue: 184;
@@ -23,6 +25,13 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --transition-ultra: all 0.8s var(--ease-out-expo);
   --transition-smooth: all 0.4s var(--ease-out-expo);
+  
+  /* Responsive Defaults */
+  --section-padding: 100px;
+}
+
+html {
+  -webkit-text-size-adjust: 100%; /* Prevent font scaling in landscape */
 }
 
 * {
@@ -141,6 +150,7 @@ h1, h2, h3, .orbitron {
 
 /* Hyper-refraction Glassmorphism */
 .glass {
+  background: var(--bg-soft); /* Fallback for no-backdrop-filter */
   background: var(--surface);
   backdrop-filter: var(--refraction);
   -webkit-backdrop-filter: var(--refraction);

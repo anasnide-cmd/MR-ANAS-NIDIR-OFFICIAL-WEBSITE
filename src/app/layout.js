@@ -70,6 +70,7 @@ export default function RootLayout({ children }) {
       textColor: '#fff',
       links: [
         { label: 'Home', href: '/', ariaLabel: 'Go to Home' },
+        { label: 'Portfolio', href: '/portfolio', ariaLabel: 'View Portfolio' },
         { label: 'Projects', href: '/#projects', ariaLabel: 'View Projects' },
         { label: 'Products', href: '/#products', ariaLabel: 'View Products' }
       ]

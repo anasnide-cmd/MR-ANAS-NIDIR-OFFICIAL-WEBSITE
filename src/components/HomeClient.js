@@ -65,11 +65,15 @@ export default function HomeClient() {
     };
     fetchSettings();
 
-    const handleMouseMove = (e) => {
-      setMousePos({
-        x: (e.clientX / window.innerWidth - 0.5) * 20,
-        y: (e.clientY / window.innerHeight - 0.5) * 20,
-      });
+
+      const handleMouseMove = (e) => {
+        // Disable parallax on mobile/tablet to prevent jitters
+        if (window.innerWidth < 1024) return;
+
+        setMousePos({
+          x: (e.clientX / window.innerWidth - 0.5) * 20,
+          y: (e.clientY / window.innerHeight - 0.5) * 20,
+        });
 
       // Localized mouse tracking for cards
       const cards = document.querySelectorAll('.project-card, .hub-card, .price-card');
@@ -628,7 +632,7 @@ export default function HomeClient() {
         
         .pricing-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
           gap: 30px;
           margin-top: 60px;
         }
@@ -680,7 +684,7 @@ export default function HomeClient() {
 
         .signal-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
           gap: 30px;
           margin-top: 50px;
         }
@@ -977,7 +981,7 @@ export default function HomeClient() {
         /* Project Cards 3D */
         .project-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
           gap: 30px;
         }
         .project-card {
@@ -1081,7 +1085,7 @@ export default function HomeClient() {
         /* Products Grid */
         .asset-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
           gap: 20px;
           margin-top: 50px;
         }
