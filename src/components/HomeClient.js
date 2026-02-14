@@ -3,8 +3,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+
 import ShinyText from './ReactBits/ShinyText';
 import RetroGrid from './ReactBits/RetroGrid';
+import CardNav from './ReactBits/CardNav';
+import TiltedCard from './ReactBits/TiltedCard';
 import { db } from '../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import ActivityFeed from './ActivityFeed';
@@ -48,6 +51,39 @@ export default function HomeClient() {
     ]
   });
 
+  const navItems = [
+    {
+      label: 'Main',
+      bgColor: '#111',
+      textColor: '#fff',
+      links: [
+        { label: 'Home', href: '/', ariaLabel: 'Go to Home' },
+        { label: 'Portfolio', href: '/portfolio', ariaLabel: 'View Portfolio' },
+        { label: 'Projects', href: '/#projects', ariaLabel: 'View Projects' },
+        { label: 'Products', href: '/#products', ariaLabel: 'View Products' }
+      ]
+    },
+    {
+      label: 'Content',
+      bgColor: '#161616',
+      textColor: '#00f0ff',
+      links: [
+        { label: 'SavoirPedia', href: '/savoirpedia', ariaLabel: 'Read SavoirPedia' },
+        { label: 'Mr Build', href: '/mr-build', ariaLabel: 'Mr Build Dashboard' },
+        { label: 'Games', href: '/mr-games', ariaLabel: 'Mr Arcade Games' }
+      ]
+    },
+    {
+      label: 'Socials',
+      bgColor: '#00f0ff',
+      textColor: '#000',
+      links: [
+        { label: 'Instagram', href: 'https://www.instagram.com/anasnide', ariaLabel: 'Instagram' },
+        { label: 'TikTok', href: 'https://tiktok.com/@anasnide', ariaLabel: 'TikTok' }
+      ]
+    }
+  ];
+
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -64,8 +100,10 @@ export default function HomeClient() {
       }
     };
     fetchSettings();
+  }, []);
 
 
+  useEffect(() => {
       const handleMouseMove = (e) => {
         // Disable parallax on mobile/tablet to prevent jitters
         if (window.innerWidth < 1024) return;
@@ -97,6 +135,7 @@ export default function HomeClient() {
       <NexusCommand />
       <CustomCursor />
       <QuantumCore />
+      <CardNav items={navItems} /> {/* ReactBits Navbar */}
       {/* HERO */}
       <header className="hero" id="home">
         <div className="hero-bg">
@@ -172,98 +211,98 @@ export default function HomeClient() {
 
         <div className="project-grid">
           <ScrollReveal direction="left" delay={0.1}>
-            <Link href="/mr-build" className="project-card glass shadow-hover no-underline">
-              <MagneticWrapper strength={0.1} range={100}>
-                <div className="card-top">
-                  <div className="card-icon-wrapper">
-                    <span className="card-icon">🏗️</span>
-                    <div className="icon-glow"></div>
+            <TiltedCard tiltStrength={15} glareOpacity={0.3} scaleOnHover={1.02} className="project-card-wrapper">
+              <Link href="/mr-build" className="project-card glass shadow-hover no-underline">
+                  <div className="card-top">
+                    <div className="card-icon-wrapper">
+                      <span className="card-icon">🏗️</span>
+                      <div className="icon-glow"></div>
+                    </div>
+                    <span className="card-tag">Web Builder</span>
                   </div>
-                  <span className="card-tag">Web Builder</span>
-                </div>
-                <h3>MR BUILD</h3>
-                <p>Deploy high-performance, SEO-optimized websites in seconds. Zero code, total control.</p>
-                <div className="card-footer">
-                  <span className="view-link">LAUNCH ENGINE →</span>
-                </div>
-              </MagneticWrapper>
-            </Link>
+                  <h3>MR BUILD</h3>
+                  <p>Deploy high-performance, SEO-optimized websites in seconds. Zero code, total control.</p>
+                  <div className="card-footer">
+                    <span className="view-link">LAUNCH ENGINE →</span>
+                  </div>
+              </Link>
+            </TiltedCard>
           </ScrollReveal>
 
           <ScrollReveal direction="left" delay={0.2}>
-            <Link href="/mr-search" className="project-card glass shadow-hover no-underline">
-              <MagneticWrapper strength={0.1} range={100}>
-                <div className="card-top">
-                  <div className="card-icon-wrapper">
-                    <span className="card-icon">🔍</span>
-                    <div className="icon-glow"></div>
+            <TiltedCard tiltStrength={15} glareOpacity={0.3} scaleOnHover={1.02} className="project-card-wrapper">
+              <Link href="/mr-search" className="project-card glass shadow-hover no-underline">
+                  <div className="card-top">
+                    <div className="card-icon-wrapper">
+                      <span className="card-icon">🔍</span>
+                      <div className="icon-glow"></div>
+                    </div>
+                    <span className="card-tag">Real-time Search</span>
                   </div>
-                  <span className="card-tag">Real-time Search</span>
-                </div>
-                <h3>MR SEARCH</h3>
-                <p>Next-gen indexing technology for deep-web discovery and instant data retrieval.</p>
-                <div className="card-footer">
-                  <span className="view-link">START SEARCH →</span>
-                </div>
-              </MagneticWrapper>
-            </Link>
+                  <h3>MR SEARCH</h3>
+                  <p>Next-gen indexing technology for deep-web discovery and instant data retrieval.</p>
+                  <div className="card-footer">
+                    <span className="view-link">START SEARCH →</span>
+                  </div>
+              </Link>
+            </TiltedCard>
           </ScrollReveal>
 
           <ScrollReveal direction="left" delay={0.25}>
-            <Link href="/nex-ai" className="project-card glass shadow-hover no-underline">
-              <MagneticWrapper strength={0.1} range={100}>
-                <div className="card-top">
-                  <div className="card-icon-wrapper">
-                    <span className="card-icon">🤖</span>
-                    <div className="icon-glow"></div>
+            <TiltedCard tiltStrength={15} glareOpacity={0.3} scaleOnHover={1.02} className="project-card-wrapper">
+              <Link href="/nex-ai" className="project-card glass shadow-hover no-underline">
+                  <div className="card-top">
+                    <div className="card-icon-wrapper">
+                      <span className="card-icon">🤖</span>
+                      <div className="icon-glow"></div>
+                    </div>
+                    <span className="card-tag">Artificial Intelligence</span>
                   </div>
-                  <span className="card-tag">Artificial Intelligence</span>
-                </div>
-                <h3>NEX AI</h3>
-                <p>Interact with the singularity. Access GPT-4, Claude 3, and Llama 3 in a holographic interface.</p>
-                <div className="card-footer">
-                  <span className="view-link">INITIATE UPLINK →</span>
-                </div>
-              </MagneticWrapper>
-            </Link>
+                  <h3>NEX AI</h3>
+                  <p>Interact with the singularity. Access GPT-4, Claude 3, and Llama 3 in a holographic interface.</p>
+                  <div className="card-footer">
+                    <span className="view-link">INITIATE UPLINK →</span>
+                  </div>
+              </Link>
+            </TiltedCard>
           </ScrollReveal>
 
           <ScrollReveal direction="left" delay={0.3}>
-            <Link href="/mr-shop" className="project-card glass shadow-hover no-underline">
-              <MagneticWrapper strength={0.1} range={100}>
-                <div className="card-top">
-                  <div className="card-icon-wrapper">
-                    <span className="card-icon">🛍️</span>
-                    <div className="icon-glow"></div>
+            <TiltedCard tiltStrength={15} glareOpacity={0.3} scaleOnHover={1.02} className="project-card-wrapper">
+              <Link href="/mr-shop" className="project-card glass shadow-hover no-underline">
+                  <div className="card-top">
+                    <div className="card-icon-wrapper">
+                      <span className="card-icon">🛍️</span>
+                      <div className="icon-glow"></div>
+                    </div>
+                    <span className="card-tag">Marketplace</span>
                   </div>
-                  <span className="card-tag">Marketplace</span>
-                </div>
-                <h3>MR SHOP</h3>
-                <p>A secure digital asset exchange for futuristic tools, templates, and AI models.</p>
-                <div className="card-footer">
-                  <span className="view-link">BROWSE ASSETS →</span>
-                </div>
-              </MagneticWrapper>
-            </Link>
+                  <h3>MR SHOP</h3>
+                  <p>A secure digital asset exchange for futuristic tools, templates, and AI models.</p>
+                  <div className="card-footer">
+                    <span className="view-link">BROWSE ASSETS →</span>
+                  </div>
+              </Link>
+            </TiltedCard>
           </ScrollReveal>
 
           <ScrollReveal direction="left" delay={0.4}>
-            <Link href="/savoirpedia" className="project-card glass shadow-hover no-underline">
-              <MagneticWrapper strength={0.1} range={100}>
-                <div className="card-top">
-                  <div className="card-icon-wrapper">
-                    <span className="card-icon">📚</span>
-                    <div className="icon-glow"></div>
+            <TiltedCard tiltStrength={15} glareOpacity={0.3} scaleOnHover={1.02} className="project-card-wrapper">
+              <Link href="/savoirpedia" className="project-card glass shadow-hover no-underline">
+                  <div className="card-top">
+                    <div className="card-icon-wrapper">
+                      <span className="card-icon">📚</span>
+                      <div className="icon-glow"></div>
+                    </div>
+                    <span className="card-tag">Knowledge Hub</span>
                   </div>
-                  <span className="card-tag">Knowledge Hub</span>
-                </div>
-                <h3>SAVOIRPEDIA</h3>
-                <p>The definitive archive for tech, futurism, and digital sovereignty.</p>
-                <div className="card-footer">
-                  <span className="view-link">OPEN ARCHIVES →</span>
-                </div>
-              </MagneticWrapper>
-            </Link>
+                  <h3>SAVOIRPEDIA</h3>
+                  <p>The definitive archive for tech, futurism, and digital sovereignty.</p>
+                  <div className="card-footer">
+                    <span className="view-link">OPEN ARCHIVES →</span>
+                  </div>
+              </Link>
+            </TiltedCard>
           </ScrollReveal>
         </div>
       </section>

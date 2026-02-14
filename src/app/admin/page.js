@@ -5,6 +5,8 @@ import Loader from '../../components/Loader';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, orderBy, getDocs, limit, where } from 'firebase/firestore';
 import Link from 'next/link';
+import CommandGrid, { GridItem } from '../../components/Admin/CommandGrid';
+import SystemTerminal from '../../components/Admin/SystemTerminal';
 
 export default function AdminDashboard() {
     const [user, setUser] = useState(null);
@@ -18,6 +20,7 @@ export default function AdminDashboard() {
     const [recentSites, setRecentSites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [permissionError, setPermissionError] = useState(false);
+    const [logs, setLogs] = useState([]);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (u) => {
@@ -54,183 +57,194 @@ export default function AdminDashboard() {
 
             // Get recent 5 sites
             setRecentSites(sites.slice(0, 5));
+            
+            // Simulate System Logs
+            setLogs([
+                { timestamp: Date.now(), source: 'NET_SEC', message: 'SCANNING NETWORK TRAFFIC...', type: 'info' },
+                { timestamp: Date.now() - 1000, source: 'AUTH', message: 'ADMIN ACCESS GRANTED', type: 'success' },
+                { timestamp: Date.now() - 2500, source: 'DB_CORE', message: `SYNCED ${usersSnap.size} USER NODES`, type: 'info' },
+                { timestamp: Date.now() - 4000, source: 'SYS', message: 'SYSTEM INTEGRITY: 100%', type: 'success' },
+            ]);
 
         } catch (err) {
             console.error("Error fetching dashboard:", err);
             if (err.code === 'permission-denied') {
                 setPermissionError(true);
             }
+            setLogs(prev => [...prev, { timestamp: Date.now(), source: 'ERR', message: 'ACCESS DENIED: ' + err.message, type: 'error' }]);
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) return <Loader text="Syncing Admin Core..." />;
-    if (!user) return <div className="loading-state">Access Denied</div>;
-    
+    if (loading) return <div className="cia-loading"><div className="loader-text">INITIALIZING COMMAND ACCESS...</div></div>;
+    if (!user) return <div className="cia-loading error">ACCESS DENIED</div>;
+
     // Permission Error Component
     if (permissionError) return (
         <div className="error-state">
             <div className="error-card glass">
-                <h2>🚫 Access Denied</h2>
-                <p>The system refused your connection request.</p>
+                <h2>🚫 SECURITY BREACH DETECTED</h2>
+                <p>UNAUTHORIZED ACCESS ATTEMPT.</p>
                 <div className="troubleshoot">
-                    <h3>SYSTEM OVERRIDE REQUIRED</h3>
-                    <p>To access this control panel, you must manually grant yourself <strong>Admin</strong> privileges in the database.</p>
+                    <h3>MANUAL OVERRIDE REQUIRED</h3>
+                    <p>Grant <strong>Admin</strong> privileges in Firestore to proceed.</p>
                     <ol>
-                        <li>Open Firebase Console -&gt; Firestore</li>
-                        <li>Find collection <code>users</code></li>
-                        <li>Find document matching your UID: <code>{user.uid}</code></li>
-                        <li>Add field: <code>role: &quot;admin&quot;</code></li>
+                        <li>Access Database Console</li>
+                        <li>Update User Node: <code>{user.uid}</code></li>
+                        <li>Set <code>role: "admin"</code></li>
                     </ol>
-                    <button onClick={fetchDashboardData} className="btn glow-blue">RETRY CONNECTION</button>
+                    <button onClick={fetchDashboardData} className="btn-cia">RETRY HANDSHAKE</button>
                 </div>
             </div>
             <style jsx>{`
-                .error-state { height: 80vh; display: flex; align-items: center; justify-content: center; }
-                .error-card { padding: 40px; border: 1px solid #ff3232; border-radius: 20px; max-width: 500px; text-align: center; }
-                h2 { color: #ff3232; margin-bottom: 20px; }
-                .troubleshoot { margin-top: 30px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; text-align: left; }
-                h3 { color: #00f0ff; font-size: 0.9rem; margin-bottom: 10px; letter-spacing: 1px; }
-                ol { margin-left: 20px; color: rgba(255,255,255,0.7); font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px; }
-                code { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-family: monospace; }
-                .btn { cursor: pointer; border: none; }
-                .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); }
-                .glow-blue { box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); background: #00f0ff; color: #000; padding: 10px 20px; border-radius: 8px; font-weight: 700; width: 100%; }
+                .error-state { height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; color: var(--cia-alert); }
+                .error-card { padding: 40px; border: 1px solid var(--cia-alert); background: rgba(255, 0, 0, 0.05); text-align: center; }
+                h2 { margin-bottom: 20px; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; }
+                .btn-cia { background: var(--cia-alert); color: #000; border: none; padding: 15px 30px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+                .btn-cia:hover { background: #fff; }
+                code { color: #fff; background: rgba(255,255,255,0.1); padding: 2px 5px; }
             `}</style>
         </div>
     );
 
     return (
-        <div className="dashboard-overview animate-fade-in">
-            <header className="page-header">
+        <main className="cia-dashboard">
+            <div className="scanline-overlay"></div>
+            
+            <header className="cia-header">
                 <div>
-                    <span className="welcome-tag">SYSTEM OVERVIEW</span>
-                    <h1>Command Center</h1>
-                    <p className="subtitle">System status and key metrics</p>
+                    <h1 className="cia-title">OPTIC-ZERO <span className="sub">COMMAND CENTER</span></h1>
+                    <div className="status-line">
+                        <span className="blink">●</span> SYSTEM ONLINE :: SECURE CONNECTION ESTABLISHED
+                    </div>
                 </div>
-                <div className="header-actions">
-                     <span className="live-indicator">● SYSTEM ONLINE</span>
+                <div className="header-meta">
+                    <span>USER: {user.email}</span>
+                    <span>ID: {user.uid.slice(0, 8)}...</span>
                 </div>
             </header>
 
-            {/* Quick Stats Row */}
-            <div className="stats-grid">
-                <Link href="/admin/users" className="stat-card glass hover-card">
-                    <div className="stat-icon">👥</div>
-                    <div className="stat-info">
-                        <span className="stat-label">Total Users</span>
-                        <span className="stat-value">{stats.totalUsers}</span>
+            <CommandGrid>
+                {/* Stats Row */}
+                <GridItem colSpan={3} title="USER NODES">
+                    <div className="stat-display">
+                        <span className="value">{stats.totalUsers}</span>
+                        <span className="label">REGISTERED AGENTS</span>
                     </div>
-                </Link>
-                <Link href="/admin/sites" className="stat-card glass hover-card">
-                    <div className="stat-icon">🌐</div>
-                    <div className="stat-info">
-                        <span className="stat-label">Total Sites</span>
-                        <span className="stat-value">{stats.totalSites}</span>
+                </GridItem>
+                <GridItem colSpan={3} title="ACTIVE SITES">
+                    <div className="stat-display">
+                        <span className="value cyan">{stats.totalSites}</span>
+                        <span className="label">DEPLOYED PLATFORMS</span>
                     </div>
-                </Link>
-                <Link href="/admin/content" className="stat-card glass hover-card">
-                    <div className="stat-icon">📝</div>
-                    <div className="stat-info">
-                        <span className="stat-label">Total Posts</span>
-                        <span className="stat-value">{stats.totalPosts}</span>
+                </GridItem>
+                <GridItem colSpan={3} title="INTEL DATABASE">
+                    <div className="stat-display">
+                        <span className="value">{stats.totalPosts}</span>
+                        <span className="label">ARCHIVED RECORDS</span>
                     </div>
-                </Link>
-                <div className="stat-card glass">
-                    <div className="stat-icon">⚠️</div>
-                    <div className="stat-info">
-                        <span className="stat-label">Flagged Nodes</span>
-                        <span className="stat-value warning">{stats.bannedSites}</span>
+                </GridItem>
+                <GridItem colSpan={3} title="THREAT ALERTS">
+                    <div className="stat-display">
+                        <span className="value red">{stats.bannedSites}</span>
+                        <span className="label">FLAGGED NODES</span>
                     </div>
-                </div>
-            </div>
+                </GridItem>
 
-            {/* Recent Activity Section */}
-            <section className="dashboard-section glass">
-                <div className="section-header">
-                    <h2>Recent Deployments</h2>
-                    <Link href="/admin/sites" className="view-all">View All Sites →</Link>
-                </div>
-                <div className="recent-list">
-                    {recentSites.map(site => (
-                        <div key={site.id} className="recent-item">
-                            <div className="site-info">
-                                <span className="site-name">{site.title || 'Untitled Site'}</span>
-                                <span className="site-url">/s/{site.slug}</span>
-                            </div>
-                            <div className="site-meta">
-                                <span className={`status-pill ${site.adminStatus || 'active'}`}>
-                                    {site.adminStatus || 'active'}
+                {/* Main Content Area */}
+                <GridItem colSpan={8} rowSpan={4} title="GLOBAL DEPLOYMENT MAP" border={true}>
+                    {/* Simulated Map Placeholder */}
+                    <div className="map-placeholder">
+                        <div className="grid-lines"></div>
+                        <div className="radar-sweep"></div>
+                        <div className="map-text">SATELLITE LINK ACTIVE...</div>
+                    </div>
+                </GridItem>
+
+                <GridItem colSpan={4} rowSpan={2} title="SYSTEM TERMINAL">
+                    <SystemTerminal logs={logs} height="100%" />
+                </GridItem>
+
+                <GridItem colSpan={4} rowSpan={2} title="RECENT DEPLOYMENTS">
+                     <div className="recent-list">
+                        {recentSites.map(site => (
+                            <Link href={`/admin/sites`} key={site.id} className="recent-row">
+                                <span className="site-name">{site.title || 'UNKNOWN_NODE'}</span>
+                                <span className={`status ${site.adminStatus || 'active'}`}>
+                                    {site.adminStatus === 'banned' ? 'CRITICAL' : 'NOMINAL'}
                                 </span>
-                                <span className="time-ago">
-                                    {site.updatedAt?.seconds ? new Date(site.updatedAt.seconds * 1000).toLocaleDateString() : 'Unknown'}
-                                </span>
-                            </div>
-                        </div>
-                    ))}
-                    {recentSites.length === 0 && <p className="empty-state">No recent activity detected.</p>}
-                </div>
-            </section>
+                            </Link>
+                        ))}
+                     </div>
+                </GridItem>
+            </CommandGrid>
 
-            <style jsx>{`
-                .dashboard-overview { padding-bottom: 100px; }
-                .page-header { 
-                    display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; 
+            <style jsx global>{`
+                .cia-dashboard {
+                    background-color: var(--cia-bg);
+                    min-height: 100vh;
+                    color: var(--cia-accent);
+                    font-family: 'Share Tech Mono', monospace;
+                    position: relative;
                 }
-                h1 { margin: 5px 0; font-size: 2.5rem; background: linear-gradient(to right, #fff, #aaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-                .welcome-tag { color: #00f0ff; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; }
-                .subtitle { opacity: 0.6; }
-                .live-indicator { color: #00ff88; font-weight: 700; font-size: 0.8rem; border: 1px solid rgba(0, 255, 136, 0.2); padding: 5px 10px; border-radius: 20px; background: rgba(0, 255, 136, 0.1); }
-
-                .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px; }
-                .stat-card { 
-                    padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); 
-                    display: flex; align-items: center; gap: 20px; text-decoration: none; color: inherit;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                .scanline-overlay {
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+                    background-size: 100% 2px, 3px 100%;
+                    pointer-events: none;
+                    z-index: 100;
                 }
-                .hover-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
-                .stat-icon { font-size: 2rem; background: rgba(255,255,255,0.05); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 15px; }
-                .stat-value { font-size: 2rem; font-weight: 800; display: block; line-height: 1; margin-top: 5px; }
-                .stat-label { font-size: 0.8rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
-                .stat-value.warning { color: #ff3232; }
-
-                .dashboard-section { padding: 30px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.05); }
-                .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-                .section-header h2 { font-size: 1.2rem; margin: 0; }
-                .view-all { color: #00f0ff; text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+                .cia-header {
+                    padding: 20px 30px;
+                    border-bottom: 2px solid var(--cia-accent);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    background: rgba(0, 243, 255, 0.05);
+                }
+                .cia-title { margin: 0; font-size: 2rem; color: #fff; letter-spacing: 5px; }
+                .cia-title .sub { color: var(--cia-accent); font-size: 1rem; }
+                .status-line { font-size: 0.8rem; margin-top: 5px; color: var(--cia-success); }
+                .blink { animation: flicker 1s infinite; margin-right: 5px; color: var(--cia-success); }
                 
-                .recent-item { 
-                    display: flex; justify-content: space-between; align-items: center; 
-                    padding: 15px; border-radius: 12px; margin-bottom: 8px;
-                    background: rgba(255,255,255,0.02); transition: all 0.2s;
-                }
-                .recent-item:hover { background: rgba(255,255,255,0.05); }
-                .site-info { display: flex; flex-direction: column; gap: 4px; }
-                .site-name { font-weight: 700; color: #fff; }
-                .site-url { font-family: monospace; font-size: 0.8rem; opacity: 0.5; }
-                
-                .site-meta { display: flex; align-items: center; gap: 15px; }
-                .status-pill { font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; font-weight: 800; }
-                .status-pill.active { background: rgba(0, 255, 136, 0.1); color: #00ff88; }
-                .status-pill.banned { background: rgba(255, 50, 50, 0.1); color: #ff3232; }
-                .status-pill.verified { background: rgba(0, 240, 255, 0.1); color: #00f0ff; }
-                .time-ago { font-size: 0.8rem; opacity: 0.4; }
+                .header-meta { text-align: right; display: flex; flex-direction: column; opacity: 0.7; font-size: 0.8rem; }
 
-                .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); }
-                .animate-fade-in { animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+                /* Stats */
+                .stat-display { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+                .stat-display .value { font-size: 3rem; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+                .stat-display .value.cyan { color: var(--cia-accent); text-shadow: 0 0 10px var(--cia-accent); }
+                .stat-display .value.red { color: var(--cia-alert); text-shadow: 0 0 10px var(--cia-alert); }
+                .stat-display .label { font-size: 0.7rem; opacity: 0.7; margin-top: 5px; letter-spacing: 1px; }
 
-                @media (max-width: 768px) {
-                    .dashboard-overview { padding-bottom: 60px; }
-                    .page-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-                    .header-actions { width: 100%; display: flex; justify-content: flex-end; }
-                    h1 { font-size: 2rem; }
-                    .stats-grid { grid-template-columns: 1fr; }
-                    .recent-item { flex-direction: column; align-items: flex-start; gap: 10px; }
-                    .site-meta { width: 100%; justify-content: space-between; }
+                /* Map Placeholder */
+                .map-placeholder { width: 100%; height: 100%; background: #000; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+                .grid-lines { 
+                    position: absolute; inset: 0; 
+                    background-image: linear-gradient(var(--cia-accent) 1px, transparent 1px), linear-gradient(90deg, var(--cia-accent) 1px, transparent 1px);
+                    background-size: 50px 50px;
+                    opacity: 0.1;
                 }
+                .radar-sweep {
+                    position: absolute; width: 100%; height: 100%;
+                    background: conic-gradient(from 0deg, transparent 0deg, rgba(0, 243, 255, 0.1) 60deg, transparent 60deg);
+                    animation: radar 4s infinite linear;
+                    border-radius: 50%;
+                }
+                @keyframes radar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .map-text { z-index: 2; background: #000; padding: 5px 10px; border: 1px solid var(--cia-accent); }
+
+                /* Recent List */
+                .recent-list { display: flex; flex-direction: column; gap: 5px; height: 100%; overflow-y: auto; padding-right: 5px; }
+                .recent-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(255,255,255,0.05); text-decoration: none; color: inherit; font-size: 0.8rem; border-left: 2px solid transparent; }
+                .recent-row:hover { background: rgba(0, 243, 255, 0.1); border-left-color: var(--cia-accent); }
+                .status.active { color: var(--cia-success); }
+                .status.banned { color: var(--cia-alert); }
+
+                /* Loading */
+                .cia-loading { height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; color: var(--cia-accent); font-family: monospace; font-size: 1.5rem; }
+                .loader-text { animation: flicker 0.2s infinite; }
             `}</style>
-        </div>
+        </main>
     );
 }

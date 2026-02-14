@@ -27,16 +27,7 @@ const CardNav = ({
   const pathname = usePathname();
   const lastPath = useRef(pathname);
 
-  const calculateHeight = () => {
-    const navEl = navRef.current;
-    if (!navEl) return 450;
 
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    if (isMobile) {
-      return 600;
-    }
-    return 450;
-  };
 
   useEffect(() => {
     // Initial State
@@ -58,7 +49,7 @@ const CardNav = ({
       setIsHamburgerOpen(true);
       setIsExpanded(true);
       
-      const targetHeight = calculateHeight();
+      const targetHeight = "auto"; // Let GSAP handle auto height
       console.log("[CardNav] Opening to height:", targetHeight);
 
       gsap.killTweensOf(navEl);

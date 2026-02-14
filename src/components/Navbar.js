@@ -118,7 +118,9 @@ export default function Navbar() {
     return false;
   };
 
+
   // Hide Navbar on user sites or admin pages
+  if (pathname === '/') return null; // Replaced by CardNav on homepage
   if (pathname?.startsWith('/s/')) return null;
   if (pathname?.startsWith('/admin')) return null;
   if (pathname?.startsWith('/nex-ai')) return null;
@@ -285,12 +287,15 @@ export default function Navbar() {
 
 
             {/* Mobile Socials */}
+
             <div className="mobile-social-section">
-              <a href="https://tiktok.com/@anasnide" target="_blank" rel="noopener noreferrer" className="mobile-social-link">
-                <span>🎵 TikTok</span>
+              <a href="https://tiktok.com/@anasnide" target="_blank" rel="noopener noreferrer" className="mobile-social-link tiktok">
+                <span className="social-icon">🎵</span>
+                <span>TikTok</span>
               </a>
-              <a href="https://www.instagram.com/anasnide" target="_blank" rel="noopener noreferrer" className="mobile-social-link">
-                <span>📸 Instagram</span>
+              <a href="https://www.instagram.com/anasnide" target="_blank" rel="noopener noreferrer" className="mobile-social-link instagram">
+                <span className="social-icon">📸</span>
+                <span>Instagram</span>
               </a>
             </div>
 
@@ -980,32 +985,64 @@ export default function Navbar() {
         /* Mobile Socials */
         .mobile-social-section {
           padding: 0 2.5rem 2rem 2.5rem;
-          display: flex;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
           gap: 1rem;
+          margin-top: auto;
         }
 
         .mobile-social-link {
-          flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 0.5rem;
-          padding: 1rem;
+          gap: 0.8rem;
+          padding: 1.2rem;
           background: rgba(255, 255, 255, 0.03);
           border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 16px;
-          color: rgba(255, 255, 255, 0.6);
+          border-radius: 18px;
+          color: rgba(255, 255, 255, 0.8);
           text-decoration: none;
-          font-weight: 600;
-          font-size: 0.9rem;
-          transition: all 0.3s ease;
+          font-weight: 700;
+          font-size: 1rem;
+          transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .mobile-social-link::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+          transform: translateX(-100%);
+          transition: transform 0.6s ease;
+        }
+
+        .mobile-social-link:hover::before {
+          transform: translateX(100%);
         }
 
         .mobile-social-link:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            transform: translateY(-2px);
+          transform: translateY(-3px);
+          color: #fff;
+          box-shadow: 0 10px 20px -5px rgba(0,0,0,0.3);
+        }
+
+        .mobile-social-link.tiktok:hover {
+          background: linear-gradient(45deg, rgba(0,0,0,0.8), rgba(25,25,35,0.9));
+          border-color: #ff0050;
+          box-shadow: 0 0 20px rgba(255, 0, 80, 0.2);
+        }
+
+        .mobile-social-link.instagram:hover {
+          background: linear-gradient(45deg, rgba(131, 58, 180, 0.1), rgba(253, 29, 29, 0.1), rgba(252, 176, 69, 0.1));
+          border-color: #fd1d1d;
+          box-shadow: 0 0 20px rgba(253, 29, 29, 0.2);
+        }
+
+        .social-icon {
+          font-size: 1.4rem;
+          filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));
         }
 
         /* Mobile CTA */

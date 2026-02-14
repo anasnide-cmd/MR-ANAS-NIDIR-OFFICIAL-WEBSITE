@@ -28,6 +28,37 @@
   
   /* Responsive Defaults */
   --section-padding: 100px;
+  
+  /* Project: OPTIC-ZERO (CIA Theme) */
+  --cia-bg: #050505;
+  --cia-accent: #00f3ff;
+  --cia-alert: #ff2a2a;
+  --cia-warn: #ffae00;
+  --cia-success: #00ff9d;
+  --scanline: rgba(0, 243, 255, 0.03);
+  --crt-flicker: rgba(0, 243, 255, 0.02);
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.9; }
+  15% { opacity: 0.95; }
+  20% { opacity: 0.99; }
+  50% { opacity: 0.95; }
+  80% { opacity: 0.9; }
+  100% { opacity: 0.97; }
+}
+
+.cia-text {
+  font-family: 'Share Tech Mono', monospace; /* Fallback to monospace if not loaded */
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 html {
