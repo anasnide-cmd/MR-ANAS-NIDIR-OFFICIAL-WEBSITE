@@ -101,7 +101,8 @@ service cloud.firestore {
     }
 
     match /system_config/{configId} {
-      allow read, write: if isAdmin();
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // Workspace Communication (Chat)

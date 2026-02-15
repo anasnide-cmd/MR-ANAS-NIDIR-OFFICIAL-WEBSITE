@@ -1,17 +1,18 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { auth, db } from '../../../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc, where } from 'firebase/firestore';
-import Loader from '../../../components/Loader';
+import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function AdminMessages() {
+function MessagesContent() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
     const [usersList, setUsersList] = useState([]);
     const [messagesHistory, setMessagesHistory] = useState([]);
+    const searchParams = useSearchParams();
 
     // Form State
     const [msgData, setMsgData] = useState({
@@ -33,6 +34,19 @@ export default function AdminMessages() {
         });
         return () => unsub();
     }, []);
+
+    // Handle Deep Linking
+    useEffect(() => {
+        const target = searchParams.get('target');
+        if (target) {
+            setMsgData(prev => ({
+                ...prev,
+                type: 'direct',
+                targetUserId: target,
+                title: 'CLASSIFIED DIRECTIVE // ' + new Date().toISOString().split('T')[0]
+            }));
+        }
+    }, [searchParams]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -61,7 +75,7 @@ export default function AdminMessages() {
         e.preventDefault();
         if (!msgData.title || !msgData.content) return;
         if (msgData.type === 'direct' && !msgData.targetUserId) {
-            alert("Please select a target user.");
+            alert("TARGET_MISSING: ABORTING TRANSMISSION");
             return;
         }
 
@@ -74,7 +88,8 @@ export default function AdminMessages() {
                 authorEmail: user.email
             });
             
-            alert("Message deployed successfully!");
+            // Play sound effect purely via DOM manipulation if we had audio, 
+            // for now just visual feedback
             setMsgData({
                 title: '',
                 content: '',
@@ -84,140 +99,139 @@ export default function AdminMessages() {
             });
             fetchData();
         } catch (err) {
-            console.error("Error sending message:", err);
-            alert("Deployment failed: " + err.message);
+            alert("TRANSMISSION_FAIL: " + err.message);
         } finally {
             setSending(false);
         }
     };
 
     const handleDeleteMessage = async (id) => {
-        if (!confirm("Retract this message? It will disappear from all user feeds.")) return;
+        if (!confirm("CONFIRM DELETION OF RECORD?")) return;
         try {
             await deleteDoc(doc(db, 'messages', id));
             fetchData();
         } catch (err) {
-            alert("Failed to retract: " + err.message);
+            alert("DELETE_FAIL");
         }
     };
 
-    if (loading) return <Loader text="Syncing Comms..." />;
+    if (loading) return <div className="cia-loading">ESTABLISHING SECURE CONNECTION...</div>;
 
     return (
-        <div className="messages-view">
-            <header className="page-header">
-                <div className="header-info">
-                    <span className="page-tag">COMMUNICATIONS HUB</span>
-                    <h1>Announcements & Messaging</h1>
-                    <p className="subtitle">Broadcast updates or send secure direct directives to users.</p>
+        <div className="cia-dashboard">
+             <header className="cia-header">
+                <div>
+                    <Link href="/admin" className="back-link">:: RETURN TO COMMAND</Link>
+                    <h1 className="cia-title">SECURE COMMS <span className="sub">ENCRYPTED CHANNEL</span></h1>
+                </div>
+                <div className="status-badge">
+                    <span className="blink">●</span> LIVE
                 </div>
             </header>
 
-            <div className="messages-grid">
-                {/* Compose Form */}
-                <div className="compose-card glass card reveal-on-scroll">
-                    <h3>Deploy New Directive</h3>
-                    <form onSubmit={handleSendMessage} className="directive-form">
-                        <div className="input-group">
-                            <label>Directive Title</label>
+            <div className="comms-grid">
+                {/* TRANSMISSION TERMINAL */}
+                <div className="terminal-card">
+                    <div className="terminal-header">
+                        <h3>:: TRANSMISSION_PROTOCOL</h3>
+                    </div>
+                    <form onSubmit={handleSendMessage} className="terminal-form">
+                        <div className="form-group">
+                            <label>ENCRYPTION_KEY (TITLE)</label>
                             <input 
                                 value={msgData.title}
                                 onChange={e => setMsgData({...msgData, title: e.target.value})}
-                                placeholder="System Update v2.1..."
-                                className="modern-input"
+                                placeholder="ENTER HEADER..."
+                                className="cia-input"
                                 required
                             />
                         </div>
 
-                        <div className="input-group">
-                            <label>Directive Content</label>
+                        <div className="form-group">
+                            <label>PAYLOAD (CONTENT)</label>
                             <textarea 
                                 value={msgData.content}
                                 onChange={e => setMsgData({...msgData, content: e.target.value})}
-                                placeholder="Enter message requirements..."
-                                className="modern-input"
-                                rows={4}
+                                placeholder="ENTER MESSAGE DATA..."
+                                className="cia-input area"
+                                rows={6}
                                 required
                             />
                         </div>
 
-                        <div className="form-row">
-                            <div className="input-group half">
-                                <label>Target Scope</label>
+                        <div className="controls-row">
+                            <div className="form-group half">
+                                <label>SIGNAL_TYPE</label>
                                 <select 
                                     value={msgData.type}
                                     onChange={e => setMsgData({...msgData, type: e.target.value})}
-                                    className="modern-input"
+                                    className="cia-input"
                                 >
-                                    <option value="broadcast">Global Broadcast</option>
-                                    <option value="direct">Targeted Directive</option>
+                                    <option value="broadcast">GLOBAL_BROADCAST</option>
+                                    <option value="direct">DIRECT_BEAM</option>
                                 </select>
                             </div>
 
-                            <div className="input-group half">
-                                <label>Priority Level</label>
+                            <div className="form-group half">
+                                <label>PRIORITY_LEVEL</label>
                                 <select 
                                     value={msgData.priority}
                                     onChange={e => setMsgData({...msgData, priority: e.target.value})}
-                                    className="modern-input"
+                                    className="cia-input"
                                 >
-                                    <option value="normal">Standard</option>
-                                    <option value="urgent">Urgent (Popup)</option>
+                                    <option value="normal">STANDARD</option>
+                                    <option value="urgent">CRITICAL (INTERRUPT)</option>
                                 </select>
                             </div>
                         </div>
 
                         {msgData.type === 'direct' && (
-                            <div className="input-group">
-                                <label>Select Target User</label>
+                            <div className="form-group fade-in">
+                                <label>TARGET_DESIGNATION</label>
                                 <select 
                                     value={msgData.targetUserId}
                                     onChange={e => setMsgData({...msgData, targetUserId: e.target.value})}
-                                    className="modern-input"
+                                    className="cia-input"
                                     required
                                 >
-                                    <option value="">-- Choose User --</option>
+                                    <option value="">-- SELECT OPERATIVE --</option>
                                     {usersList.map(u => (
                                         <option key={u.uid} value={u.uid}>
-                                            {u.displayName || u.email} ({u.email})
+                                            {u.displayName} [{u.email}]
                                         </option>
                                     ))}
                                 </select>
                             </div>
                         )}
 
-                        <button type="submit" className="btn-modern glow-blue full-width" disabled={sending}>
-                            {sending ? '⚡ Deploying...' : '🚀 Deploy Directive'}
+                        <button type="submit" className="btn-transmit" disabled={sending}>
+                            {sending ? 'TRANSMITTING...' : 'INITIATE TRANSMISSION'}
                         </button>
                     </form>
                 </div>
 
-                {/* History List */}
-                <div className="history-card glass card reveal-on-scroll">
-                    <h3>Directive History</h3>
-                    <div className="history-list">
+                {/* ARCHIVE LOG */}
+                <div className="archive-card">
+                    <div className="terminal-header">
+                        <h3>:: ARCHIVE_LOG</h3>
+                    </div>
+                    <div className="log-scroll">
                         {messagesHistory.length === 0 ? (
-                            <p className="no-data">No history found. System is quiet.</p>
+                            <div className="no-data">NO RECORDS FOUND</div>
                         ) : (
                             messagesHistory.map(msg => (
-                                <div key={msg.id} className={`history-item ${msg.priority}`}>
-                                    <div className="item-main">
-                                        <div className="item-meta">
-                                            <span className={`type-pill ${msg.type}`}>{msg.type.toUpperCase()}</span>
-                                            {msg.priority === 'urgent' && <span className="urgent-pill">URGENT</span>}
-                                            <span className="date-tag">{new Date(msg.createdAt).toLocaleDateString()}</span>
-                                        </div>
-                                        <h4>{msg.title}</h4>
-                                        <p>{msg.content}</p>
-                                        {msg.type === 'direct' && (
-                                            <div className="target-info">
-                                                To: <code>{usersList.find(u => u.uid === msg.targetUserId)?.email || msg.targetUserId}</code>
-                                            </div>
-                                        )}
+                                <div key={msg.id} className={`log-entry ${msg.priority}`}>
+                                    <div className="entry-meta">
+                                        <span className="timestamp">[{new Date(msg.createdAt).toLocaleDateString()}]</span>
+                                        <span className={`tag ${msg.type}`}>{msg.type.toUpperCase()}</span>
+                                        {msg.priority === 'urgent' && <span className="tag urgent">CRITICAL</span>}
                                     </div>
-                                    <button onClick={() => handleDeleteMessage(msg.id)} className="btn-retract" title="Retract Directive">
-                                        🗑️
-                                    </button>
+                                    <div className="entry-title">{msg.title}</div>
+                                    <div className="entry-content">{msg.content}</div>
+                                    {msg.type === 'direct' && (
+                                        <div className="entry-target">&gt;&gt; TARGET: {usersList.find(u => u.uid === msg.targetUserId)?.email || msg.targetUserId}</div>
+                                    )}
+                                    <button onClick={() => handleDeleteMessage(msg.id)} className="btn-delete" title="Purge Record">×</button>
                                 </div>
                             ))
                         )}
@@ -225,74 +239,107 @@ export default function AdminMessages() {
                 </div>
             </div>
 
-            <style jsx>{`
-                .messages-view { animation: fadeIn 0.5s ease-out; }
-                .page-header { margin-bottom: 40px; }
-                .page-tag { 
-                    font-size: 0.7rem; color: #00f0ff; letter-spacing: 3px; 
-                    background: rgba(0, 240, 255, 0.1); padding: 5px 12px; 
-                    border-radius: 20px; font-weight: 900;
+            <style jsx global>{`
+                .cia-dashboard {
+                    background-color: var(--cia-bg);
+                    min-height: 100vh;
+                    color: var(--cia-accent);
+                    font-family: 'Share Tech Mono', monospace;
+                    padding-bottom: 50px;
                 }
-                .page-header h1 { font-family: var(--font-orbitron); font-size: 2.2rem; margin: 15px 0 10px; }
-                .subtitle { opacity: 0.5; }
-
-                .messages-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; }
-
-                .card { padding: 30px; border-radius: 24px; position: relative; overflow: hidden; }
-                h3 { font-family: var(--font-orbitron); font-size: 1.1rem; color: #00f0ff; margin-bottom: 25px; letter-spacing: 1px; }
-
-                .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-                .input-group label { font-size: 0.75rem; font-weight: 800; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
+                .cia-header {
+                    padding: 20px 30px;
+                    border-bottom: 2px solid var(--cia-accent);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: rgba(0, 243, 255, 0.05);
+                    margin-bottom: 30px;
+                }
+                .back-link { color: var(--cia-accent); text-decoration: none; font-size: 0.8rem; letter-spacing: 2px; display: block; margin-bottom: 5px; opacity: 0.6; }
+                .cia-title { margin: 0; font-size: 2rem; color: #fff; letter-spacing: 5px; }
+                .cia-title .sub { color: var(--cia-accent); font-size: 1rem; }
                 
-                .modern-input {
-                    background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 12px; padding: 12px 15px; color: #fff; font-size: 0.95rem; font-family: inherit;
-                    transition: all 0.3s;
-                }
-                .modern-input:focus { border-color: #00f0ff; outline: none; background: rgba(255, 255, 255, 0.05); }
-                select.modern-input { cursor: pointer; }
-                select.modern-input option { background: #0a0a0a; color: #fff; }
+                .status-badge { border: 1px solid var(--cia-success); color: var(--cia-success); padding: 5px 10px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
+                .blink { animation: flicker 1s infinite; }
 
-                .form-row { display: flex; gap: 15px; }
+                .comms-grid {
+                    display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 0 30px;
+                }
+                
+                .terminal-card, .archive-card {
+                    background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+                    height: 600px; display: flex; flex-direction: column;
+                }
+                
+                .terminal-header {
+                    background: rgba(255,255,255,0.05); padding: 10px 15px;
+                    border-bottom: 1px solid var(--cia-accent);
+                }
+                .terminal-header h3 { margin: 0; font-size: 0.9rem; color: var(--cia-accent); letter-spacing: 2px; }
+                
+                .terminal-form { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+                
+                .form-group { display: flex; flex-direction: column; gap: 5px; }
+                .form-group label { font-size: 0.7rem; opacity: 0.7; color: var(--cia-accent); }
+                
+                .cia-input {
+                    background: rgba(0, 243, 255, 0.05); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 10px; font-family: inherit; font-size: 1rem;
+                }
+                .cia-input:focus { outline: none; border-color: var(--cia-accent); box-shadow: 0 0 10px rgba(0, 243, 255, 0.1); }
+                .cia-input.area { resize: none; }
+                .cia-input option { background: #000; }
+
+                .controls-row { display: flex; gap: 20px; }
                 .half { flex: 1; }
 
-                .history-list { max-height: 600px; overflow-y: auto; padding-right: 10px; }
-                .history-list::-webkit-scrollbar { width: 4px; }
-                .history-list::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.2); border-radius: 10px; }
-
-                .history-item { 
-                    padding: 20px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05);
-                    border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start;
-                    transition: all 0.3s;
+                .btn-transmit {
+                    margin-top: 10px; padding: 15px; background: var(--cia-accent); color: #000;
+                    border: none; font-family: inherit; font-weight: bold; font-size: 1.1rem;
+                    cursor: pointer; transition: all 0.2s; letter-spacing: 2px;
                 }
-                .history-item:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.1); }
-                .history-item.urgent { border-left: 4px solid #ff3232; background: rgba(255, 50, 50, 0.02); }
+                .btn-transmit:hover { background: #fff; box-shadow: 0 0 20px var(--cia-accent); }
+                .btn-transmit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-                .item-main { flex: 1; }
-                .item-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-                .type-pill { font-size: 0.6rem; font-weight: 900; padding: 2px 8px; border-radius: 4px; }
-                .type-pill.broadcast { background: rgba(0, 240, 255, 0.1); color: #00f0ff; }
-                .type-pill.direct { background: rgba(112, 0, 255, 0.1); color: #7000ff; }
-                .urgent-pill { background: #ff3232; color: #fff; font-size: 0.6rem; font-weight: 900; padding: 2px 8px; border-radius: 4px; }
-                .date-tag { font-size: 0.7rem; opacity: 0.4; }
-
-                h4 { margin: 0 0 8px; font-size: 1.1rem; }
-                p { font-size: 0.9rem; opacity: 0.7; margin-bottom: 10px; line-height: 1.5; }
-                .target-info { font-size: 0.75rem; opacity: 0.5; }
-                .target-info code { color: #7000ff; }
-
-                .btn-retract { 
-                    background: none; border: none; cursor: pointer; font-size: 1rem; opacity: 0.3; 
-                    transition: all 0.3s; padding: 5px; 
+                .log-scroll { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+                
+                .log-entry {
+                    background: rgba(255,255,255,0.02); border-left: 2px solid rgba(255,255,255,0.2);
+                    padding: 10px; position: relative;
                 }
-                .btn-retract:hover { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 5px #ff3232); }
-
-                .no-data { text-align: center; opacity: 0.4; padding: 40px; }
-
-                @media (max-width: 1200px) {
-                    .messages-grid { grid-template-columns: 1fr; }
+                .log-entry:hover { background: rgba(255,255,255,0.05); }
+                .log-entry.urgent { border-left-color: var(--cia-alert); background: rgba(255, 50, 50, 0.05); }
+                
+                .entry-meta { display: flex; gap: 10px; font-size: 0.7rem; margin-bottom: 5px; opacity: 0.7; }
+                .tag { font-weight: bold; }
+                .tag.direct { color: #bb00ff; }
+                .tag.broadcast { color: var(--cia-success); }
+                .tag.urgent { color: var(--cia-alert); }
+                
+                .entry-title { font-weight: bold; color: #fff; margin-bottom: 5px; }
+                .entry-content { font-size: 0.9rem; opacity: 0.8; line-height: 1.4; white-space: pre-wrap; }
+                .entry-target { margin-top: 5px; font-size: 0.7rem; color: #bb00ff; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 5px; }
+                
+                .btn-delete {
+                    position: absolute; top: 5px; right: 5px; background: none; border: none;
+                    color: rgba(255,255,255,0.3); cursor: pointer; font-size: 1.2rem;
                 }
+                .btn-delete:hover { color: var(--cia-alert); }
+                
+                .fade-in { animation: fadeIn 0.3s; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+                
+                .cia-loading { height: 100vh; display: flex; align-items: center; justify-content: center; color: var(--cia-accent); animation: flicker 0.5s infinite; }
             `}</style>
         </div>
+    );
+}
+
+export default function AdminMessages() {
+    return (
+        <Suspense fallback={<div className="cia-loading">LOADING COMMS MODULE...</div>}>
+            <MessagesContent />
+        </Suspense>
     );
 }

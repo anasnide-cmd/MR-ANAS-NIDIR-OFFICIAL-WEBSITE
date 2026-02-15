@@ -32,6 +32,7 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
   const [models, setModels] = useState([]); // Dynamic models
   const [user, setUser] = useState(null);
   const [aiCredits, setAiCredits] = useState(null);
+  const [apiKey, setApiKey] = useState(null);
 
   // Auth & Credit Sync
   useEffect(() => {
@@ -52,35 +53,41 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
 
   // Fetch Models from Admin Config
   useEffect(() => {
-    const fetchModels = async () => {
+    const fetchModelsAndKey = async () => {
         try {
             const docRef = doc(db, 'system_config', 'nex_ai');
             const snap = await getDoc(docRef);
             if (snap.exists()) {
                 const data = snap.data();
+                
+                // 1. Models
                 if (data.models) {
                     const activeModels = data.models.filter(m => m.active);
                     setModels(activeModels);
-                    if (activeModels.length > 0) {
-                        setSelectedModel(activeModels[0].id);
-                    }
+                    if (activeModels.length > 0) setSelectedModel(activeModels[0].id);
                 }
+
+                // 2. Extract API Key (Auto)
+                let foundKey = null;
+                if (data.keys && Array.isArray(data.keys)) {
+                    const activeKeyObj = data.keys.find(k => k.status === 'active');
+                    if (activeKeyObj) foundKey = activeKeyObj.key;
+                } else if (data.openRouterKey) {
+                    foundKey = data.openRouterKey;
+                }
+                
+                if (foundKey) setApiKey(foundKey);
+
             } else {
-                // Fallback if no config found
-                setModels([
-                    { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini (Default)' },
-                    { id: 'openai/gpt-4o', name: 'GPT-4o (Fallback)' }
-                ]);
+                // Fallback
+                setModels([{ id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini (Default)' }]);
             }
         } catch (err) {
-            console.error("Error fetching AI models:", err);
-            // Fallback
-             setModels([
-                { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' }
-            ]);
+            console.error("Error fetching AI config:", err);
+            setModels([{ id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' }]);
         }
     };
-    fetchModels();
+    fetchModelsAndKey();
   }, []);
 
   const scrollRef = useRef(null);
@@ -251,7 +258,9 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
                     }, {}) : {}
                 },
                 model: selectedModel,
-                userId: user?.uid
+                mode: 'coder', // Explicitly set mode
+                userId: user?.uid,
+                apiKey: apiKey // Pass Client-Side Key
             })
         });
 

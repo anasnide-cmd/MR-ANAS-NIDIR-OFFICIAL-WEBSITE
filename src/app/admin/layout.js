@@ -8,8 +8,11 @@ import {
     signInWithPopup,
     GoogleAuthProvider
 } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import AdminSidebar from '../../components/AdminSidebar';
+import CommandPalette from '../../components/Admin/CommandPalette';
+import AdminAgent from '../../components/Admin/AdminAgent';
 
 const ALLOWED_ADMINS = [
     'anasnide@gmail.com',
@@ -706,6 +709,8 @@ export default function AdminLayout({ children }) {
                 />
             )}
 
+            <CommandPalette />
+
             <main className={`admin-main ${sidebarMinimized ? 'minimized' : ''}`}>
                 <div className="admin-header">
                     <div className="header-content">
@@ -972,6 +977,11 @@ export default function AdminLayout({ children }) {
                     }
                 }
             `}</style>
+            {/* GLOBAL COMMAND PALETTE */}
+            <CommandPalette />
+            
+            {/* THE ORACLE AI AGENT */}
+            <AdminAgent />
         </div>
     );
 }

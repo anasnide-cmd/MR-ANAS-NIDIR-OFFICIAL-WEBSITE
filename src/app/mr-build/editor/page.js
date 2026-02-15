@@ -542,7 +542,10 @@ function EditorContent() {
                                                                 <style>${siteData.files['styles.css']?.content || ''}</style>
                                                             </head>
                                                             <body>
-                                                                ${siteData.files['index.html']?.content || ''}
+                                                                ${(siteData.files['index.html']?.content || '')
+                                                                    .replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '')
+                                                                    .replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')
+                                                                }
                                                                 
                                                                 <!-- Monetization Injection -->
                                                                 ${siteData.monetization?.enabled && siteData.monetization?.publisherId ? `

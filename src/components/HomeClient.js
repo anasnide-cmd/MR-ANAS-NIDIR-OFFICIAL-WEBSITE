@@ -21,6 +21,7 @@ import CustomCursor from './Effects/CustomCursor';
 import HyperButton from './Effects/HyperButton';
 import LensEffects from './Effects/LensEffects';
 import NexusCommand from './NexusCommand';
+import SentientCore from './SentientCore';
 
 
 export default function HomeClient() {
@@ -134,6 +135,9 @@ export default function HomeClient() {
       <LensEffects />
       <NexusCommand />
       <CustomCursor />
+      <div style={{ position: 'fixed', inset: 0, zIndex: -1, pointerEvents: 'none' }}>
+        <SentientCore />
+      </div>
       <QuantumCore />
       <CardNav items={navItems} /> {/* ReactBits Navbar */}
       {/* HERO */}

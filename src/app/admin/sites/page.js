@@ -5,12 +5,14 @@ import Loader from '../../../components/Loader';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, orderBy, getDocs, doc, updateDoc, setDoc } from 'firebase/firestore';
 import Link from 'next/link';
+import CommandGrid, { GridItem } from '../../../components/Admin/CommandGrid';
 
 export default function SitesPage() {
     const [user, setUser] = useState(null);
     const [sites, setSites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // all, active, banned, verified
+    const [selectedIds, setSelectedIds] = useState([]);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (u) => {
@@ -42,12 +44,12 @@ export default function SitesPage() {
             await updateDoc(doc(db, 'user_sites', siteId), { adminStatus: newStatus });
             setSites(prev => prev.map(s => s.id === siteId ? { ...s, adminStatus: newStatus } : s));
         } catch (err) {
-            alert('Error updating status: ' + err.message);
+            alert('CMD_FAIL: ' + err.message);
         }
     };
 
     const updatePublisherId = async (siteId, currentId) => {
-        const newId = prompt("Enter AdSense Publisher ID (e.g., pub-xxxxxxxx):", currentId || '');
+        const newId = prompt("INPUT ADSENSE ID (pub-xxxxxxxx):", currentId || '');
         if (newId === null) return;
         try {
              await setDoc(doc(db, 'user_sites', siteId), {
@@ -55,7 +57,7 @@ export default function SitesPage() {
              }, { merge: true });
              setSites(prev => prev.map(s => s.id === siteId ? { ...s, monetization: { ...(s.monetization || {}), publisherId: newId } } : s));
         } catch (err) {
-            alert('Error updating AdSense ID: ' + err.message);
+            alert('CMD_FAIL: ' + err.message);
         }
     }
 
@@ -65,122 +67,196 @@ export default function SitesPage() {
         return status === filter;
     });
 
-    if (loading) return <Loader text="Loading Sites..." />;
-    if (!user) return <div>Access Denied</div>;
+    if (loading) return <div className="cia-loading">SCANNING NETWORK NODES...</div>;
+    if (!user) return <div className="cia-loading error">ACCESS DENIED</div>;
 
     return (
-        <div className="sites-view animate-fade-in">
-            <header className="page-header">
+        <main className="cia-dashboard">
+            <header className="cia-header">
                 <div>
-                    <Link href="/admin" className="back-link">← Dashboard</Link>
-                    <h1>Site Operations</h1>
-                    <p className="subtitle">Monitoring {sites.length} Deployments</p>
+                    <Link href="/admin" className="back-link">:: RETURN TO COMMAND</Link>
+                    <h1 className="cia-title">PLATFORM SURVEILLANCE <span className="sub">TRAFFIC MONITOR</span></h1>
                 </div>
-                <div className="filter-bar">
+                <div className="filter-group">
                     {['all', 'active', 'verified', 'banned'].map(f => (
                         <button 
                             key={f}
                             className={`filter-btn ${filter === f ? 'active' : ''}`}
                             onClick={() => setFilter(f)}
                         >
-                            {f.charAt(0).toUpperCase() + f.slice(1)}
+                            [{f.toUpperCase()}]
                         </button>
                     ))}
                 </div>
             </header>
 
-            <div className="sites-grid">
+            <div className="surveillance-grid">
                 {filteredSites.map(site => (
-                    <div key={site.id} className={`site-card ${site.adminStatus || 'active'}`}>
-                        <div className="card-header">
-                            <h3 title={site.title}>{site.title || 'Untitled Site'}</h3>
-                            <span className={`status-badge ${site.adminStatus || 'active'}`}>
-                                {site.adminStatus || 'active'}
+                    <div key={site.id} className={`node-card ${site.adminStatus || 'active' } ${selectedIds.includes(site.id) ? 'selected' : ''}`}>
+                        <div className="node-header">
+                            <input 
+                                type="checkbox" 
+                                className="cia-checkbox"
+                                checked={selectedIds.includes(site.id)}
+                                onChange={(e) => {
+                                    if(e.target.checked) setSelectedIds(prev => [...prev, site.id]);
+                                    else setSelectedIds(prev => prev.filter(id => id !== site.id));
+                                }}
+                            />
+                            <span className="node-id">NODE :: {site.slug.toUpperCase()}</span>
+                            <span className={`status-code ${site.adminStatus || 'active'}`}>
+                                {site.adminStatus === 'banned' ? '⚠ CRITICAL' : (site.adminStatus === 'verified' ? '✔ SECURE' : '● NOMINAL')}
                             </span>
                         </div>
                         
-                        <div className="card-body">
-                            <div className="info-row">
-                                <span className="label">URL Slug</span>
-                                <span className="value slug">/s/{site.slug}</span>
+                        <div className="node-vis">
+                            <div className="signal-bars">
+                                {[1,2,3,4,5].map(i => (
+                                    <div key={i} className={`bar ${i <= Math.min(5, Math.ceil((site.views || 0)/10)) ? 'lit' : ''}`}></div>
+                                ))}
                             </div>
-                            <div className="info-row">
-                                <span className="label">Owner</span>
-                                <span className="value email">{site.userEmail}</span>
+                            <span className="views-val">{site.views || 0} HITS</span>
+                        </div>
+
+                        <div className="node-details">
+                            <div className="detail-row">
+                                <span className="lbl">TITLE:</span>
+                                <span className="val">{site.title || 'UNKNOWN'}</span>
                             </div>
-                            <div className="info-row">
-                                <span className="label">Views</span>
-                                <span className="value highlight">{site.views || 0}</span>
+                            <div className="detail-row">
+                                <span className="lbl">OWNER:</span>
+                                <span className="val email">{site.userEmail}</span>
                             </div>
-                            <div className="info-row">
-                                <span className="label">Monetization</span>
-                                <span className="value">{site.monetization?.publisherId ? '✅ Enabled' : 'Off'}</span>
+                            <div className="detail-row">
+                                <span className="lbl">ADS:</span>
+                                <span className="val">{site.monetization?.publisherId ? 'ACTIVE' : 'INACTIVE'}</span>
                             </div>
                         </div>
 
-                        <div className="card-actions">
-                            <div className="action-group">
-                                <button onClick={() => updateSiteStatus(site.id, 'verified')} title="Verify" className="btn-icon verify">💎</button>
-                                <button onClick={() => updateSiteStatus(site.id, 'active')} title="Normal" className="btn-icon normal">🟢</button>
-                                <button onClick={() => updateSiteStatus(site.id, 'banned')} title="Ban" className="btn-icon ban">🔴</button>
-                            </div>
-                            <button onClick={() => updatePublisherId(site.id, site.monetization?.publisherId)} className="btn-text">
-                                {site.monetization?.publisherId ? 'Edit Ads' : 'Setup Ads'}
-                            </button>
-                            <a href={`/s/${site.slug}`} target="_blank" className="btn-visit">Visit ➜</a>
+                        <div className="node-actions">
+                            <button onClick={() => updateSiteStatus(site.id, 'verified')} className="action-btn" title="Verify">SECURE</button>
+                            <button onClick={() => updateSiteStatus(site.id, 'banned')} className="action-btn warn" title="Ban">PURGE</button>
+                            <button onClick={() => updatePublisherId(site.id, site.monetization?.publisherId)} className="action-btn">ADS</button>
+                            <a href={`/s/${site.slug}`} target="_blank" className="action-btn link">VISIT ➜</a>
                         </div>
                     </div>
                 ))}
+                {filteredSites.length === 0 && <div className="empty-sector">SECTOR CLEAR. NO NODES DETECTED.</div>}
             </div>
 
-            <style jsx>{`
-                .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
-                .back-link { color: #00f0ff; text-decoration: none; font-size: 0.9rem; font-weight: 700; display: block; margin-bottom: 10px; }
-                h1 { font-size: 2rem; margin: 0; }
-                
-                .filter-bar { display: flex; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 12px; }
-                .filter-btn { padding: 8px 16px; background: transparent; border: none; color: #fff; cursor: pointer; border-radius: 8px; font-weight: 600; opacity: 0.6; transition: all 0.2s; }
-                .filter-btn:hover { opacity: 1; background: rgba(255,255,255,0.05); }
-                .filter-btn.active { background: #00f0ff; color: #000; opacity: 1; }
+            {/* BULK ACTION BAR */}
+            {selectedIds.length > 0 && (
+                 <div className="bulk-bar">
+                    <div className="bulk-info">
+                        <span className="count">{selectedIds.length}</span>
+                        <span>NODES TARGETED</span>
+                    </div>
+                    <div className="bulk-actions">
+                        <button onClick={() => console.log('Mass Secure', selectedIds)} className="btn-cia small">SECURE ALL</button>
+                        <button onClick={() => console.log('Mass Purge', selectedIds)} className="btn-cia small warn">PURGE ALL</button>
+                        <button onClick={() => setSelectedIds([])} className="btn-cia small">ABORT</button>
+                    </div>
+                 </div>
+            )}
 
-                .sites-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-                .site-card { 
-                    background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.05); 
-                    border-radius: 16px; padding: 20px; transition: all 0.3s; display: flex; flex-direction: column; gap: 15px;
+            <style jsx global>{`
+                .bulk-bar {
+                    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+                    background: #000; border: 1px solid var(--cia-accent);
+                    padding: 15px 30px; border-radius: 50px;
+                    display: flex; gap: 30px; align-items: center;
+                    box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+                    z-index: 900; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 }
-                .site-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
-                .site-card.banned { border-color: #ff3232; box-shadow: 0 0 15px rgba(255, 50, 50, 0.1); }
-                .site-card.verified { border-color: #00f0ff; box-shadow: 0 0 15px rgba(0, 240, 255, 0.1); }
+                .bulk-info { display: flex; align-items: center; gap: 10px; font-weight: bold; color: #fff; }
+                .bulk-info .count { background: var(--cia-accent); color: #000; padding: 2px 8px; border-radius: 10px; }
+                .bulk-actions { display: flex; gap: 10px; }
+                @keyframes slideUp { from { transform: translate(-50%, 100%); } to { transform: translate(-50%, 0); } }
 
-                .card-header { display: flex; justify-content: space-between; align-items: center; }
-                .card-header h3 { margin: 0; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
-                
-                .status-badge { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; }
-                .status-badge.active { color: #00ff88; background: rgba(0, 255, 136, 0.1); }
-                .status-badge.banned { color: #ff3232; background: rgba(255, 50, 50, 0.1); }
-                .status-badge.verified { color: #00f0ff; background: rgba(0, 240, 255, 0.1); }
+                .cia-checkbox {
+                    accent-color: var(--cia-accent);
+                    width: 16px; height: 16px; cursor: pointer;
+                    margin-right: 10px;
+                }
+                .node-card.selected {
+                    background: rgba(0, 243, 255, 0.1);
+                    border-color: var(--cia-accent);
+                    box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+                }
 
-                .card-body { display: flex; flex-direction: column; gap: 8px; }
-                .info-row { display: flex; justify-content: space-between; font-size: 0.9rem; }
-                .info-row .label { opacity: 0.5; }
-                .info-row .value { font-weight: 500; }
-                .slug { font-family: monospace; opacity: 0.7; }
-                .email { font-size: 0.8rem; opacity: 0.7; }
-                .highlight { color: #00f0ff; font-weight: 700; }
+                .cia-dashboard {
+                    background-color: var(--cia-bg);
+                    min-height: 100vh;
+                    color: var(--cia-accent);
+                    font-family: 'Share Tech Mono', monospace;
+                    padding-bottom: 50px;
+                }
+                .cia-header {
+                    padding: 20px 30px;
+                    border-bottom: 2px solid var(--cia-accent);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: rgba(0, 243, 255, 0.05);
+                    margin-bottom: 30px;
+                }
+                .back-link { color: var(--cia-accent); text-decoration: none; font-size: 0.8rem; letter-spacing: 2px; display: block; margin-bottom: 5px; opacity: 0.6; }
+                .cia-title { margin: 0; font-size: 2rem; color: #fff; letter-spacing: 5px; }
+                .cia-title .sub { color: var(--cia-accent); font-size: 1rem; }
 
-                .card-actions { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); }
-                .action-group { display: flex; gap: 5px; }
-                .btn-icon { background: rgba(255,255,255,0.05); border: none; cursor: pointer; font-size: 1rem; padding: 5px; border-radius: 6px; transition: transform 0.2s; }
-                .btn-icon:hover { transform: scale(1.2); background: rgba(255,255,255,0.1); }
+                .filter-group { display: flex; gap: 5px; }
+                .filter-btn { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.5); cursor: pointer; padding: 5px 10px; font-family: inherit; font-size: 0.8rem; transition: all 0.2s; }
+                .filter-btn:hover { border-color: var(--cia-accent); color: var(--cia-accent); }
+                .filter-btn.active { background: var(--cia-accent); color: #000; border-color: var(--cia-accent); font-weight: bold; }
+
+                .surveillance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 30px; }
                 
-                .btn-text { background: transparent; border: none; color: #aaa; cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
-                .btn-text:hover { color: #fff; }
+                .node-card {
+                    background: rgba(0,0,0,0.5);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    padding: 15px;
+                    position: relative;
+                    display: flex; flex-direction: column; gap: 15px;
+                }
+                .node-card:before { content: ''; position: absolute; top: -1px; left: -1px; width: 10px; height: 10px; border-top: 2px solid var(--cia-accent); border-left: 2px solid var(--cia-accent); }
+                .node-card:after { content: ''; position: absolute; bottom: -1px; right: -1px; width: 10px; height: 10px; border-bottom: 2px solid var(--cia-accent); border-right: 2px solid var(--cia-accent); }
                 
-                .btn-visit { color: #00f0ff; text-decoration: none; font-size: 0.9rem; font-weight: 700; }
+                .node-card:hover { background: rgba(0, 243, 255, 0.03); border-color: rgba(0, 243, 255, 0.3); }
+                .node-card.banned { border-color: var(--cia-alert); }
                 
-                .animate-fade-in { animation: fadeIn 0.5s ease-out; }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .node-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+                .node-id { font-size: 0.9rem; font-weight: bold; color: #fff; }
+                .status-code { font-size: 0.7rem; font-weight: bold; }
+                .status-code.active { color: var(--cia-success); }
+                .status-code.banned { color: var(--cia-alert); }
+                .status-code.verified { color: var(--cia-accent); }
+                
+                .node-vis { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 10px; }
+                .signal-bars { display: flex; gap: 2px; align-items: flex-end; height: 20px; }
+                .bar { width: 4px; background: #333; height: 100%; }
+                .bar:nth-child(1) { height: 20%; }
+                .bar:nth-child(2) { height: 40%; }
+                .bar:nth-child(3) { height: 60%; }
+                .bar:nth-child(4) { height: 80%; }
+                .bar:nth-child(5) { height: 100%; }
+                .bar.lit { background: var(--cia-accent); box-shadow: 0 0 5px var(--cia-accent); }
+                .views-val { font-size: 1.2rem; font-weight: bold; color: #fff; }
+                
+                .node-details { display: flex; flex-direction: column; gap: 5px; }
+                .detail-row { display: flex; justify-content: space-between; font-size: 0.8rem; }
+                .detail-row .lbl { opacity: 0.5; }
+                .val.email { opacity: 0.8; }
+                
+                .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: auto; }
+                .action-btn { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); cursor: pointer; padding: 5px; font-family: inherit; font-size: 0.7rem; transition: all 0.2s; }
+                .action-btn:hover { border-color: var(--cia-accent); color: var(--cia-accent); background: rgba(0, 243, 255, 0.1); }
+                .action-btn.warn:hover { border-color: var(--cia-alert); color: var(--cia-alert); background: rgba(255, 50, 50, 0.1); }
+                .action-btn.link { text-decoration: none; text-align: center; color: var(--cia-accent); border-color: var(--cia-accent); }
+                
+                .empty-sector { grid-column: 1/-1; text-align: center; padding: 50px; opacity: 0.5; border: 1px dashed rgba(255,255,255,0.2); }
+                
+                .cia-loading { height: 100vh; display: flex; align-items: center; justify-content: center; color: var(--cia-accent); animation: flicker 0.5s infinite; }
             `}</style>
-        </div>
+        </main>
     );
 }

@@ -24,6 +24,8 @@ import {
     X
 } from 'lucide-react';
 
+import ArchitectModal from './ArchitectModal';
+
 export default function BuildDashboard() {
     const router = useRouter();
     const [user, setUser] = useState(null);
@@ -31,6 +33,7 @@ export default function BuildDashboard() {
     const [userLimit, setUserLimit] = useState(1);
     const [unlockedTemplates, setUnlockedTemplates] = useState([]);
     const [showNewModal, setShowNewModal] = useState(false);
+    const [showArchitect, setShowArchitect] = useState(false);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('repositories'); // 'repositories', 'stars', 'projects'
@@ -365,6 +368,9 @@ export default function BuildDashboard() {
                     </div>
                 </div>
 
+                {/* Architect Modal */}
+                {showArchitect && <ArchitectModal onClose={() => setShowArchitect(false)} user={user} />}
+
                 {/* New Repo Modal */}
                 {showNewModal && (
                     <div className="new-modal-overlay" onClick={() => setShowNewModal(false)}>
@@ -375,6 +381,14 @@ export default function BuildDashboard() {
                             </div>
                             
                             <div className="modal-options">
+                                <button className="option-card glass primary" style={{borderColor: '#00f0ff'}} onClick={() => { setShowNewModal(false); setShowArchitect(true); }}>
+                                    <div className="option-icon">✨</div>
+                                    <div className="option-info">
+                                        <h3 style={{color: '#00f0ff'}}>AI Architect</h3>
+                                        <p>Describe your vision, and I will build it.</p>
+                                    </div>
+                                </button>
+
                                 <button className="option-card glass primary" onClick={startFromScratch}>
                                     <div className="option-icon">📄</div>
                                     <div className="option-info">
