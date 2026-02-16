@@ -38,6 +38,48 @@ export default function BuildDashboard() {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('repositories'); // 'repositories', 'stars', 'projects'
 
+    // Swipe State
+    const [swipeState, setSwipeState] = useState({ id: null, startX: 0, currentX: 0, showAction: null });
+
+    const triggerHaptic = (pattern = 20) => {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate(pattern);
+        }
+    };
+
+    const handleTouchStart = (e, id) => {
+        setSwipeState({ id, startX: e.touches[0].clientX, currentX: e.touches[0].clientX, showAction: null });
+    };
+
+    const handleTouchMove = (e) => {
+        if (!swipeState.id) return;
+        const currentX = e.touches[0].clientX;
+        const diff = currentX - swipeState.startX;
+        setSwipeState(prev => ({ ...prev, currentX }));
+    };
+
+    const handleTouchEnd = () => {
+        if (!swipeState.id) return;
+        const diff = swipeState.currentX - swipeState.startX;
+        const threshold = 100;
+
+        if (diff > threshold) {
+            // Swipe Right -> Deploy/Enter
+            triggerHaptic(50);
+            router.push(`/mr-build/editor?id=${swipeState.id}`);
+        } else if (diff < -threshold) {
+             // Swipe Left -> Delete
+             triggerHaptic([30, 50, 30]);
+             if(confirm('Delete this project?')) {
+                 // Trigger delete logic (would need a delete function, but for now just log/stub)
+                 // In a real app we'd call deleteDoc
+                 console.log('Delete ' + swipeState.id);
+             }
+        }
+        
+        setSwipeState({ id: null, startX: 0, currentX: 0, showAction: null });
+    };
+
     useEffect(() => {
         const checkUser = onAuthStateChanged(auth, async (u) => {
             if (u) {
@@ -224,7 +266,26 @@ export default function BuildDashboard() {
                         ))
                     ) : displaySites.length > 0 ? (
                         displaySites.map(site => (
-                            <div key={site.id} className="project-card" onClick={() => router.push(`/mr-build/editor?id=${site.id}`)}>
+                            <div 
+                                key={site.id} 
+                                className="project-card" 
+                                onClick={() => { if(!swipeState.id) router.push(`/mr-build/editor?id=${site.id}`); }}
+                                onTouchStart={(e) => handleTouchStart(e, site.id)}
+                                onTouchMove={handleTouchMove}
+                                onTouchEnd={handleTouchEnd}
+                                style={{
+                                    transform: swipeState.id === site.id ? `translateX(${swipeState.currentX - swipeState.startX}px)` : 'none',
+                                    transition: swipeState.id === site.id ? 'none' : 'transform 0.3s'
+                                }}
+                            >
+                                {/* Swipe Indicators */}
+                                {swipeState.id === site.id && (swipeState.currentX - swipeState.startX) > 50 && (
+                                    <div className="swipe-indicator right">OPEN 🚀</div>
+                                )}
+                                {swipeState.id === site.id && (swipeState.currentX - swipeState.startX) < -50 && (
+                                    <div className="swipe-indicator left">DELETE 🗑️</div>
+                                )}
+
                                 <div className="card-preview">
                                     <div className="preview-overlay">
                                         <button className="btn-launch">ENTER CONSTRUCT <ChevronDown size={14} style={{transform: 'rotate(-90deg)'}}/></button>
@@ -365,18 +426,36 @@ export default function BuildDashboard() {
 
                 .project-card {
                     background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
-                    border-radius: 16px; overflow: hidden; cursor: pointer; transition: 0.3s;
+                    border-radius: 16px; overflow: visible; cursor: pointer; transition: 0.3s;
                     position: relative;
                 }
                 .project-card:hover { 
                     transform: translateY(-5px); border-color: #00f0ff; 
                     box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
                 }
+
+                .swipe-indicator {
+                    position: absolute; top: 0; bottom: 0; width: 100px;
+                    display: flex; align-items: center; justify-content: center;
+                    font-weight: 800; font-size: 14px; letter-spacing: 1px;
+                }
+                .swipe-indicator.right {
+                    left: -100px; background: linear-gradient(90deg, transparent, rgba(0,255,0,0.2));
+                    border-right: 1px solid #00ff80; color: #00ff80;
+                    justify-content: flex-end; padding-right: 20px;
+                }
+                .swipe-indicator.left {
+                    right: -100px; background: linear-gradient(-90deg, transparent, rgba(255,0,0,0.2));
+                    border-left: 1px solid #ff4444; color: #ff4444;
+                    justify-content: flex-start; padding-left: 20px;
+                }
                 
                 .card-preview {
                     height: 160px; background: linear-gradient(45deg, #111, #222);
                     display: flex; align-items: center; justify-content: center;
                     position: relative;
+                    border-radius: 16px 16px 0 0;
+                    overflow: hidden;
                 }
                 .preview-overlay {
                     position: absolute; inset: 0; background: rgba(0,0,0,0.6);

@@ -98,7 +98,21 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, loading]);
+  }, [messages]);
+
+  // Self-Healing Trigger
+  useEffect(() => {
+    const handleAiFixRequest = (e) => {
+        const error = e.detail?.error;
+        if (error) {
+            setInput(`Fix this error: ${error}`);
+            // Optional: Auto-send after a delay?
+            // handleSend(null, `Fix this error: ${error}`);
+        }
+    };
+    window.addEventListener('AI_FIX_REQUEST', handleAiFixRequest);
+    return () => window.removeEventListener('AI_FIX_REQUEST', handleAiFixRequest);
+  }, []);
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -185,6 +199,20 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
 
   const removeAttachment = (index) => {
       setAttachments(attachments.filter((_, i) => i !== index));
+  };
+
+  // Ghost Writer Logic
+  const streamCodeToEditor = async (filename, code) => {
+      const baseSpeed = 10; 
+      const speed = Math.max(2, baseSpeed - Math.floor(code.length / 500));
+      const chunkSize = 5; 
+      
+      for (let i = 0; i <= code.length; i += chunkSize) {
+          const slice = code.slice(0, i + chunkSize);
+          onCodeUpdate(filename, slice);
+          await new Promise(r => setTimeout(r, speed));
+      }
+      onCodeUpdate(filename, code);
   };
 
   // Chat Handler
@@ -285,12 +313,11 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
             speakText(data.message);
         }
 
-        // Handle File Updates
+        // Handle File Updates (Ghost Writer)
         if (data.action === 'UPDATE_FILE' && data.modifications) {
-            // Automatically apply updates
-            data.modifications.forEach(mod => {
-                onCodeUpdate(mod.file, mod.code);
-            });
+            for (const mod of data.modifications) {
+                await streamCodeToEditor(mod.file, mod.code);
+            }
         }
 
     } catch (err) {

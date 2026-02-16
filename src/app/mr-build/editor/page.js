@@ -86,6 +86,7 @@ function EditorContent() {
     const [isCreating, setIsCreating] = useState(false);
     const [newFileName, setNewFileName] = useState('');
     const [deletingFile, setDeletingFile] = useState(null); // filename
+    const [zenMode, setZenMode] = useState(false); // Zen Mode State
 
     // Terminal Listener
     useEffect(() => {
@@ -285,8 +286,19 @@ function EditorContent() {
         }
     };
 
+    // AI Fix Handler (Self-Healing)
+    const handleAiFix = async (errorMsg) => {
+        setCopilotOpen(true);
+        // We'll expose a method on AICopilot via ref or just trigger it via state in a real app
+        // For now, let's simulate the user typing this into the copilot
+        // In a polised version, we'd use a context or ref. 
+        // Hack: Dispatch a custom event that AICopilot listens to
+        window.dispatchEvent(new CustomEvent('AI_FIX_REQUEST', { detail: { error: errorMsg } }));
+    };
+
     // Derived Logic
     const repoName = siteData.slug || 'untitled-repo';
+
     const userName = user?.displayName || user?.email?.split('@')[0] || 'user';
     const currentFile = siteData.files[activeFile] || { content: '', language: 'text' };
 
@@ -294,7 +306,8 @@ function EditorContent() {
 
     return (
         <div className="nebula-editor">
-            {/* 1. Editor Header */}
+            {/* 1. Editor Header (Hidden in Zen Mode) */}
+            {!zenMode && (
             <header className="editor-header">
                 <div className="header-left">
                     <button className="btn-icon" onClick={() => router.push('/mr-build/dashboard')} title="Back to Dashboard">
@@ -311,6 +324,9 @@ function EditorContent() {
                     </div>
                 </div>
                 <div className="header-right">
+                    <button className={`btn-icon ${zenMode ? 'active' : ''}`} onClick={() => setZenMode(!zenMode)} title="Toggle Zen Mode">
+                        <Maximize size={18} />
+                    </button>
                     <button className={`btn-icon ${showSidebar ? 'active' : ''}`} onClick={() => setShowSidebar(!showSidebar)}>
                         <Folder size={18} />
                     </button>
@@ -334,11 +350,24 @@ function EditorContent() {
                     )}
                 </div>
             </header>
+            )}
+
+            {/* Zen Mode Exit Button (Floating) */}
+            {zenMode && (
+                <button 
+                    className="zen-exit-btn"
+                    onClick={() => setZenMode(false)}
+                    title="Exit Zen Mode"
+                >
+                    <Minimize size={20} />
+                </button>
+            )}
 
             {/* 2. Main Workspace */}
             <div className="workspace-container">
                 
                 {/* File Explorer (Mobile Drawer / Desktop Sidebar) */}
+                {!zenMode && (
                 <aside className={`file-explorer ${showSidebar ? 'visible' : ''}`}>
                     <div className="explorer-header">
                         <span>FILES</span>
@@ -385,6 +414,7 @@ function EditorContent() {
                         ))}
                     </div>
                 </aside>
+                )}
 
                 {/* Mobile Sidebar Backdrop */}
                 {showSidebar && <div className="sidebar-backdrop" onClick={() => setShowSidebar(false)} />}
@@ -475,7 +505,12 @@ function EditorContent() {
                                 <span>TERMINAL</span>
                                 <button onClick={() => setTerminalOpen(false)}><X size={14}/></button>
                             </div>
-                            <Terminal files={siteData.files} onUpdateFiles={updateFileContent} onRun={() => setPreviewKey(k => k + 1)}/>
+                            <Terminal 
+                                files={siteData.files} 
+                                onUpdateFiles={updateFileContent} 
+                                onRun={() => setPreviewKey(k => k + 1)}
+                                onFixError={handleAiFix}
+                            />
                         </div>
                     )}
                 </main>
@@ -623,6 +658,14 @@ function EditorContent() {
                 @media (max-width: 1024px) {
                     .copilot-sidebar { position: absolute; right: 0; top: 0; bottom: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
                 }
+
+                .zen-exit-btn {
+                    position: fixed; bottom: 30px; right: 30px; width: 44px; height: 44px;
+                    border-radius: 50%; background: rgba(0,240,255,0.1); border: 1px solid rgba(0,240,255,0.3);
+                    color: #00f0ff; display: flex; align-items: center; justify-content: center;
+                    cursor: pointer; backdrop-filter: blur(10px); transition: 0.3s; z-index: 100;
+                }
+                .zen-exit-btn:hover { background: rgba(0,240,255,0.2); box-shadow: 0 0 20px rgba(0,240,255,0.4); transform: scale(1.1); }
 
                 .toast-notification {
                     position: fixed; bottom: 30px; right: 30px;
