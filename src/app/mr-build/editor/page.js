@@ -45,7 +45,8 @@ import {
     Sparkles,
     X,
     Maximize,
-    Minimize
+    Minimize,
+    Plus
 } from 'lucide-react';
 
 /* --- ICONS & STYLES --- */
@@ -63,7 +64,6 @@ function EditorContent() {
     const [siteId, setSiteId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState('code'); // code, issues, pr, settings
     const [activeFile, setActiveFile] = useState('index.html'); 
     const [showPreview, setShowPreview] = useState(false); // Default to FALSE
     const [copilotOpen, setCopilotOpen] = useState(false);
@@ -290,1022 +290,351 @@ function EditorContent() {
     const userName = user?.displayName || user?.email?.split('@')[0] || 'user';
     const currentFile = siteData.files[activeFile] || { content: '', language: 'text' };
 
-    if (loading) return <Loader text="Loading Repository..." />;
+    if (loading) return <Loader text="Loading Construct..." />;
 
     return (
-        <div className="repo-container">
-            {/* 1. Header (Breadcrumbs + Actions) */}
-            <header className="repo-header">
+        <div className="nebula-editor">
+            {/* 1. Editor Header */}
+            <header className="editor-header">
                 <div className="header-left">
-                    <button className="mobile-menu-btn" onClick={() => setShowSidebar(!showSidebar)} title="Toggle File Explorer">
-                        <Layout size={20} />
+                    <button className="btn-icon" onClick={() => router.push('/mr-build/dashboard')} title="Back to Dashboard">
+                        <ChevronRight size={20} style={{transform: 'rotate(180deg)'}} />
                     </button>
-                    <div className="repo-breadcrumb">
-                        <BookIcon />
-                        <Link href="/mr-build/dashboard" className="user-link">{userName}</Link>
-                        <span className="separator">/</span>
-                        <span className="repo-name">{repoName}</span>
-                        <span className="badge-public">{siteData.status === 'public' ? 'Public' : 'Private'}</span>
+                    <div className="project-info">
+                        <input 
+                            className="project-name-input"
+                            value={siteData.name || siteData.slug}
+                            onChange={(e) => setSiteData({...siteData, name: e.target.value})}
+                            placeholder="Project Name"
+                        />
+                        <span className={`status-badge ${siteData.status}`}>{siteData.status}</span>
                     </div>
                 </div>
                 <div className="header-right">
-                    <button className="btn-action-sm">
-                        <Eye size={14} /> Unwatch <span className="count">1</span>
+                    <button className={`btn-icon ${showSidebar ? 'active' : ''}`} onClick={() => setShowSidebar(!showSidebar)}>
+                        <Folder size={18} />
                     </button>
-                    <button className="btn-action-sm">
-                        <GitBranch size={14} /> Fork <span className="count">0</span>
+                    <button className={`btn-icon ${terminalOpen ? 'active' : ''}`} onClick={() => setTerminalOpen(!terminalOpen)}>
+                        <TerminalIcon size={18} />
                     </button>
-                    <button className="btn-action-sm">
-                        <Star size={14} /> Star <span className="count">{siteData.views || 0}</span>
+                    <button className={`btn-icon ${copilotOpen ? 'active' : ''}`} onClick={() => setCopilotOpen(!copilotOpen)}>
+                        <Sparkles size={18} />
                     </button>
+                    <button className="btn-save" onClick={handleSave} disabled={saving}>
+                        <Save size={16} /> <span>{saving ? 'Saving...' : 'Save'}</span>
+                    </button>
+                    <div className="divider"></div>
+                     <button className={`btn-icon ${showPreview ? 'active' : ''}`} onClick={() => setShowPreview(!showPreview)}>
+                        <Eye size={18} />
+                    </button>
+                    {siteData.slug && (
+                        <a href={`/s/${siteData.slug}`} target="_blank" className="btn-icon" title="Open Live Site">
+                            <ExternalLink size={18}/>
+                        </a>
+                    )}
                 </div>
             </header>
 
-            {/* 2. Navigation Tabs */}
-            <nav className="repo-nav">
-                <button className={`nav-tab ${activeTab === 'code' ? 'active' : ''}`} onClick={() => setActiveTab('code')}>
-                    <Code size={16} /> Code
-                </button>
-                <button className={`nav-tab ${activeTab === 'issues' ? 'active' : ''}`} onClick={() => setActiveTab('issues')}>
-                    <AlertCircle size={16} /> Issues <span className="counter">0</span>
-                </button>
-                <button className={`nav-tab ${activeTab === 'pr' ? 'active' : ''}`} onClick={() => setActiveTab('pr')}>
-                    <GitPullRequest size={16} /> Pull requests <span className="counter">0</span>
-                </button>
-                <button className={`nav-tab ${activeTab === 'actions' ? 'active' : ''}`} onClick={() => setActiveTab('actions')}>
-                    <Play size={16} /> Actions
-                </button>
-                <button className={`nav-tab ${activeTab === 'projects' ? 'active' : ''}`} onClick={() => setActiveTab('projects')}>
-                    <Layout size={16} /> Projects
-                </button>
-                <button className={`nav-tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
-                    <Settings size={16} /> Settings
-                </button>
-            </nav>
-
-            {/* 3. Main Content Area */}
-            <main className="repo-content">
+            {/* 2. Main Workspace */}
+            <div className="workspace-container">
                 
-                {/* SETTINGS VIEW (Simplified for this demo) */}
-                {activeTab === 'settings' && (
-                    <div className="settings-container">
-                        <h3>Repository Settings</h3>
-                        <div className="form-group">
-                            <label>Repository Name (Slug)</label>
+                {/* File Explorer (Mobile Drawer / Desktop Sidebar) */}
+                <aside className={`file-explorer ${showSidebar ? 'visible' : ''}`}>
+                    <div className="explorer-header">
+                        <span>FILES</span>
+                        <button onClick={startCreating} className="btn-add-file" title="New File"><Plus size={16}/></button>
+                    </div>
+                    
+                    {isCreating && (
+                        <div className="file-creation-row">
                             <input 
-                                value={siteData.slug} 
-                                onChange={e => setSiteData({...siteData, slug: e.target.value})}
-                                className="gh-input"
+                                autoFocus
+                                value={newFileName}
+                                onChange={e => setNewFileName(e.target.value)}
+                                onKeyDown={e => { if(e.key === 'Enter') confirmCreate(); if(e.key === 'Escape') cancelCreate(); }}
+                                onBlur={cancelCreate}
+                                className="new-file-input"
+                                placeholder="filename.ext"
                             />
                         </div>
-                        <div className="form-group">
-                            <label>Description</label>
-                            <input 
-                                value={siteData.description} 
-                                onChange={e => setSiteData({...siteData, description: e.target.value})}
-                                className="gh-input"
-                            />
-                        </div>
-                         <div className="form-group">
-                            <label>Visibility</label>
-                            <select 
-                                value={siteData.status}
-                                onChange={e => setSiteData({...siteData, status: e.target.value})}
-                                className="gh-select"
+                    )}
+
+                    <div className="file-list">
+                        {Object.keys(siteData.files).sort().map(fileName => (
+                            <div 
+                                key={fileName}
+                                className={`file-item ${activeFile === fileName ? 'active' : ''}`} 
+                                onClick={() => { setActiveFile(fileName); if(window.innerWidth < 768) setShowSidebar(false); }}
                             >
-                                <option value="draft">Draft (Private)</option>
-                                <option value="public">Public</option>
-                                <option value="private">Private</option>
-                            </select>
-                        </div>
-                        <button className="btn-primary" onClick={handleSave} disabled={saving}>
-                            {saving ? 'Saving...' : 'Rename Repository'}
-                        </button>
-                    </div>
-                )}
-
-                {/* CODE VIEW */}
-                {activeTab === 'code' && (
-                    <div className="code-layout">
-                        {/* Mobile Backdrop */}
-                        <div 
-                            className={`mobile-backdrop ${showSidebar ? 'visible' : ''}`} 
-                            onClick={() => setShowSidebar(false)}
-                        />
-
-                        {/* 3a. File Explorer Sidebar (Modal) */}
-                        <aside className={`file-explorer ${showSidebar ? 'visible' : ''}`}>
-                            <div className="explorer-header">
-                                <span>FILES</span>
-                                <div className="explorer-actions">
-                                    <button onClick={startCreating} className="btn-icon-add" title="New File">+</button>
-                                    <button className="btn-icon-close-mobile" onClick={() => setShowSidebar(false)}><X size={16}/></button>
-                                </div>
-                            </div>
-                            <div className="explorer-list">
-                                {isCreating && (
-                                    <div className="file-creation-row">
-                                        <input 
-                                            autoFocus
-                                            value={newFileName}
-                                            onChange={e => setNewFileName(e.target.value)}
-                                            onKeyDown={e => { if(e.key === 'Enter') confirmCreate(); if(e.key === 'Escape') cancelCreate(); }}
-                                            onBlur={cancelCreate}
-                                            className="new-file-input"
-                                            placeholder="filename.ext"
-                                        />
-                                    </div>
-                                )}
-                                {Object.keys(siteData.files).sort().map(fileName => (
-                                    <div 
-                                        key={fileName}
-                                        className={`file-item ${activeFile === fileName ? 'active' : ''}`} 
-                                        onClick={() => { setActiveFile(fileName); setShowSidebar(false); }}
+                                <span className="file-icon">
+                                    {fileName.endsWith('.html') && <Code size={14} color="#e34c26" />}
+                                    {fileName.endsWith('.css') && <Code size={14} color="#563d7c" />}
+                                    {fileName.endsWith('.js') && <FileCode size={14} color="#f7df1e" />}
+                                    {fileName.endsWith('.md') && <Book size={14} color="#fff" />}
+                                </span>
+                                <span className="file-name">{fileName}</span>
+                                {fileName !== 'index.html' && (
+                                    <button 
+                                        className="btn-delete"
+                                        onClick={(e) => deletingFile === fileName ? confirmDelete(e, fileName) : startDelete(e, fileName)}
                                     >
-                                        <div className="file-name-wrap">
-                                            {fileName.endsWith('.html') && <Code size={14} className="icon-file icon-html" />}
-                                            {fileName.endsWith('.css') && <Code size={14} className="icon-file icon-css" />}
-                                            {fileName.endsWith('.js') && <FileCode size={14} className="icon-file icon-js" />}
-                                            {fileName.endsWith('.md') && <Book size={14} className="icon-file" />}
-                                            {!['.html','.css','.js','.md'].some(ext => fileName.endsWith(ext)) && <FileText size={14} className="icon-file" />}
-                                            {fileName}
-                                        </div>
-                                        {fileName !== 'index.html' && (
-                                            deletingFile === fileName ? (
-                                                <div className="delete-confirm">
-                                                    <button className="btn-confirm-del warn" onClick={(e) => confirmDelete(e, fileName)}>Del</button>
-                                                    <button className="btn-confirm-del" onClick={cancelDelete}>X</button>
-                                                </div>
-                                            ) : (
-                                                <button 
-                                                    className="btn-delete-file"
-                                                    onClick={(e) => startDelete(e, fileName)}
-                                                >
-                                                    &times;
-                                                </button>
-                                            )
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </aside>
-
-            {/* 3b. Editor / Preview Area */}
-                        <div className="editor-main">
-                            {/* Toolbar */}
-                            <div className="editor-toolbar">
-                                <div className="toolbar-left">
-                                    <span className="breadcrumb-path">{repoName} / <strong>{activeFile}</strong></span>
-                                </div>
-                                <div className="toolbar-right">
-                                    {activeFile !== 'README.md' && (
-                                        <button 
-                                            className={`btn-tool ${showPreview ? 'active' : ''}`} 
-                                            onClick={() => setShowPreview(!showPreview)}
-                                        >
-                                            <Eye size={14}/> {showPreview ? 'Hide Preview' : 'Preview'}
-                                        </button>
-                                    )}
-                                    <button className={`btn-tool ${terminalOpen ? 'active' : ''}`} onClick={() => setTerminalOpen(!terminalOpen)}>
-                                        <TerminalIcon size={14}/> Terminal
+                                        {deletingFile === fileName ? <span className="confirm-del">Sure?</span> : <X size={12} />}
                                     </button>
-                                    <button className="btn-tool" onClick={() => setCopilotOpen(!copilotOpen)}>
-                                        <Sparkles size={14}/> Copilot
-                                    </button>
-                                    <button className="btn-primary-sm" onClick={handleSave} disabled={saving}>
-                                        <Save size={14}/> {saving ? 'Committing...' : 'Commit changes'}
-                                    </button>
-                                    {siteData.slug && (
-                                        <a href={`/s/${siteData.slug}`} target="_blank" className="btn-tool">
-                                            <ExternalLink size={14}/> Visit
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            {successMsg && <div className="flash-msg">{successMsg}</div>}
-
-                            <div className={`workspace ${copilotOpen ? 'with-copilot' : ''}`}>
-                                
-                                <div className="editor-layout-col">
-                                    <div className="editor-upper">
-                                        {/* The Editor */}
-                                        <div className={`editor-pane ${showPreview ? 'split' : ''}`}>
-                                            {activeFile === 'README.md' ? (
-                                                <div className="readme-preview">
-                                                    <h1>{siteData.title || 'Untitled Project'}</h1>
-                                                    <p>{siteData.description || 'No description found.'}</p>
-                                                    <hr/>
-                                                    <h3>Status</h3>
-                                                    <p>This project is currently <strong>{siteData.status}</strong>.</p>
-                                                    <div style={{marginTop: '20px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px'}}>
-                                                        <pre style={{whiteSpace: 'pre-wrap'}}>{currentFile.content}</pre>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <Editor
-                                                    value={currentFile.content}
-                                                    onValueChange={code => updateFileContent(activeFile, code)}
-                                                    highlight={code => {
-                                                        if (currentFile.language === 'html') return highlight(code, languages.markup);
-                                                        if (currentFile.language === 'css') return highlight(code, languages.css);
-                                                        if (currentFile.language === 'javascript') return highlight(code, languages.javascript);
-                                                        return highlight(code, languages.markup);
-                                                    }}
-                                                    padding={20}
-                                                    className="code-editor"
-                                                    style={{
-                                                        fontFamily: '"JetBrains Mono", "Fira Code", monospace',
-                                                        fontSize: 14,
-                                                    }}
-                                                />
-                                            )}
-                                        </div>
-
-                                        {/* The Live Preview (Iframe) */}
-                                        {showPreview && activeFile !== 'README.md' && (
-                                            <div className="preview-pane">
-                                                <div className="preview-header">
-                                                    <span>Browser Preview</span>
-                                                    <div className="traffic-lights">
-                                                        <span className="light red"></span>
-                                                        <span className="light yellow"></span>
-                                                        <span className="light green"></span>
-                                                    </div>
-                                                </div>
-                                                <iframe 
-                                                    key={previewKey} // Force reload on run
-                                                    title="Live Preview"
-                                                    srcDoc={`
-                                                        <html>
-                                                            <head>
-                                                                <style>${siteData.files['styles.css']?.content || ''}</style>
-                                                            </head>
-                                                            <body>
-                                                                ${(siteData.files['index.html']?.content || '')
-                                                                    .replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '')
-                                                                    .replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')
-                                                                }
-                                                                
-                                                                <!-- Monetization Injection -->
-                                                                ${siteData.monetization?.enabled && siteData.monetization?.publisherId ? `
-                                                                    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${siteData.monetization.publisherId}" crossorigin="anonymous"></script>
-                                                                    <div id="ai-ad-slot" style="margin: 20px auto; padding: 20px; background: rgba(0,240,255,0.05); border: 1px dashed #00f0ff; color: #00f0ff; text-align: center; border-radius: 8px; font-family: sans-serif; font-size: 12px;">
-                                                                        <div style="font-weight: bold; margin-bottom: 5px;">[ NEX AD NETWORK SLOT ]</div>
-                                                                        <div>Monetization Active: ${siteData.monetization.publisherId}</div>
-                                                                    </div>
-                                                                ` : ''}
-                                                                
-                                                                <!-- Console Hijack -->
-                                                                <script>
-                                                                    (function() {
-                                                                        const oldLog = console.log;
-                                                                        const oldError = console.error;
-                                                                        
-                                                                        console.log = function(...args) {
-                                                                            window.parent.postMessage({ type: 'CONSOLE_LOG', args: args.map(a => String(a)) }, '*');
-                                                                            oldLog.apply(console, args);
-                                                                        };
-                                                                        
-                                                                        console.error = function(...args) {
-                                                                            window.parent.postMessage({ type: 'CONSOLE_ERR', args: args.map(a => String(a)) }, '*');
-                                                                            oldError.apply(console, args);
-                                                                        };
-
-                                                                        window.onerror = function(msg, source, lineno, colno, error) {
-                                                                            window.parent.postMessage({ type: 'CONSOLE_ERR', args: [msg] }, '*');
-                                                                        };
-                                                                    })();
-                                                                </script>
-
-                                                                <!-- Inject JS -->
-                                                                <script>
-                                                                    ${Object.keys(siteData.files)
-                                                                        .filter(f => f.endsWith('.js'))
-                                                                        .map(f => `
-                                                                            try {
-                                                                                // Virtual File: ${f}
-                                                                                ${siteData.files[f].content}
-                                                                            } catch(e) { console.error("Error in ${f}:", e); }
-                                                                        `).join('\n')}
-                                                                </script>
-                                                            </body>
-                                                        </html>
-                                                    `}
-                                                    className="preview-iframe"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Terminal Panel */}
-                                    {terminalOpen && (
-                                        <div className="terminal-pane">
-                                            <div className="terminal-header">
-                                                <span>TERMINAL</span>
-                                                <button onClick={() => setTerminalOpen(false)}><X size={12}/></button>
-                                            </div>
-                                            <div className="terminal-body">
-                                                <Terminal 
-                                                    files={siteData.files} 
-                                                    onUpdateFiles={updateFileContent} 
-                                                    onRun={() => setPreviewKey(k => k + 1)}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {copilotOpen && (
-                                    <div className="copilot-sidebar">
-                                         <AICopilot 
-                                            siteData={siteData}
-                                            onCodeUpdate={(file, code) => {
-                                                // Handle Multi-File Updates
-                                                if (!siteData.files[file]) {
-                                                    const ext = file.split('.').pop();
-                                                    let lang = 'javascript';
-                                                    if (ext === 'html') lang = 'html';
-                                                    if (ext === 'css') lang = 'css';
-                                                    if (ext === 'json') lang = 'json';
-                                                    
-                                                    setSiteData(prev => ({
-                                                        ...prev,
-                                                        files: {
-                                                            ...prev.files,
-                                                            [file]: { content: code, language: lang }
-                                                        }
-                                                    }));
-                                                    setSuccessMsg(`AI created ${file}`);
-                                                } else {
-                                                    updateFileContent(file, code);
-                                                    setSuccessMsg(`AI updated ${file}`);
-                                                }
-                                                setTimeout(() => setSuccessMsg(''), 3000);
-                                            }} 
-                                        />
-                                    </div>
                                 )}
                             </div>
-                        </div>
+                        ))}
                     </div>
+                </aside>
+
+                {/* Mobile Sidebar Backdrop */}
+                {showSidebar && <div className="sidebar-backdrop" onClick={() => setShowSidebar(false)} />}
+
+                {/* Editor & Preview Area */}
+                <main className={`main-pane ${copilotOpen ? 'shrink' : ''}`}>
+                    
+                    {/* Code Editor */}
+                    <div className={`editor-wrapper ${showPreview ? 'split-view' : ''} ${activeFile === 'README.md' ? 'readme-mode' : ''}`}>
+                         {activeFile === 'README.md' ? (
+                            <div className="readme-preview">
+                                <h1>{siteData.title || 'Untitled Project'}</h1>
+                                <p>{siteData.description || 'No description found.'}</p>
+                                <hr/>
+                                <div className="readme-content">
+                                    <pre>{currentFile.content}</pre>
+                                </div>
+                            </div>
+                        ) : (
+                            <Editor
+                                value={currentFile.content}
+                                onValueChange={code => updateFileContent(activeFile, code)}
+                                highlight={code => {
+                                    if (currentFile.language === 'html') return highlight(code, languages.markup);
+                                    if (currentFile.language === 'css') return highlight(code, languages.css);
+                                    if (currentFile.language === 'javascript') return highlight(code, languages.javascript);
+                                    return highlight(code, languages.markup);
+                                }}
+                                padding={20}
+                                className="code-editor"
+                                style={{
+                                    fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+                                    fontSize: 14,
+                                    backgroundColor: 'transparent',
+                                    minHeight: '100%'
+                                }}
+                            />
+                        )}
+                    </div>
+
+                    {/* Preview (Conditional or Split) */}
+                    <div className={`preview-wrapper ${showPreview ? 'visible' : ''}`}>
+                        <div className="preview-toolbar">
+                            <span>Preview</span>
+                            <button onClick={() => setPreviewKey(k => k + 1)} title="Refresh"><Play size={12} /></button>
+                        </div>
+                         <iframe 
+                            key={previewKey}
+                            title="Live Preview"
+                            srcDoc={`
+                                <html>
+                                    <head>
+                                        <style>${siteData.files['styles.css']?.content || ''}</style>
+                                    </head>
+                                    <body>
+                                        ${(siteData.files['index.html']?.content || '')
+                                            .replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '')
+                                            .replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')
+                                        }
+                                        ${siteData.monetization?.enabled && siteData.monetization?.publisherId ? `
+                                            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${siteData.monetization.publisherId}" crossorigin="anonymous"></script>
+                                            <div style="margin: 20px auto; padding: 20px; border: 1px dashed #00f0ff; color: #00f0ff; text-align: center; font-family: sans-serif; font-size: 12px;">
+                                                [ ADS ENABLED: ${siteData.monetization.publisherId} ]
+                                            </div>
+                                        ` : ''}
+                                        <script>
+                                            (function() {
+                                                const oldLog = console.log; const oldError = console.error;
+                                                console.log = function(...args) { window.parent.postMessage({ type: 'CONSOLE_LOG', args: args.map(a => String(a)) }, '*'); oldLog.apply(console, args); };
+                                                console.error = function(...args) { window.parent.postMessage({ type: 'CONSOLE_ERR', args: args.map(a => String(a)) }, '*'); oldError.apply(console, args); };
+                                                window.onerror = function(msg) { window.parent.postMessage({ type: 'CONSOLE_ERR', args: [msg] }, '*'); };
+                                            })();
+                                        </script>
+                                        <script>
+                                            ${Object.keys(siteData.files).filter(f => f.endsWith('.js')).map(f => `try { ${siteData.files[f].content} } catch(e) { console.error(e); }`).join('\n')}
+                                        </script>
+                                    </body>
+                                </html>
+                            `}
+                            className="preview-iframe"
+                        />
+                    </div>
+
+                    {/* Terminal Pane */}
+                    {terminalOpen && (
+                        <div className="terminal-drawer">
+                            <div className="drawer-header">
+                                <span>TERMINAL</span>
+                                <button onClick={() => setTerminalOpen(false)}><X size={14}/></button>
+                            </div>
+                            <Terminal files={siteData.files} onUpdateFiles={updateFileContent} onRun={() => setPreviewKey(k => k + 1)}/>
+                        </div>
+                    )}
+                </main>
+
+                {/* Copilot Sidebar */}
+                {copilotOpen && (
+                    <aside className="copilot-sidebar">
+                        <AICopilot 
+                            siteData={siteData} 
+                            onCodeUpdate={(file, code) => {
+                                if (!siteData.files[file]) {
+                                    setSiteData(prev => ({ ...prev, files: { ...prev.files, [file]: { content: code, language: file.endsWith('html')?'html':file.endsWith('css')?'css':'javascript' } } }));
+                                } else {
+                                    updateFileContent(file, code);
+                                }
+                                setSuccessMsg('AI updated ' + file);
+                            }} 
+                        />
+                    </aside>
                 )}
-            </main>
+            </div>
+
+            {successMsg && <div className="toast-notification">{successMsg}</div>}
 
             <style jsx>{`
-                /* Custom Scrollbars */
-                ::-webkit-scrollbar { width: 6px; height: 6px; }
-                ::-webkit-scrollbar-track { background: transparent; }
-                ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-                ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-
-                /* Dark Nebula Editor Theme */
-                .repo-container {
-                    --bg-canvas: #090c10;
-                    --bg-header: rgba(13, 17, 23, 0.85);
-                    --bg-sub: rgba(22, 27, 34, 0.6);
-                    --border-color: rgba(48, 54, 61, 0.4);
-                    --text-primary: #e6edf3;
-                    --text-secondary: #8b949e;
-                    --accent: #00f0ff;
-                    --accent-glow: rgba(0, 240, 255, 0.15);
-                    --btn-bg: rgba(33, 38, 45, 0.8);
-                    --btn-border: rgba(240, 246, 252, 0.1);
-                    --btn-hover: #30363d;
-                    --btn-primary: #238636;
-                    --btn-primary-hover: #2ea043;
-                    
-                    background: radial-gradient(circle at 60% 0%, #171b21 0%, #050505 60%);
-                    color: var(--text-primary);
-                    min-height: 100vh;
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-                    display: flex;
-                    flex-direction: column;
+                .nebula-editor {
+                    display: flex; flex-direction: column; height: 100vh;
+                    background: #050505; color: #fff; font-family: 'Inter', sans-serif;
+                    overflow: hidden;
                 }
 
                 /* Header */
-                .repo-header {
-                    background: var(--bg-header);
-                    backdrop-filter: blur(10px);
-                    padding: 12px 24px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    border-bottom: 1px solid var(--border-color);
-                    z-index: 20;
+                .editor-header {
+                    height: 60px; display: flex; justify-content: space-between; align-items: center;
+                    padding: 0 16px; background: rgba(10,10,10,0.8); border-bottom: 1px solid rgba(255,255,255,0.1);
+                    backdrop-filter: blur(10px); z-index: 50;
                 }
-                .repo-breadcrumb {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-size: 18px;
-                }
-                .user-link { color: var(--text-secondary); text-decoration: none; transition: 0.2s; }
-                .user-link:hover { color: var(--accent); }
-                .separator { color: var(--text-secondary); }
-                .repo-name { font-weight: 700; color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); }
-                .badge-public {
-                    font-size: 11px;
-                    border: 1px solid var(--border-color);
-                    border-radius: 2em;
-                    padding: 2px 10px;
-                    color: var(--text-secondary);
-                    margin-left: 8px;
-                    font-weight: 500;
-                }
-
-                .header-right { display: flex; gap: 8px; }
-                .btn-icon-close-mobile { display: none; }
-                .btn-action-sm {
-                    background: var(--btn-bg);
-                    border: 1px solid var(--btn-border);
-                    color: var(--text-primary);
-                    padding: 4px 12px;
-                    border-radius: 6px;
-                    font-size: 13px; /* Larger font for mobile */
-                    font-weight: 500;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    cursor: pointer;
-                    transition: 0.2s;
-                    flex-shrink: 0;
-                    min-height: 32px; /* Touch target */
-                }
-                .btn-action-sm:hover { background: var(--btn-hover); border-color: var(--text-secondary); }
-                .count {
-                    background: rgba(110,118,129,0.4);
-                    padding: 0 6px;
-                    border-radius: 2em;
-                    font-size: 10px;
-                }
-
-                /* Navigation */
-                .repo-nav {
-                    background: var(--bg-header);
-                    padding: 0 24px;
-                    display: flex;
-                    gap: 8px;
-                    border-bottom: 1px solid var(--border-color);
-                    overflow-x: auto;
-                    -webkit-overflow-scrolling: touch;
-                    white-space: nowrap;
-                    scrollbar-width: none;
-                    backdrop-filter: blur(10px);
-                }
-                .repo-nav::-webkit-scrollbar { display: none; }
-                .nav-tab {
-                    background: transparent;
-                    border: none;
-                    color: var(--text-primary);
-                    padding: 12px 16px;
-                    font-size: 14px;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    cursor: pointer;
-                    border-bottom: 2px solid transparent;
-                    transition: 0.2s;
-                    white-space: nowrap;
-                    position: relative;
-                }
-                .nav-tab:hover { background: rgba(255,255,255,0.05); }
-                .nav-tab.active { border-bottom-color: var(--accent); font-weight: 600; }
-                .nav-tab.active svg { color: var(--accent); filter: drop-shadow(0 0 5px var(--accent)); }
+                .header-left, .header-right { display: flex; align-items: center; gap: 12px; }
                 
-                .counter { background: rgba(110,118,129,0.4); padding: 0 6px; border-radius: 10px; font-size: 10px; }
-
-                /* Main Content */
-                .repo-content { padding: 24px; flex: 1; overflow: hidden; }
-
-                /* Code View Layout */
-                .code-layout {
-                    display: grid;
-                    grid-template-columns: 1fr; /* Single column now */
-                    gap: 0;
-                    height: calc(100vh - 140px);
-                    position: relative;
+                .project-info { display: flex; align-items: center; gap: 10px; }
+                .project-name-input {
+                    background: transparent; border: 1px solid transparent; color: #fff;
+                    font-size: 16px; font-weight: 600; width: 200px;
+                    padding: 4px 8px; border-radius: 4px; transition: 0.2s;
                 }
+                .project-name-input:focus { border-color: #00f0ff; outline: none; background: rgba(255,255,255,0.05); }
+                .project-name-input:hover { border-color: rgba(255,255,255,0.1); }
                 
-                .editor-main {
-                    display: flex;
-                    flex-direction: column;
-                    min-width: 0;
-                    height: 100%;
-                }
-                
-                .editor-toolbar {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 8px 16px;
-                    border-bottom: 1px solid var(--border-color);
-                    background: rgba(22, 27, 34, 0.6);
-                    backdrop-filter: blur(10px);
-                }
-                .toolbar-left { display: flex; align-items: center; gap: 12px; }
-                .breadcrumb-path { 
-                    font-size: 13px; 
-                    color: var(--text-secondary); 
-                    display: flex; align-items: center; gap: 6px;
-                }
-                .breadcrumb-path strong { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); }
+                .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; }
+                .status-badge.public { background: rgba(0,255,128,0.2); color: #00ff80; }
+                .status-badge.draft { background: rgba(255,255,255,0.1); color: #aaa; }
 
-                .toolbar-right { display: flex; align-items: center; gap: 8px; }
-                .btn-tool {
-                    background: transparent;
-                    border: 1px solid var(--border-color);
-                    color: var(--text-secondary);
-                    padding: 4px 10px;
-                    border-radius: 4px;
-                    font-size: 12px;
-                    cursor: pointer;
-                    display: flex; align-items: center; gap: 6px;
-                    transition: all 0.2s;
+                .btn-icon {
+                    background: transparent; border: none; color: #888; cursor: pointer;
+                    padding: 8px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center;
                 }
-                .btn-tool:hover { 
-                    background: rgba(255,255,255,0.05); 
-                    color: var(--text-primary); 
-                    border-color: var(--text-secondary);
-                }
-                .btn-tool.active {
-                    background: rgba(0, 240, 255, 0.1);
-                    color: var(--accent);
-                    border-color: var(--accent);
-                    box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
-                }
+                .btn-icon:hover { color: #fff; background: rgba(255,255,255,0.05); }
+                .btn-icon.active { color: #00f0ff; background: rgba(0,240,255,0.1); }
                 
-                /* File Explorer Modal */
-                .file-explorer {
-                    position: absolute;
-                    top: 0; left: 0; bottom: 0;
-                    width: 300px;
-                    background: rgba(13, 17, 23, 0.95);
-                    border-right: 1px solid var(--border-color);
-                    z-index: 50;
-                    transform: translateX(-100%);
-                    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-                    backdrop-filter: blur(10px);
-                    display: flex;
-                    flex-direction: column;
-                    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-                }
-                .file-explorer.visible { transform: translateX(0); }
-
-                /* Backdrop */
-                .file-explorer.visible::before {
-                    content: '';
-                    position: fixed;
-                    top: 0; left: 300px; right: 0; bottom: 0;
-                    background: rgba(0,0,0,0.3);
-                    z-index: -1;
-                    pointer-events: auto;
-                }
-                
-                .explorer-header {
-                     padding: 12px 16px;
-                     background: transparent;
-                     border-bottom: 1px solid var(--border-color);
-                     font-size: 11px;
-                     font-weight: 700;
-                     letter-spacing: 1px;
-                     text-transform: uppercase;
-                     display: flex; justify-content: space-between; align-items: center;
-                     color: var(--text-secondary);
-                }
-                .branch-badge { 
-                    background: rgba(255,255,255,0.05); 
-                    padding: 2px 8px; 
-                    border-radius: 6px; 
-                    display: flex; align-items: center; gap: 6px; 
-                    font-size: 11px;
-                    border: 1px solid var(--border-color);
-                    cursor: pointer;
-                    color: var(--text-secondary);
+                .btn-save {
+                    background: #00f0ff; color: #000; border: none; padding: 6px 16px; border-radius: 6px;
+                    font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;
                     transition: 0.2s;
                 }
-                .branch-badge:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); border-color: var(--text-secondary); }
-
-                .file-item {
-                    padding: 8px 16px;
-                    font-size: 13px;
-                    border-bottom: 1px solid transparent;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    color: var(--text-secondary);
-                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                    position: relative;
-                    margin: 1px 0;
-                }
-                .file-item:last-child { border-bottom: none; }
-                .file-item:hover { 
-                    background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
-                    color: var(--text-primary); 
-                    transform: translateX(4px);
-                }
-                .file-item.active { 
-                    background: rgba(0, 240, 255, 0.05); 
-                    color: #fff; 
-                    border-left: 2px solid var(--accent);
-                    box-shadow: inset 20px 0 30px -15px rgba(0, 240, 255, 0.15);
-                }
-                .file-name-wrap { display: flex; align-items: center; gap: 10px; }
-
-                .icon-file { color: var(--text-secondary); opacity: 0.7; }
-                .file-item:hover .icon-file { opacity: 1; }
-                .icon-html { color: #e34c26; }
-                .icon-css { color: #563d7c; }
-                .icon-js { color: #f7df1e; }
+                .btn-save:hover { box-shadow: 0 0 10px rgba(0,240,255,0.5); }
+                .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
                 
-                .btn-icon-add {
-                    background: transparent;
-                    border: 1px solid var(--border-color);
-                    color: var(--text-secondary);
-                    width: 24px; height: 24px;
-                    display: flex; align-items: center; justify-content: center;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    transition: 0.2s;
-                }
-                .btn-icon-add:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: var(--text-primary); }
+                .divider { width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 4px; }
 
-                .btn-delete-file {
-                    background: transparent;
-                    border: none;
-                    color: #ef4444;
-                    opacity: 0;
-                    cursor: pointer;
-                    font-size: 16px;
-                    transition: 0.2s;
-                    transform: translateX(10px);
-                }
-                .file-item:hover .btn-delete-file { opacity: 1; transform: translateX(0); }
-                .btn-delete-file:hover { color: #ff0000; scale: 1.2; }
-                
-                .file-creation-row {
-                    padding: 8px 16px;
-                    border-bottom: 1px solid var(--border-color);
-                    background: rgba(0,0,0,0.2);
-                }
-                .new-file-input {
-                    width: 100%;
-                    background: rgba(0,0,0,0.3);
-                    border: 1px solid var(--accent);
-                    color: #fff;
-                    padding: 6px 10px;
-                    font-size: 13px;
-                    border-radius: 4px;
-                    outline: none;
-                    box-shadow: 0 0 10px rgba(0,240,255,0.1);
-                }
-                
-                .delete-confirm { display: flex; gap: 4px; }
-                .btn-confirm-del {
-                    background: rgba(255,255,255,0.1);
-                    border: none;
-                    color: #fff;
-                    font-size: 10px;
-                    padding: 2px 6px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                }
-                .btn-confirm-del.warn { background: #ef4444; }
-                .btn-confirm-del:hover { opacity: 0.8; }
-
-                /* Editor Main */
-                .editor-main {
-                    display: flex;
-                    flex-direction: column;
-                    border: 1px solid var(--border-color);
-                    border-radius: 6px;
-                    background: rgba(13, 17, 23, 0.5); /* Semi-transparent */
-                    overflow: hidden;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-                    backdrop-filter: blur(5px);
-                }
-
-                /* ... existing toolbar rules ... */
-
-                .preview-header {
-                    background: var(--bg-sub);
-                    color: var(--text-primary);
-                    padding: 8px 16px;
-                    font-size: 12px;
-                    font-weight: 600;
-                    border-bottom: 1px solid var(--border-color);
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-                .preview-iframe { flex: 1; border: none; width: 100%; height: 100%; }
-
-                .copilot-sidebar {
-                    width: 350px;
-                    border-left: 1px solid var(--border-color);
-                    background: var(--bg-sub);
-                    backdrop-filter: blur(10px);
-                }
-
-                .flash-msg {
-                    background: var(--btn-primary);
-                    color: #fff;
-                    padding: 8px 16px;
-                    font-size: 13px;
-                    font-weight: 600;
-                    display: flex; align-items: center; gap: 8px;
-                    animation: slideDown 0.3s ease-out;
-                    position: absolute;
-                    top: 10px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    z-index: 50;
-                    border-radius: 8px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    backdrop-filter: blur(12px);
-                }
-                @keyframes slideDown { from { transform: translate(-50%, -20px) scale(0.9); opacity: 0; } to { transform: translate(-50%, 16px) scale(1); opacity: 1; } }
-                
-                .settings-container { max-width: 600px; padding: 20px 0; color: var(--text-secondary); }
-                .form-group { margin-bottom: 20px; }
-                .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-primary); }
-                .gh-input, .gh-select {
-                    width: 100%;
-                    padding: 8px 12px;
-                    background: rgba(0,0,0,0.3);
-                    border: 1px solid var(--border-color);
-                    border-radius: 6px;
-                    color: var(--text-primary);
-                    font-size: 14px;
-                    line-height: 20px;
-                }
-                .gh-input:focus, .gh-select:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
-                .btn-primary {
-                     background: var(--btn-primary);
-                    color: #fff;
-                    border: 1px solid rgba(240,246,252,0.1);
-                    padding: 6px 16px;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    transition: 0.2s;
-                }
-                .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 15px rgba(35, 134, 54, 0.4); }
-
-                /* Mobile */
-                @media (max-width: 768px) {
-                    .code-layout { grid-template-columns: 1fr; }
-                    .file-explorer { display: none; } /* Hide sidebar on mobile for now */
-                    .editor-pane.split { flex: 1; display: none; }
-                    .editor-pane.split:first-child { display: block; } 
-                    .preview-pane { position: absolute; inset: 0; z-index: 10; }
-                }
-                .mobile-menu-btn {
-                    display: flex; /* Always visible */
-                    background: transparent;
-                    border: 1px solid var(--border-color);
-                    color: var(--text-secondary);
-                    padding: 6px;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    margin-right: 12px;
-                }
-                .mobile-menu-btn:hover { color: var(--text-primary); border-color: var(--text-secondary); }
-
-                /* Mobile Responsive */
-                @media (max-width: 768px) {
-                    .mobile-menu-btn { display: flex; }
-                    .repo-header { flex-direction: column; align-items: flex-start; gap: 12px; height: auto; padding: 16px; }
-                    .header-left { display: flex; align-items: center; width: 100%; }
-                    .header-right { 
-                        width: 100%; 
-                        justify-content: flex-start; 
-                        overflow-x: auto; 
-                        padding-bottom: 8px;
-                        gap: 12px;
-                        -webkit-overflow-scrolling: touch;
-                    }
-                    .header-right::-webkit-scrollbar { display: none; }
-                }
-                    
-                    .code-layout { grid-template-columns: 1fr; position: relative; height: calc(100vh - 180px); }
-                    
                 /* Workspace */
-                .workspace {
-                    display: flex;
-                    flex: 1;
-                    overflow: hidden;
-                    position: relative;
+                .workspace-container { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+                /* Sidebar */
+                .file-explorer {
+                    width: 250px; background: #0a0a0a; border-right: 1px solid rgba(255,255,255,0.05);
+                    display: flex; flex-direction: column; transition: 0.3s;
+                    position: absolute; top:0; bottom:0; left:0; transform: translateX(-100%); z-index: 40;
                 }
+                .file-explorer.visible { transform: translateX(0); position: relative; }
+                @media (max-width: 768px) {
+                    .file-explorer { position: absolute; height: 100%; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+                    .file-explorer.visible { transform: translateX(0); }
+                    .sidebar-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 30; }
+                }
+
+                .explorer-header { 
+                    padding: 16px; font-size: 12px; color: #666; font-weight: 700; letter-spacing: 1px;
+                    display: flex; justify-content: space-between; align-items: center;
+                }
+                .btn-add-file { background: none; border: none; color: #666; cursor: pointer; }
+                .btn-add-file:hover { color: #fff; }
+
+                .file-list { flex: 1; overflow-y: auto; }
+                .file-item {
+                    padding: 10px 16px; display: flex; align-items: center; gap: 10px;
+                    cursor: pointer; color: #888; font-size: 14px; border-left: 2px solid transparent;
+                    transition: 0.2s;
+                }
+                .file-item:hover { background: rgba(255,255,255,0.02); color: #fff; }
+                .file-item.active { background: rgba(0,240,255,0.05); color: #fff; border-left-color: #00f0ff; }
+                .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+                .btn-delete { background: none; border: none; color: #666; cursor: pointer; opacity: 0; transition: 0.2s; }
+                .file-item:hover .btn-delete { opacity: 1; }
+                .btn-delete:hover { color: #ff4444; }
+                .confirm-del { font-size: 10px; color: #ff4444; text-transform: uppercase; }
+
+                .file-creation-row { padding: 10px 16px; background: rgba(255,255,255,0.05); }
+                .new-file-input { width: 100%; background: transparent; border: none; color: #fff; outline: none; font-size: 14px; }
+
+                /* Main Pane */
+                .main-pane { flex: 1; display: flex; position: relative; overflow: hidden; transition: 0.3s; }
+                .main-pane.shrink { margin-right: 0; } /* Copilot takes space */
                 
-                .editor-layout-col {
-                    display: flex;
-                    flex-direction: column;
-                    flex: 1;
-                    min-width: 0;
-                    height: 100%;
+                .editor-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+                .editor-wrapper.split-view { width: 50%; border-right: 1px solid rgba(255,255,255,0.1); }
+                @media (max-width: 768px) {
+                    .editor-wrapper.split-view { display: none; } /* On mobile, toggle, don't split */
                 }
+
+                .preview-wrapper { 
+                    flex: 1; background: #fff; display: none; flex-direction: column; 
+                }
+                .preview-wrapper.visible { display: flex; }
+                @media (max-width: 768px) {
+                    .preview-wrapper.visible { position: absolute; inset: 0; z-index: 20; }
+                }
+
+                .preview-toolbar { padding: 8px 16px; background: #eee; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; color: #333; font-size: 12px; font-weight: 600; }
+                .preview-iframe { flex: 1; width: 100%; height: 100%; border: none; }
+
+                /* Terminal */
+                .terminal-drawer {
+                    position: absolute; bottom: 0; left: 0; right: 0; height: 250px;
+                    background: #0d0d0d; border-top: 1px solid rgba(255,255,255,0.1);
+                    display: flex; flex-direction: column; z-index: 25;
+                    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+                }
+                .drawer-header { padding: 8px 16px; background: #151515; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #888; font-weight: 700; letter-spacing: 1px; }
                 
-                .editor-upper {
-                    flex: 1;
-                    display: flex;
-                    min-height: 0; 
-                    position: relative;
-                }
-
-                .editor-pane {
-                    flex: 1;
-                    overflow: auto;
-                    position: relative;
-                }
-                .editor-pane.split { border-right: 1px solid var(--border-color); }
-
-                /* Preview Pane */
-                .preview-pane {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    background: #fff;
-                    overflow: hidden;
-                }
-                .preview-header {
-                    background: #e1e4e8;
-                    color: #24292e;
-                    padding: 6px 12px;
-                    font-size: 11px;
-                    font-weight: 600;
-                    border-bottom: 1px solid #d1d5da;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                }
-                
-                .traffic-lights { display: flex; gap: 6px; }
-                .light { width: 10px; height: 10px; border-radius: 50%; }
-                .light.red { background: #ff5f56; border: 1px solid #e0443e; }
-                .light.yellow { background: #ffbd2e; border: 1px solid #dea123; }
-                .light.green { background: #27c93f; border: 1px solid #1aab29; }
-
-                .preview-iframe {
-                    flex: 1;
-                    border: none;
-                    background: #fff;
-                    width: 100%;
-                    height: 100%;
-                }
-
-                /* Terminal Pane */
-                .terminal-pane {
-                    height: 240px;
-                    min-height: 100px;
-                    border-top: 1px solid var(--border-color);
-                    background: #0d1117;
-                    display: flex;
-                    flex-direction: column;
-                }
-                .terminal-header {
-                    background: var(--bg-header);
-                    padding: 6px 12px;
-                    font-size: 11px;
-                    font-weight: 600;
-                    border-bottom: 1px solid var(--border-color);
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    color: var(--text-secondary);
-                }
-                .terminal-header button {
-                     background: transparent; border: none; color: var(--text-secondary); cursor: pointer;
-                }
-                .terminal-header button:hover { color: #fff; }
-                
-                .terminal-body {
-                    flex: 1;
-                    position: relative;
-                    overflow: hidden;
-                    padding: 4px;
-                }
-
                 /* Copilot Sidebar */
                 .copilot-sidebar {
-                    width: 350px;
-                    border-left: 1px solid var(--border-color);
-                    background: rgba(0,0,0,0.5);
-                    backdrop-filter: blur(10px);
-                    display: flex;
-                    flex-direction: column;
-                    z-index: 10;
+                    width: 320px; background: #080808; border-left: 1px solid rgba(255,255,255,0.1);
+                    display: flex; flex-direction: column; z-index: 30;
                 }
-                .workspace:not(.with-copilot) .copilot-sidebar { display: none; }
-
-                /* Code Editor Override */
-                :global(.code-editor) {
-                    min-height: 100%;
-                }
-                :global(textarea) { outline: none !important; }
-                
-                .readme-preview {
-                    padding: 40px;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    color: var(--text-primary);
-                    line-height: 1.6;
-                }
-                .readme-preview h1 { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px; }
-                .readme-preview hr { border: 0; border-top: 1px solid var(--border-color); margin: 24px 0; }
-
-                .flash-msg {
-                    position: absolute;
-                    top: 60px;
-                    right: 20px;
-                    background: var(--btn-primary);
-                    color: #fff;
-                    padding: 8px 16px;
-                    border-radius: 6px;
-                    font-size: 13px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                    animation: slideIn 0.3s ease-out;
-                    z-index: 100;
-                }
-                @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-                /* Header */
-                .repo-header {
-                    background: var(--bg-header);
-                    backdrop-filter: blur(10px);
-                    padding: 12px 24px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    border-bottom: 1px solid var(--border-color);
-                    position: sticky; /* Ensure z-index works and it stays on top */
-                    top: 0;
-                    z-index: 20;
+                @media (max-width: 1024px) {
+                    .copilot-sidebar { position: absolute; right: 0; top: 0; bottom: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
                 }
 
-                /* Mobile Responsive */
-                @media (max-width: 768px) {
-                    .mobile-responsive-wrapper { display: contents; }
-
-                    /* Mobile File Explorer Slide-in */
-                    .file-explorer {
-                        display: flex; /* Always display for transition, hide via transform */
-                        position: fixed; /* Fixed to viewport */
-                        top: 0; left: 0; bottom: 0;
-                        width: 250px;
-                        background: rgba(13, 17, 23, 0.95);
-                        z-index: 100; /* Higher than header */
-                        border-right: 1px solid var(--border-color);
-                        box-shadow: 10px 0 20px rgba(0,0,0,0.5);
-                        transform: translateX(-100%);
-                        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                    }
-                    .file-explorer.visible { transform: translateX(0); }
-                    
-                    /* Mobile Backdrop */
-                    .mobile-backdrop {
-                        position: fixed;
-                        top: 0; left: 0; right: 0; bottom: 0;
-                        background: rgba(0,0,0,0.5);
-                        z-index: 90; /* Below sidebar (100) */
-                        opacity: 0;
-                        pointer-events: none;
-                        transition: opacity 0.3s;
-                        backdrop-filter: blur(2px);
-                    }
-                    .mobile-backdrop.visible {
-                        opacity: 1;
-                        pointer-events: auto;
-                    }
-
-                    /* Close Button Mobile */
-                    .btn-icon-close-mobile { 
-                        display: flex; 
-                        align-items: center; 
-                        justify-content: center;
-                        background: rgba(255,255,255,0.1);
-                        border: 1px solid var(--border-color);
-                        color: #fff;
-                        width: 28px; height: 28px;
-                        border-radius: 6px;
-                        cursor: pointer;
-                    }
-
-                    /* Ensure button is clickable */
-                    .mobile-menu-btn {
-                        position: relative;
-                        z-index: 30;
-                        padding: 8px; /* Bigger touch target */
-                        margin: -8px;
-                    }
-                    
-                    .editor-pane.split { display: none; }
-                    .editor-pane.split:first-child { display: block; flex: 1; }
+                .toast-notification {
+                    position: fixed; bottom: 30px; right: 30px;
+                    background: #00f0ff; color: #000; padding: 12px 24px;
+                    border-radius: 8px; font-weight: 600; box-shadow: 0 5px 20px rgba(0,240,255,0.3);
+                    z-index: 100; animation: fadeUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
                 }
-                @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+                @keyframes fadeUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+                .readme-preview { padding: 40px; overflow-y: auto; height: 100%; color: #ccc; }
+                .readme-preview h1 { color: #fff; border-bottom: 1px solid #333; padding-bottom: 10px; }
+                .readme-content { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; margin-top: 20px; }
             `}</style>
         </div>
     );
@@ -1317,12 +646,4 @@ export default function MrBuildEditorPage() {
             <EditorContent />
         </Suspense>
     );
-}
-
-function BookIcon() {
-    return (
-        <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style={{color: '#8b949e'}}>
-            <path d="M0 1.75A.75.75 0 01.75 1h4.253c1.227 0 2.317.59 3 1.501A3.744 3.744 0 0111.006 1h4.245a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-4.507a2.25 2.25 0 00-1.591.659l-.622.621a.75.75 0 01-1.06 0l-.622-.621A2.25 2.25 0 005.258 13H.75a.75.75 0 01-.75-.75V1.75zm8.755 3a2.25 2.25 0 012.25-2.25H14.5v9h-3.757c-.71 0-1.4.201-1.992.572l.004-7.322zm-1.504 7.324l.004-5.073-.002-2.253A2.25 2.25 0 005.003 2.5H1.5v9h3.757a3.677 3.677 0 011.994.574z"></path>
-        </svg>
-    )
 }

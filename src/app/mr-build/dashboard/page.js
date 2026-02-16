@@ -156,726 +156,292 @@ export default function BuildDashboard() {
 
     return (
         <div className="nebula-container">
-            {/* Top Navigation Bar */}
+            {/* Header */}
             <header className="nebula-header">
-                <div className="header-left">
-                    <div className="logo-section">
-                        <Box size={24} className="logo-icon" />
-                        <span className="logo-text">Mr Build <span className="highlight">OS</span></span>
-                    </div>
-                     <div className="search-bar">
-                        <Search size={14} className="search-icon" />
-                        <input 
-                            placeholder="Search repositories..." 
-                            className="nebula-search-input"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        <span className="shortcut">/</span>
-                    </div>
-                    <nav className="header-nav">
-                        <button className="nav-item">Pull requests</button>
-                        <button className="nav-item">Issues</button>
-                        <button className="nav-item">Codespaces</button>
-                        <button className="nav-item">Marketplace</button>
-                        <button className="nav-item">Explore</button>
-                    </nav>
+                <div className="brand-section">
+                    <Box size={24} className="brand-icon" />
+                    <span className="brand-text">MR BUILD <span className="highlight">OS</span></span>
                 </div>
-                <div className="header-right">
-                    <div className="user-menu" onClick={async () => {
-                        await signOut(auth);
-                        router.push('/mr-build/login');
-                    }}>
+                <div className="header-actions">
+                    <div className="user-profile" onClick={() => router.push('/mr-build/subscription')}>
+                        <div className="user-info-header">
+                            <span className="user-name">{user.displayName || user.email?.split('@')[0]}</span>
+                            <span className="user-plan">FREE PLAN</span>
+                        </div>
                         <img 
                             src={`https://ui-avatars.com/api/?name=${user.email}&background=00f0ff&color=000`} 
                             alt="User" 
-                            className="header-avatar" 
+                            className="avatar-sm" 
                         />
                     </div>
                 </div>
             </header>
 
             <main className="nebula-main">
-                <div className="nebula-layout">
-                    
-                    {/* Left Sidebar */}
-                    <aside className="nebula-sidebar">
-                        <div className="profile-section">
-                            <div className="profile-avatar-large">
-                                <img 
-                                    src={`https://ui-avatars.com/api/?name=${user.email}&background=050505&color=00f0ff&size=200`} 
-                                    alt="Profile" 
-                                />
-                                <div className="online-indicator"></div>
-                            </div>
-                            <h2 className="profile-name">{user.displayName || user.email?.split('@')[0]}</h2>
-                            <p className="profile-handle">{user.email}</p>
-                            
-                            <button className="btn-block-action">Edit profile</button> 
-                            <Link href="/mr-build/subscription" className="btn-block-action btn-sub">
-                                💎 Manage Subscription
-                            </Link> 
-                             
-                            <div className="profile-stats">
-                                <span className="stat-item"><Star size={14} className="icon-star"/> <strong>{sites.reduce((acc, s) => acc + (s.views || 0), 0)}</strong> stars</span>
-                                <span className="stat-item"><Eye size={14} className="icon-eye"/> <strong>{sites.length}</strong> repos</span>
-                                <span className="stat-item"><Box size={14} className="icon-box"/> <strong>{sites.length} / {userLimit}</strong> sites used</span>
-                            </div>
+                {/* Stats / Welcome Banner */}
+                <section className="welcome-banner">
+                    <div className="banner-content">
+                        <h1>Command Center</h1>
+                        <p>Manage your digital constructs and deploy new realities.</p>
+                    </div>
+                    <div className="stats-row">
+                        <div className="stat-card">
+                            <div className="stat-value">{sites.length} / {userLimit}</div>
+                            <div className="stat-label">Active Sites</div>
                         </div>
-
-                        <div className="divider"></div>
-
-                        <div className="achievements">
-                            <h3>Achievements</h3>
-                            <div className="badge-grid">
-                                <div className="badge tooltip-trigger" title="First Deployment">🚀</div>
-                                <div className="badge tooltip-trigger" title="Quick Starter">⚡</div>
-                                {sites.length >= 3 && <div className="badge tooltip-trigger" title="Prolific Builder">🏗️</div>}
-                            </div>
+                        <div className="stat-card">
+                            <div className="stat-value">{sites.reduce((acc, s) => acc + (s.views || 0), 0)}</div>
+                            <div className="stat-label">Total Views</div>
                         </div>
-                    </aside>
+                    </div>
+                </section>
 
-                    {/* Main Content */}
-                    <div className="nebula-content">
-                        {/* Tab Switcher */}
-                        <div className="content-tabs">
-                            <button 
-                                className={`tab-btn ${activeTab === 'repositories' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('repositories')}
-                            >
-                                <Book size={16}/>
-                                Repositories
-                                <span className="counter">{sites.length}</span>
-                            </button>
-                            <button 
-                                className={`tab-btn ${activeTab === 'projects' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('projects')}
-                            >
-                                <Layout size={16}/>
-                                Projects
-                            </button>
-                            <button className="tab-btn">
-                                <Box size={16}/>
-                                Packages
-                            </button>
-                            <button 
-                                className={`tab-btn ${activeTab === 'stars' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('stars')}
-                            >
-                                <Star size={16}/>
-                                Stars
-                            </button>
-                        </div>
+                {/* Controls */}
+                <div className="controls-bar">
+                    <div className="search-wrapper">
+                        <Search size={16} className="search-icon"/>
+                        <input 
+                            placeholder="Search projects..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <button onClick={handleNewRepo} className="btn-new-project">
+                        <Plus size={16} /> New Project
+                    </button>
+                </div>
 
-                        {/* Search & Filters */}
-                        <div className="repo-controls">
-                            <div className="search-wrapper">
-                                <input 
-                                    placeholder="Find a repository..." 
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="repo-search-input"
-                                />
-                            </div>
-                            <div className="filter-buttons">
-                                <button className="btn-filter">Type <ChevronDown size={12}/></button>
-                                <button className="btn-filter">Language <ChevronDown size={12}/></button>
-                                <button className="btn-filter">Sort <ChevronDown size={12}/></button>
-                            </div>
-                            <button onClick={handleNewRepo} className="btn-new-repo">
-                                <Book size={16} /> New
-                            </button>
-                        </div>
-
-                        <div className="repo-list">
-                            {loading ? (
-                                Array(3).fill(0).map((_, i) => (
-                                    <div key={i} className="repo-item skeleton">
-                                        <SkeletonLoader height={24} width={200} />
-                                        <SkeletonLoader height={16} width="60%" style={{marginTop: 8}} />
-                                    </div>
-                                ))
-                            ) : displaySites.length > 0 ? (
-                                displaySites.map(site => (
-                                    <div key={site.id} className="repo-item">
-                                        <div className="repo-main">
-                                            <div className="repo-header">
-                                                <h3>
-                                                    <Link href={`/mr-build/editor?id=${site.id}`} className="repo-link">
-                                                        {site.name || site.title || 'untitled-repo'}
-                                                    </Link>
-                                                </h3>
-                                                <div className="repo-badges">
-                                                    {site.monetization?.enabled && <span className="badge-monetized">💰 Monetized</span>}
-                                                    <span className="repo-visibility">
-                                                        {site.status === 'public' ? 'Public' : 'Private'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <p className="repo-desc">
-                                                {site.description || 'No description provided.'}
-                                            </p>
-                                            <div className="repo-meta">
-                                                <span className="meta-item language">
-                                                    <span className="lang-color" style={{background: '#00f0ff'}}></span>
-                                                    HTML/NEX
-                                                </span>
-                                                <span className="meta-item hover-accent">
-                                                    <Star size={14} /> {site.views || 0}
-                                                </span>
-                                                <span className="meta-item hover-accent">
-                                                    <GitBranch size={14} /> 1
-                                                </span>
-                                                <span className="meta-item">
-                                                    Updated {new Date(site.updatedAt || 0).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="repo-actions-panel">
-                                            <div className="monetization-control">
-                                                <div className="toggle-row">
-                                                    <label className="toggle-label">Enable Ads</label>
-                                                    <button 
-                                                        className={`toggle-btn ${site.monetization?.enabled ? 'on' : 'off'}`}
-                                                        onClick={() => toggleMonetization(displaySites.indexOf(site))}
-                                                    >
-                                                        <div className="toggle-knob"></div>
-                                                    </button>
-                                                </div>
-                                                {site.monetization?.enabled && (
-                                                    <input 
-                                                        className="pub-id-input"
-                                                        placeholder="pub-00000000"
-                                                        value={site.monetization?.publisherId || ''}
-                                                        onChange={(e) => updatePublisherId(displaySites.indexOf(site), e.target.value)}
-                                                        title="Enter your AdSense Publisher ID"
-                                                    />
-                                                )}
-                                            </div>
-                                             <div className="activity-bar"></div>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="no-repos">
-                                    <h3>{activeTab === 'stars' ? "You haven't starred any repositories yet." : "No repositories matching your search."}</h3>
-                                    {activeTab === 'repositories' && (
-                                        <button onClick={handleNewRepo} className="btn-create-first">Create a new repository</button>
-                                    )}
+                {/* Projects Grid */}
+                <div className="projects-grid">
+                    {loading ? (
+                        Array(3).fill(0).map((_, i) => (
+                            <div key={i} className="project-card skeleton">
+                                <SkeletonLoader height={160} width="100%" />
+                                <div style={{padding: 16}}>
+                                    <SkeletonLoader height={20} width="60%" />
                                 </div>
-                            )}
+                            </div>
+                        ))
+                    ) : displaySites.length > 0 ? (
+                        displaySites.map(site => (
+                            <div key={site.id} className="project-card" onClick={() => router.push(`/mr-build/editor?id=${site.id}`)}>
+                                <div className="card-preview">
+                                    <div className="preview-overlay">
+                                        <button className="btn-launch">ENTER CONSTRUCT <ChevronDown size={14} style={{transform: 'rotate(-90deg)'}}/></button>
+                                    </div>
+                                    <div className="tech-badge">NEX ENGINE</div>
+                                </div>
+                                <div className="card-body">
+                                    <div className="card-header">
+                                        <h3>{site.name || 'Untitled Project'}</h3>
+                                        <span className={`status-dot ${site.status === 'public' ? 'online' : 'offline'}`}></span>
+                                    </div>
+                                    <p className="card-desc">{site.description || 'No description provided.'}</p>
+                                    <div className="card-meta">
+                                        <span>Updated {new Date(site.updatedAt || 0).toLocaleDateString()}</span>
+                                        <div className="meta-icons">
+                                            {site.monetization?.enabled && <span title="Monetized">💰</span>}
+                                            <span title="Views"><Eye size={12}/> {site.views || 0}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="empty-state">
+                            <div className="empty-icon">📂</div>
+                            <h3>No Projects Found</h3>
+                            <button onClick={handleNewRepo}>Initialize First Project</button>
+                        </div>
+                    )}
+                </div>
+            </main>
+
+            {/* Architect Modal */}
+            {showArchitect && <ArchitectModal onClose={() => setShowArchitect(false)} user={user} />}
+
+            {/* New Project Modal */}
+            {showNewModal && (
+                <div className="modal-backdrop" onClick={() => setShowNewModal(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="modal-head">
+                            <h2>Initialize New Construct</h2>
+                            <button onClick={() => setShowNewModal(false)}><X size={20}/></button>
+                        </div>
+                        <div className="modal-options-grid">
+                            <button className="option-tile architect" onClick={() => { setShowNewModal(false); setShowArchitect(true); }}>
+                                <div className="tile-icon"><Star size={24}/></div>
+                                <h3>AI Architect</h3>
+                                <p>Describe and generate.</p>
+                            </button>
+                            <button className="option-tile blank" onClick={startFromScratch}>
+                                <div className="tile-icon"><Code size={24}/></div>
+                                <h3>Blank Core</h3>
+                                <p>Start from scratch.</p>
+                            </button>
+                            {unlockedTemplates.map(tid => (
+                                <button key={tid} className="option-tile template" onClick={() => startFromTemplate(tid)}>
+                                    <div className="tile-icon"><Layout size={24}/></div>
+                                    <h3>{tid.replace(/_/g, ' ')}</h3>
+                                    <p>Template</p>
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>
-
-                {/* Architect Modal */}
-                {showArchitect && <ArchitectModal onClose={() => setShowArchitect(false)} user={user} />}
-
-                {/* New Repo Modal */}
-                {showNewModal && (
-                    <div className="new-modal-overlay" onClick={() => setShowNewModal(false)}>
-                        <div className="new-modal glass" onClick={e => e.stopPropagation()}>
-                            <div className="modal-header">
-                                <h2>INITIALIZE NEW SECTOR</h2>
-                                <button className="close-btn" onClick={() => setShowNewModal(false)}><X size={18}/></button>
-                            </div>
-                            
-                            <div className="modal-options">
-                                <button className="option-card glass primary" style={{borderColor: '#00f0ff'}} onClick={() => { setShowNewModal(false); setShowArchitect(true); }}>
-                                    <div className="option-icon">✨</div>
-                                    <div className="option-info">
-                                        <h3 style={{color: '#00f0ff'}}>AI Architect</h3>
-                                        <p>Describe your vision, and I will build it.</p>
-                                    </div>
-                                </button>
-
-                                <button className="option-card glass primary" onClick={startFromScratch}>
-                                    <div className="option-icon">📄</div>
-                                    <div className="option-info">
-                                        <h3>Blank Slate</h3>
-                                        <p>Start with a clean NEX engine core.</p>
-                                    </div>
-                                </button>
-                                
-                                <div className="templates-section">
-                                    <h4>UNLOCKED TEMPLATES</h4>
-                                    {unlockedTemplates.length === 0 ? (
-                                        <div className="no-templates">
-                                            <p>No templates unlocked. Visit the <Link href="/mr-shop" className="link-shop">Marketplace</Link> to upgrade your arsenal.</p>
-                                        </div>
-                                    ) : (
-                                        <div className="template-grid">
-                                            {unlockedTemplates.map(tid => (
-                                                <button key={tid} className="template-card glass" onClick={() => startFromTemplate(tid)}>
-                                                    <div className="template-id">{tid.replace(/_/g, ' ').toUpperCase()}</div>
-                                                    <span className="launch-text">LAUNCH →</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </main>
-
+            )}
             <style jsx>{`
-                /* Dark Nebula Palette */
                 .nebula-container {
-                    --bg-page: #050505;
-                    --bg-panel: rgba(22, 27, 34, 0.6);
-                    --border: rgba(48, 54, 61, 0.6);
-                    --text-main: #e6edf3;
-                    --text-muted: #8b949e;
-                    --brand: #00f0ff;
-                    --brand-glow: rgba(0, 240, 255, 0.2);
-                    --btn-bg: rgba(33, 38, 45, 0.9);
-                    --btn-hover: #30363d;
-                    
                     min-height: 100vh;
-                    background: radial-gradient(circle at 10% 10%, rgba(9,23,37,1) 0%, rgba(0,0,0,1) 100%);
-                    color: var(--text-main);
+                    background: radial-gradient(circle at 50% 0%, #1a1f2e 0%, #050505 60%);
+                    color: #fff;
                     font-family: 'Inter', sans-serif;
                 }
 
-                .new-modal-overlay {
-                    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-                    background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
-                    display: flex; align-items: center; justify-content: center; z-index: 1000;
-                }
-                .new-modal {
-                    width: 500px; max-width: 90%; padding: 40px; border-radius: 20px;
-                    border: 1px solid rgba(0, 240, 255, 0.3);
-                }
-                .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-                .modal-header h2 { font-family: var(--font-orbitron); font-size: 1.2rem; color: #00f0ff; letter-spacing: 2px; }
-                .close-btn { background: none; border: none; color: #fff; cursor: pointer; opacity: 0.5; transition: 0.2s; }
-                .close-btn:hover { opacity: 1; }
-                
-                .modal-options { display: flex; flex-direction: column; gap: 24px; }
-                .option-card {
-                    display: flex; gap: 20px; align-items: center; padding: 20px; border-radius: 12px;
-                    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
-                    text-align: left; transition: 0.3s; cursor: pointer; width: 100%; color: #fff;
-                }
-                .option-card:hover { border-color: #00f0ff; background: rgba(0, 240, 255, 0.05); transform: translateY(-3px); }
-                .option-icon { font-size: 2rem; }
-                .option-info h3 { font-size: 1.1rem; margin-bottom: 4px; }
-                .option-info p { font-size: 0.85rem; opacity: 0.6; }
-                
-                .templates-section h4 { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1.5px; margin-bottom: 16px; }
-                .template-grid { display: grid; gap: 12px; }
-                .template-card {
-                    display: flex; justify-content: space-between; align-items: center; padding: 16px;
-                    border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);
-                    background: rgba(0,0,0,0.2); transition: 0.2s; color: #fff;
-                }
-                .template-card:hover { border-color: #00f0ff; background: rgba(0, 240, 255, 0.1); }
-                .template-id { font-weight: 700; font-size: 0.85rem; letter-spacing: 1px; }
-                .launch-text { font-size: 0.75rem; color: #00f0ff; font-weight: 900; }
-                
-                .link-shop { color: #00f0ff; text-decoration: none; font-weight: 700; }
-                .link-shop:hover { text-decoration: underline; }
-
                 /* Header */
                 .nebula-header {
-                    background: rgba(1, 4, 9, 0.8);
-                    backdrop-filter: blur(10px);
-                    padding: 12px 24px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    border-bottom: 1px solid var(--border);
+                    display: flex; justify-content: space-between; align-items: center;
+                    padding: 16px 32px;
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                    background: rgba(5,5,5,0.8); backdrop-filter: blur(10px);
                     position: sticky; top: 0; z-index: 50;
                 }
-                .header-left { display: flex; align-items: center; gap: 20px; }
-                .logo-section { 
-                    display: flex; align-items: center; gap: 8px; font-weight: 700; color: #fff; font-family: 'Orbitron', sans-serif; 
-                }
-                .logo-icon { color: var(--brand); filter: drop-shadow(0 0 5px var(--brand)); } 
-                .highlight { color: var(--brand); font-size: 0.8em; margin-left: 2px; }
+                .brand-section { display: flex; align-items: center; gap: 10px; font-family: 'Orbitron', sans-serif; font-weight: 700; letter-spacing: 1px; }
+                .brand-icon { color: #00f0ff; filter: drop-shadow(0 0 5px #00f0ff); }
+                .highlight { color: #00f0ff; font-size: 0.8em; margin-left: 4px; }
                 
-                .search-bar {
-                    background: var(--btn-bg);
-                    border: 1px solid var(--border);
-                    border-radius: 6px;
-                    padding: 4px 12px;
-                    display: flex;
-                    align-items: center;
-                    width: 100%;
-                    max-width: 320px;
-                    transition: 0.3s;
+                .user-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: 0.2s; }
+                .user-profile:hover { background: rgba(255,255,255,0.05); }
+                .user-info-header { text-align: right; display: none; }
+                @media (min-width: 768px) { .user-info-header { display: block; } }
+                
+                .user-name { display: block; font-size: 14px; font-weight: 600; }
+                .user-plan { display: block; font-size: 10px; color: #00f0ff; letter-spacing: 1px; }
+                .avatar-sm { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); }
+
+                /* Main */
+                .nebula-main { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+
+                /* Welcome Banner */
+                .welcome-banner { 
+                    display: flex; flex-direction: column; justify-content: space-between; align-items: start;
+                    margin-bottom: 40px; gap: 20px;
                 }
-                .search-bar:focus-within { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-glow); }
-                .search-icon { color: var(--text-muted); margin-right: 8px; }
-                .nebula-search-input {
-                    background: transparent;
-                    border: none;
-                    color: var(--text-main);
-                    width: 100%;
-                    font-size: 13px;
-                    outline: none;
+                @media (min-width: 768px) { .welcome-banner { flex-direction: row; align-items: center; } }
+                
+                .banner-content h1 { font-family: 'Orbitron', sans-serif; font-size: 2rem; margin-bottom: 8px; background: linear-gradient(90deg, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+                .banner-content p { color: #888; }
+                
+                .stats-row { display: flex; gap: 20px; }
+                .stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px 20px; border-radius: 12px; min-width: 120px; }
+                .stat-value { font-size: 1.5rem; font-weight: 700; color: #00f0ff; }
+                .stat-label { font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+
+                /* Controls */
+                .controls-bar { display: flex; gap: 16px; margin-bottom: 30px; flex-wrap: wrap; }
+                @media (max-width: 600px) { .controls-bar { flex-direction: column-reverse; } }
+
+                .search-wrapper { 
+                    flex: 1; display: flex; align-items: center; gap: 10px; 
+                    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+                    padding: 10px 16px; border-radius: 8px; min-width: 250px;
                 }
-                .shortcut { 
-                    border: 1px solid var(--border); 
-                    border-radius: 4px; padding: 0 6px; font-size: 10px; color: var(--text-muted); 
+                .search-wrapper input { background: transparent; border: none; color: #fff; flex: 1; outline: none; }
+                .search-icon { color: #666; }
+                
+                .btn-new-project {
+                    background: #00f0ff; color: #000; border: none; padding: 10px 24px; border-radius: 8px;
+                    font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;
+                    transition: 0.2s; box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+                }
+                @media (max-width: 600px) { .btn-new-project { width: 100%; justify-content: center; } }
+                .btn-new-project:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(0, 240, 255, 0.5); }
+
+                /* Grid */
+                .projects-grid {
+                    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;
+                }
+                @media (max-width: 600px) { .projects-grid { grid-template-columns: 1fr; } }
+
+                .project-card {
+                    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+                    border-radius: 16px; overflow: hidden; cursor: pointer; transition: 0.3s;
+                    position: relative;
+                }
+                .project-card:hover { 
+                    transform: translateY(-5px); border-color: #00f0ff; 
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
                 }
                 
-                .header-nav { 
-                    display: flex; gap: 4px; 
-                    overflow-x: auto; 
-                    -webkit-overflow-scrolling: touch;
-                    scrollbar-width: none;
-                }
-                .header-nav::-webkit-scrollbar { display: none; }
-                .nav-item { 
-                    background: transparent; border: none; color: var(--text-main); 
-                    font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 10px; border-radius: 6px;
-                    transition: 0.2s;
-                }
-                .nav-item:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.1); }
-
-                .header-avatar {
-                    width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border);
-                    cursor: pointer; transition: 0.2s;
-                }
-                .header-avatar:hover { box-shadow: 0 0 10px var(--brand); border-color: var(--brand); }
-
-                /* Layout */
-                .nebula-main {
-                    padding: 0;
-                    width: 100%;
-                    max-width: 100%;
-                }
-                .nebula-layout {
-                    display: grid;
-                    grid-template-columns: 320px 1fr;
-                    gap: 0;
-                    min-height: calc(100vh - 60px);
-                }
-
-                /* Sidebar */
-                .nebula-sidebar { 
-                    padding: 32px;
-                    border-right: 1px solid var(--border);
-                    background: rgba(0,0,0,0.3);
-                } 
-                .profile-avatar-large { position: relative; width: 100%; margin-bottom: 20px; }
-                .profile-avatar-large img {
-                    width: 100%; height: auto;
-                    border-radius: 50%;
-                    border: 2px solid var(--border);
-                }
-                .online-indicator {
-                    position: absolute; bottom: 10%; right: 10%;
-                    width: 32px; height: 32px;
-                    background: var(--brand);
-                    border: 4px solid #0d1117;
-                    border-radius: 50%;
-                    box-shadow: 0 0 15px var(--brand);
-                }
-                .profile-name { font-size: 26px; font-weight: 700; margin-bottom: 4px; color: #fff; letter-spacing: -0.5px; }
-                .profile-handle { font-size: 20px; color: var(--text-muted); font-weight: 300; margin-bottom: 24px; }
-                
-                .btn-block-action {
-                    width: 100%;
-                    background: var(--btn-bg);
-                    border: 1px solid var(--border);
-                    color: var(--text-main);
-                    padding: 8px 16px;
-                    border-radius: 6px;
-                    font-weight: 500;
-                    cursor: pointer;
-                    margin-bottom: 24px;
-                    transition: 0.2s;
-                }
-                .btn-block-action:hover { background: var(--btn-hover); border-color: var(--text-muted); }
-                .btn-sub {
-                    background: rgba(0, 240, 255, 0.1);
-                    border-color: rgba(0, 240, 255, 0.3);
-                    color: #00f0ff;
-                    margin-top: 8px;
-                    display: flex; justify-content: center; align-items: center; text-decoration: none;
-                }
-                .btn-sub:hover {
-                    background: rgba(0, 240, 255, 0.2);
-                    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
-                }
-
-                .profile-stats { font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 12px; }
-                .stat-item { display: flex; align-items: center; gap: 8px; }
-                .stat-item strong { color: var(--text-main); }
-                .icon-star, .icon-eye { color: var(--text-muted); }
-
-                .divider { height: 1px; background: var(--border); margin: 32px 0; }
-                
-                .achievements h3 { font-size: 16px; margin-bottom: 16px; font-weight: 600; }
-                .badge-grid { display: flex; gap: 12px; }
-                .badge { 
-                    width: 48px; height: 48px; 
-                    background: rgba(255,255,255,0.03); 
-                    border: 1px solid var(--border); 
-                    border-radius: 50%; 
+                .card-preview {
+                    height: 160px; background: linear-gradient(45deg, #111, #222);
                     display: flex; align-items: center; justify-content: center;
-                    font-size: 20px;
-                    cursor: help;
-                    transition: 0.2s;
-                }
-                .badge:hover { border-color: var(--brand); box-shadow: 0 0 10px var(--brand-glow); transform: translateY(-2px); }
-
-                /* Content Area */
-                .nebula-content { padding: 32px 48px; }
-                
-                .content-tabs {
-                    display: flex;
-                    gap: 8px;
-                    border-bottom: 1px solid var(--border);
-                    margin-bottom: 32px;
-                    overflow-x: auto;
-                    -webkit-overflow-scrolling: touch;
-                    scrollbar-width: none;
-                }
-                .content-tabs::-webkit-scrollbar { display: none; }
-                .tab-btn {
-                    background: transparent;
-                    border: none;
-                    color: var(--text-main);
-                    padding: 10px 20px;
-                    font-size: 14px;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    cursor: pointer;
-                    border-bottom: 2px solid transparent;
-                    transition: all 0.2s;
-                    white-space: nowrap;
-                    flex-shrink: 0;
-                }
-                .tab-btn:hover { background: rgba(255,255,255,0.03); border-radius: 6px 6px 0 0; }
-                .tab-btn.active { font-weight: 600; border-bottom-color: var(--brand); }
-                .counter {
-                    background: rgba(110,118,129,0.4);
-                    padding: 2px 8px;
-                    border-radius: 2em;
-                    font-size: 11px;
-                }
-                
-                .repo-controls {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 24px;
-                    gap: 16px;
-                }
-                .search-wrapper { flex: 1; }
-                .repo-search-input {
-                    box-sizing: border-box;
-                    width: 100%;
-                    padding: 8px 16px;
-                    font-size: 14px;
-                    line-height: 20px;
-                    color: var(--text-main);
-                    background: var(--bg-page);
-                    border: 1px solid var(--border);
-                    border-radius: 6px;
-                    transition: 0.2s;
-                }
-                .repo-search-input:focus { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-glow); outline: none; }
-
-                .filter-buttons { display: flex; gap: 8px; }
-                .btn-filter {
-                    background: var(--btn-bg);
-                    color: var(--text-main);
-                    border: 1px solid var(--border);
-                    padding: 6px 16px;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    font-weight: 500;
-                    cursor: pointer;
-                    display: flex; align-items: center; gap: 6px;
-                    transition: 0.2s;
-                }
-                .btn-filter:hover { border-color: var(--text-muted); background: var(--btn-hover); }
-
-                .btn-new-repo {
-                    background: #238636;
-                    color: #fff;
-                    border: 1px solid rgba(240,246,252,0.1);
-                    padding: 6px 20px;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    cursor: pointer;
-                    transition: 0.2s;
-                    box-shadow: 0 0 15px rgba(35, 134, 54, 0.4);
-                }
-                .btn-new-repo:hover { background: #2ea043; transform: translateY(-1px); box-shadow: 0 0 20px rgba(35, 134, 54, 0.6); }
-
-                /* Repo List */
-                .repo-item {
-                    display: flex;
-                    justify-content: space-between;
-                    padding: 32px 0;
-                    border-top: 1px solid var(--border);
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    position: relative;
-                    animation: fadeIn 0.5s ease-out forwards;
-                    opacity: 0;
-                    border-radius: 8px; /* For hover effect */
-                    margin-bottom: 8px; /* Spacing for hover card look */
-                    padding: 24px; /* Adjust padding for card look */
-                }
-                .repo-item:nth-child(1) { animation-delay: 0.05s; }
-                .repo-item:nth-child(2) { animation-delay: 0.1s; }
-                .repo-item:nth-child(3) { animation-delay: 0.15s; }
-                .repo-item:nth-child(4) { animation-delay: 0.2s; }
-                .repo-item:nth-child(5) { animation-delay: 0.25s; }
-
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-                .repo-item:hover { 
-                    background: rgba(22, 27, 34, 0.8);
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-                    border-color: rgba(255,255,255,0.1);
-                    transform: translateY(-2px); 
-                }
-                .repo-item:hover .repo-link { color: var(--brand); text-shadow: 0 0 12px var(--brand-glow); }
-                .repo-item:last-child { border-bottom: none; }
-                
-                .repo-header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
-                .repo-link { color: var(--brand); font-size: 20px; font-weight: 600; text-decoration: none; transition: 0.2s; word-break: break-word; }
-                .repo-link:hover { text-decoration: underline; text-shadow: 0 0 8px var(--brand-glow); }
-                
-                .repo-visibility {
-                    border: 1px solid var(--border);
-                    border-radius: 2em;
-                    padding: 0 10px;
-                    font-size: 12px;
-                    font-weight: 500;
-                    color: var(--text-muted);
-                    line-height: 20px;
-                }
-                
-                .repo-desc { color: var(--text-muted); font-size: 14px; margin-bottom: 16px; max-width: 80%; line-height: 1.5; word-break: break-word; }
-                
-                .repo-meta { display: flex; align-items: center; gap: 24px; font-size: 12px; color: var(--text-muted); }
-                .meta-item { display: flex; align-items: center; gap: 6px; }
-                .lang-color {
-                    width: 12px; height: 12px; border-radius: 50%; display: inline-block;
-                    border: 1px solid rgba(255,255,255,0.2);
-                    box-shadow: 0 0 5px var(--brand);
-                }
-                .hover-accent:hover { color: var(--brand); cursor: pointer; }
-
-                .activity-bar {
-                    width: 120px; height: 10px;
-                    background: rgba(255,255,255,0.05);
-                    border-radius: 2px;
-                    overflow: hidden;
                     position: relative;
                 }
-                .activity-bar::after {
-                    content: ''; position: absolute; top:0; left:0; height:100%; width: 40%;
-                    background: linear-gradient(90deg, transparent, var(--brand), transparent);
-                    animation: scanning 2s linear infinite;
+                .preview-overlay {
+                    position: absolute; inset: 0; background: rgba(0,0,0,0.6);
+                    display: flex; align-items: center; justify-content: center;
+                    opacity: 0; transition: 0.2s;
                 }
-                @keyframes scanning { 0% { left: -50%; } 100% { left: 150%; } }
-
-                .no-repos { padding: 60px; text-align: center; border: 1px solid var(--border); border-radius: 6px; margin-top: 30px; background: rgba(0,0,0,0.2); }
-                .btn-create-first { color: var(--brand); background: transparent; border: 1px solid var(--brand); padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 16px; display: inline-block; }
-                .btn-create-first:hover { background: var(--brand); color: #000; }
-
-                /* Mobile/Tablet Responsive */
-                @media (max-width: 1024px) {
-                    .nebula-layout { grid-template-columns: 1fr; }
-                    .nebula-sidebar { 
-                        display: flex; flex-direction: column; align-items: center; text-align: center;
-                        border-right: none; border-bottom: 1px solid var(--border);
-                        padding: 20px 16px;
-                        width: 100%;
-                        max-width: 100vw;
-                        overflow-x: hidden;
-                        background: radial-gradient(circle at top, rgba(1, 4, 9, 0.8), rgba(1, 4, 9, 0.4));
-                    }
-                    .profile-section { 
-                        display: flex; 
-                        flex-direction: column; 
-                        align-items: center; 
-                        width: 100%; 
-                        max-width: 100%;
-                        gap: 12px; 
-                        padding-bottom: 12px;
-                        border-bottom: 1px solid rgba(255,255,255,0.1);
-                    }
-                    .profile-avatar-large { 
-                        width: 72px; 
-                        height: 72px; 
-                        font-size: 20px;
-                        margin-bottom: 0;
-                        box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
-                    }
-                    .profile-name { font-size: 18px; word-break: break-all; max-width: 100%; line-height: 1.2; }
-                    .profile-handle { font-size: 14px; word-break: break-all; max-width: 100%; }
-                    .btn-edit-profile { width: 100%; justify-content: center; }
-                    
-                    .profile-details { width: 100%; max-width: 400px; }
-                    .nebula-content { padding: 16px 12px; }
+                .project-card:hover .preview-overlay { opacity: 1; }
+                .btn-launch {
+                    background: rgba(0, 240, 255, 0.1); border: 1px solid #00f0ff; color: #00f0ff;
+                    padding: 8px 16px; border-radius: 20px; cursor: pointer;
+                    display: flex; align-items: center; gap: 6px; font-size: 0.8rem; letter-spacing: 1px;
+                }
+                .tech-badge {
+                    position: absolute; bottom: 10px; right: 10px;
+                    background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+                    padding: 4px 8px; border-radius: 4px; font-size: 0.6rem; color: #aaa;
                 }
 
-                @media (max-width: 768px) {
-                    .nebula-header {
-                        flex-direction: column;
-                        align-items: stretch;
-                        gap: 16px;
-                        padding: 12px 16px;
-                        height: auto;
-                    }
-                    .header-left {
-                        flex-direction: column;
-                        align-items: flex-start;
-                        gap: 12px;
-                        width: 100%;
-                    }
-                    .logo-section { margin-bottom: 4px; }
-                    .search-bar { width: 100%; max-width: 100%; }
-                    .header-nav { 
-                         width: 100%; 
-                         padding-bottom: 8px;
-                         border-bottom: 1px solid rgba(255,255,255,0.1);
-                    }
-                    .header-right {
-                        position: absolute;
-                        top: 16px;
-                        right: 16px;
-                    }
+                .card-body { padding: 20px; }
+                .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+                .card-header h3 { font-size: 1.1rem; font-weight: 600; color: #fff; }
+                .status-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 5px currentColor; }
+                .status-dot.online { color: #00ff80; background: #00ff80; }
+                .status-dot.offline { color: #666; background: #666; }
+                
+                .card-desc { font-size: 0.9rem; color: #888; margin-bottom: 20px; height: 40px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+                
+                .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #555; }
+                .meta-icons { display: flex; gap: 10px; }
 
-                    .repo-controls { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 16px; }
-                    .search-wrapper { width: 100%; }
-                    .filter-buttons::-webkit-scrollbar { display: none; }
-                    .filter-buttons { 
-                        display: flex; 
-                        overflow-x: auto; 
-                        gap: 8px; 
-                        padding-bottom: 4px;
-                        -webkit-overflow-scrolling: touch;
-                        scrollbar-width: none; 
-                        white-space: nowrap;
-                    }
-                    .btn-filter { 
-                        white-space: nowrap; flex-shrink: 0; 
-                        padding: 6px 12px; font-size: 13px;
-                        background: rgba(33, 38, 45, 0.5);
-                    }
-                    .repo-item { flex-direction: column; gap: 12px; padding: 16px; }
-                    .repo-header { flex-wrap: wrap; gap: 8px; }
-                    .repo-meta { flex-wrap: wrap; gap: 12px; }
-                    .activity-bar { display: none; } /* Hide fixed width element */
-                    
-                    .btn-new-repo { margin-left: 0; width: 100%; justify-content: center; margin-top: 4px; }
+                /* Empty State */
+                .empty-state { text-align: center; padding: 60px; grid-column: 1 / -1; border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; }
+                .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+                .empty-state h3 { margin-bottom: 20px; color: #fff; }
+                .empty-state button { background: #00f0ff; color: #000; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+
+                /* Modal */
+                .modal-backdrop {
+                    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+                    display: flex; align-items: center; justify-content: center; z-index: 100;
+                    animation: fadeIn 0.2s;
                 }
+                .modal-content {
+                    background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+                    width: 600px; max-width: 90%; padding: 30px;
+                    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+                }
+                .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                .modal-head h2 { font-family: 'Orbitron'; color: #fff; letter-spacing: 1px; }
+                .modal-head button { background: none; border: none; color: #666; cursor: pointer; }
+                .modal-head button:hover { color: #fff; }
+
+                .modal-options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; }
+                .option-tile {
+                    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+                    padding: 24px; border-radius: 12px; cursor: pointer; text-align: center; transition: 0.2s;
+                }
+                .option-tile:hover { transform: translateY(-3px); border-color: #00f0ff; background: rgba(0, 240, 255, 0.05); }
+                .tile-icon { font-size: 2rem; margin-bottom: 12px; color: #00f0ff; }
+                .option-tile h3 { font-size: 1rem; margin-bottom: 4px; color: #fff; }
+                .option-tile p { font-size: 0.8rem; color: #666; }
+                .option-tile.architect .tile-icon { color: #d000ff; }
+                .option-tile.architect:hover { border-color: #d000ff; background: rgba(208, 0, 255, 0.05); }
+
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             `}</style>
         </div>
     );
