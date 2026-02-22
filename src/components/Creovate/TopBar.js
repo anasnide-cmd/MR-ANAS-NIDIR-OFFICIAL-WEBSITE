@@ -182,7 +182,7 @@ export default function TopBar({ selectedElement, updateElement, deleteElement, 
                  </button>
              </div>
          ) : (
-             <div className="action-group hide-mobile">
+             <div className="action-group">
                 <button className={`icon-btn action ${canUndo ? '' : 'disabled'}`} title="Undo" onClick={undo} disabled={!canUndo}>
                     <Undo2 size={18} />
                 </button>
@@ -198,7 +198,7 @@ export default function TopBar({ selectedElement, updateElement, deleteElement, 
       </div>
 
       <div className="topbar-right">
-        <button className="icon-btn hide-mobile" onClick={saveProject} disabled={isSaving} title="Save to Cloud">
+        <button className="icon-btn" onClick={saveProject} disabled={isSaving} title="Save to Cloud">
             {isSaving ? <Loader size={16} /> : <Cloud size={16} />} 
         </button>
         <button className="presence-avatar hide-mobile">A</button>
@@ -252,7 +252,9 @@ export default function TopBar({ selectedElement, updateElement, deleteElement, 
             display: flex; align-items: center; gap: 8px;
             background: #111; padding: 4px 8px; border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.05);
+            max-width: 100vw; overflow-x: auto; scrollbar-width: none;
         }
+        .formatting-bar::-webkit-scrollbar { display: none; }
 
         .icon-btn {
             background: transparent; border: none; color: #888; padding: 6px;
@@ -306,8 +308,9 @@ export default function TopBar({ selectedElement, updateElement, deleteElement, 
 
         @media (max-width: 768px) {
             .hide-mobile { display: none !important; }
-            .design-topbar { padding: 0 10px; }
+            .design-topbar { padding: 0 10px; justify-content: flex-start; gap: 10px; }
             .project-title { display: none; }
+            .topbar-center { flex: 1; max-width: calc(100vw - 80px); }
         }
       `}</style>
     </header>

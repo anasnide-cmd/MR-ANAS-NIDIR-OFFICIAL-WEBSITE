@@ -220,6 +220,7 @@ export default function CanvasWorkspace({ elements, updateElement, selectedId, s
                     top: 0;
                     left: 0;
                     user-select: none;
+                    touch-action: none; /* Crucial for mobile drag */
                 }
 
                 .canvas-element.selected {
@@ -243,6 +244,14 @@ export default function CanvasWorkspace({ elements, updateElement, selectedId, s
                 .tr { top: -5px; right: -5px; cursor: nesw-resize; }
                 .bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
                 .br { bottom: -5px; right: -5px; cursor: nwse-resize; }
+
+                @media (max-width: 768px) {
+                    .resize-handle { width: 20px; height: 20px; }
+                    .tl { top: -10px; left: -10px; }
+                    .tr { top: -10px; right: -10px; }
+                    .bl { bottom: -10px; left: -10px; }
+                    .br { bottom: -10px; right: -10px; }
+                }
             `}</style>
         </main>
     );

@@ -3,7 +3,11 @@ import { useState, useRef } from 'react';
 import { Sparkles, LayoutGrid, Type, Square, Image as ImageIcon, Search, Circle } from 'lucide-react';
 
 export default function Toolbar({ addElement, canvasBg, setCanvasBg }) {
-    const [activeTab, setActiveTab] = useState('text');
+    const [activeTab, setActiveTab] = useState(null); // default closed on mobile to show canvas
+
+    const toggleTab = (tab) => {
+        setActiveTab(prev => prev === tab ? null : tab);
+    };
 
     const handleAddText = (type) => {
         const textConfig = {
@@ -76,25 +80,26 @@ export default function Toolbar({ addElement, canvasBg, setCanvasBg }) {
         <aside className="design-sidebar">
             {/* Primary Tab Bar */}
             <div className="tab-bar">
-                <button className={`tab-btn ${activeTab === 'design' ? 'active' : ''}`} onClick={() => setActiveTab('design')}>
+                <button className={`tab-btn ${activeTab === 'design' ? 'active' : ''}`} onClick={() => toggleTab('design')}>
                     <LayoutGrid size={20} />
                     <span>Design</span>
                 </button>
-                <button className={`tab-btn ${activeTab === 'elements' ? 'active' : ''}`} onClick={() => setActiveTab('elements')}>
+                <button className={`tab-btn ${activeTab === 'elements' ? 'active' : ''}`} onClick={() => toggleTab('elements')}>
                     <Square size={20} />
                     <span>Elements</span>
                 </button>
-                <button className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`} onClick={() => setActiveTab('text')}>
+                <button className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`} onClick={() => toggleTab('text')}>
                     <Type size={20} />
                     <span>Text</span>
                 </button>
-                <button className={`tab-btn ${activeTab === 'uploads' ? 'active' : ''}`} onClick={() => setActiveTab('uploads')}>
+                <button className={`tab-btn ${activeTab === 'uploads' ? 'active' : ''}`} onClick={() => toggleTab('uploads')}>
                     <ImageIcon size={20} />
                     <span>Uploads</span>
                 </button>
             </div>
 
             {/* Flyout Panel */}
+            {activeTab && (
             <div className="panel-content custom-scrollbar">
                 {activeTab === 'design' && (
                     <div className="tab-pane">
@@ -179,6 +184,7 @@ export default function Toolbar({ addElement, canvasBg, setCanvasBg }) {
                     </div>
                 )}
             </div>
+            )}
 
             <style jsx>{`
                 .design-sidebar {
@@ -319,16 +325,23 @@ export default function Toolbar({ addElement, canvasBg, setCanvasBg }) {
                         border-right: none;
                         border-top: 1px solid rgba(255, 215, 0, 0.1);
                         z-index: 100;
+                        position: absolute;
+                        bottom: 0; left: 0; right: 0;
+                        background: transparent;
+                        pointer-events: none; /* Let clicks pass through empty space */
                     }
                     
                     .tab-bar {
                         width: 100%;
-                        height: 70px;
+                        height: 60px;
                         flex-direction: row;
                         justify-content: space-around;
                         padding-top: 0;
                         border-right: none;
                         border-top: 1px solid rgba(255,255,255,0.05);
+                        background: rgba(10,10,10,0.95);
+                        backdrop-filter: blur(10px);
+                        pointer-events: auto; /* Re-enable clicks for tab bar */
                     }
                     
                     .tab-btn {
@@ -339,8 +352,14 @@ export default function Toolbar({ addElement, canvasBg, setCanvasBg }) {
                     }
 
                     .panel-content {
-                        max-height: 40vh; /* Don't take up entire screen */
+                        max-height: 50vh; 
                         padding: 15px;
+                        background: rgba(15,15,15,0.95);
+                        backdrop-filter: blur(10px);
+                        border-top-left-radius: 16px;
+                        border-top-right-radius: 16px;
+                        pointer-events: auto; /* Re-enable clicks for panel */
+                        box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
                     }
                 }
             `}</style>

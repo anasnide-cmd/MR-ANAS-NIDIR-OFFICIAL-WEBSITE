@@ -261,12 +261,7 @@ export default function CreovatePage() {
                     flex: 1;
                     height: calc(100vh - 60px); /* 60px is TopBar height */
                     overflow: hidden;
-                }
-                
-                @media (max-width: 768px) {
-                    .editor-body {
-                        flex-direction: column-reverse;
-                    }
+                    position: relative;
                 }
             `}</style>
         </div>
