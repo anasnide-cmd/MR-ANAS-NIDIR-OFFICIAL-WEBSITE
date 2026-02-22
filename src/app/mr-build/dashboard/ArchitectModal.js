@@ -390,7 +390,9 @@ export default function ArchitectModal({ onClose, user }) {
                     animation: fadeIn 0.3s ease-out;
                 }
                 .architect-modal {
-                    width: 600px; height: 700px;
+                    width: 100%; max-width: 600px;
+                    height: 90vh; max-height: 700px;
+                    margin: 20px;
                     background: #050505;
                     border: 1px solid #00f0ff;
                     border-radius: 12px;
@@ -400,11 +402,12 @@ export default function ArchitectModal({ onClose, user }) {
                     position: relative;
                 }
                 .architect-header {
-                    padding: 20px; border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+                    padding: 15px 20px; border-bottom: 1px solid rgba(0, 240, 255, 0.3);
                     display: flex; justify-content: space-between; align-items: center;
                     background: rgba(0, 240, 255, 0.05);
+                    gap: 10px;
                 }
-                .brand { display: flex; align-items: center; gap: 10px; color: #00f0ff; font-weight: 800; letter-spacing: 2px; }
+                .brand { display: flex; align-items: center; gap: 10px; color: #00f0ff; font-weight: 800; letter-spacing: 1px; flex-wrap: wrap; }
                 .close-btn { background: none; border: none; color: #fff; cursor: pointer; opacity: 0.7; }
                 .close-btn:hover { opacity: 1; color: #ff0055; }
 
@@ -429,16 +432,16 @@ export default function ArchitectModal({ onClose, user }) {
                 .thinking span:nth-child(3) { animation-delay: 0.4s; }
 
                 .input-area {
-                    padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);
-                    display: flex; gap: 10px;
+                    padding: 15px; border-top: 1px solid rgba(255,255,255,0.1);
+                    display: flex; gap: 8px; align-items: center;
                 }
                 .input-area input {
                     flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-                    padding: 12px; color: #fff; border-radius: 6px; outline: none;
+                    padding: 10px 12px; color: #fff; border-radius: 6px; outline: none; font-size: 14px;
                 }
                 .input-area input:focus { border-color: #00f0ff; }
                 .input-area button {
-                    background: #00f0ff; color: #000; border: none; width: 44px; border-radius: 6px; cursor: pointer;
+                    background: #00f0ff; color: #000; border: none; min-width: 40px; height: 40px; border-radius: 6px; cursor: pointer;
                     display: flex; align-items: center; justify-content: center;
                 }
                 .input-area button:hover { background: #fff; }
@@ -469,15 +472,15 @@ export default function ArchitectModal({ onClose, user }) {
 
                 .status-indicator {
                     display: flex; align-items: center; gap: 6px; font-size: 0.7rem; 
-                    margin-left: 15px; padding: 4px 8px; border-radius: 12px;
-                    border: 1px solid rgba(255,255,255,0.1);
+                    margin-left: 5px; padding: 4px 8px; border-radius: 12px;
+                    border: 1px solid rgba(255,255,255,0.1); white-space: nowrap;
                 }
                 .status-indicator.online { color: #00ff80; background: rgba(0,255,128,0.1); border-color: rgba(0,255,128,0.3); }
                 .status-indicator.offline { color: #ff4444; background: rgba(255,68,68,0.1); border-color: rgba(255,68,68,0.3); }
                 .status-indicator.checking { color: #fbff00; background: rgba(251,255,0,0.1); }
                 .status-indicator.error { color: #ff0055; background: rgba(255,0,85,0.1); }
 
-                .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 5px currentColor; }
+                .dot { min-width: 6px; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 5px currentColor; }
                 
                 .attachments-preview {
                     display: flex; gap: 8px; padding: 0 20px 10px 20px; overflow-x: auto;

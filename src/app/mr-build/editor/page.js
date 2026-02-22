@@ -381,33 +381,33 @@ function EditorContent() {
                     </div>
                 </div>
                 <div className="header-right">
-                    <button className={`btn-icon ${zenMode ? 'active' : ''}`} onClick={() => setZenMode(!zenMode)} title="Toggle Zen Mode">
+                    <button className={`btn-icon hide-on-mobile ${zenMode ? 'active' : ''}`} onClick={() => setZenMode(!zenMode)} title="Toggle Zen Mode">
                         <Maximize size={18} />
                     </button>
                     <button className={`btn-icon ${showSidebar && sidebarMode === 'files' ? 'active' : ''}`} onClick={() => { setShowSidebar(true); setSidebarMode('files'); }}>
                         <Folder size={18} />
                     </button>
-                    <button className={`btn-icon ${showSidebar && sidebarMode === 'assets' ? 'active' : ''}`} onClick={() => { setShowSidebar(true); setSidebarMode('assets'); }}>
+                    <button className={`btn-icon hide-on-mobile ${showSidebar && sidebarMode === 'assets' ? 'active' : ''}`} onClick={() => { setShowSidebar(true); setSidebarMode('assets'); }}>
                         <ImageIcon size={18} />
                     </button>
-                    <button className={`btn-icon ${terminalOpen ? 'active' : ''}`} onClick={() => setTerminalOpen(!terminalOpen)}>
+                    <button className={`btn-icon hide-on-mobile ${terminalOpen ? 'active' : ''}`} onClick={() => setTerminalOpen(!terminalOpen)}>
                         <TerminalIcon size={18} />
                     </button>
                     <button className={`btn-icon ${copilotOpen ? 'active' : ''}`} onClick={() => setCopilotOpen(!copilotOpen)}>
                         <Sparkles size={18} />
                     </button>
                     <button className="btn-save" onClick={handleSave} disabled={saving}>
-                        <Save size={16} /> <span>{saving ? 'Saving...' : 'Save'}</span>
+                        <Save size={16} /> <span className="hide-on-mobile">{saving ? 'Saving...' : 'Save'}</span>
                     </button>
-                    <button className="btn-icon" onClick={handleExport} title="Export as ZIP">
+                    <button className="btn-icon hide-on-mobile" onClick={handleExport} title="Export as ZIP">
                         <Download size={18} />
                     </button>
-                    <div className="divider"></div>
+                    <div className="divider hide-on-mobile"></div>
                      <button className={`btn-icon ${showPreview ? 'active' : ''}`} onClick={() => setShowPreview(!showPreview)}>
                         <Eye size={18} />
                     </button>
                     {siteData.slug && (
-                        <a href={`/s/${siteData.slug}`} target="_blank" className="btn-icon" title="Open Live Site">
+                        <a href={`/s/${siteData.slug}`} target="_blank" className="btn-icon hide-on-mobile" title="Open Live Site">
                             <ExternalLink size={18}/>
                         </a>
                     )}
@@ -530,10 +530,11 @@ function EditorContent() {
                         <div className="preview-toolbar">
                             <span>Preview {arMode ? '(AR Hologram)' : ''}</span>
                             <div className="preview-actions" style={{display:'flex', gap:'10px'}}>
-                                <button onClick={() => setArMode(!arMode)} title="Toggle AR Hologram" style={{color: arMode ? '#00f0ff' : '#666'}}>
+                                <button className="btn-preview-action" onClick={() => setArMode(!arMode)} title="Toggle AR Hologram" style={{color: arMode ? '#00f0ff' : '#666'}}>
                                     <Sparkles size={14} />
                                 </button>
-                                <button onClick={() => setPreviewKey(k => k + 1)} title="Refresh"><Play size={12} /></button>
+                                <button className="btn-preview-action" onClick={() => setPreviewKey(k => k + 1)} title="Refresh"><Play size={12} /></button>
+                                <button className="btn-preview-action close-preview-mobile" onClick={() => setShowPreview(false)} title="Close Preview"><X size={14}/></button>
                             </div>
                         </div>
                         {arMode ? (
@@ -654,10 +655,10 @@ function EditorContent() {
 
                 .btn-icon {
                     background: transparent; border: none; color: #888; cursor: pointer;
-                    padding: 8px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+                    padding: 8px; border-radius: 6px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center;
                 }
-                .btn-icon:hover { color: #fff; background: rgba(255,255,255,0.05); }
-                .btn-icon.active { color: #00f0ff; background: rgba(0,240,255,0.1); }
+                .btn-icon:hover { color: #fff; background: rgba(255,255,255,0.05); box-shadow: 0 0 10px rgba(255,255,255,0.05); }
+                .btn-icon.active { color: #00f0ff; background: rgba(0,240,255,0.1); box-shadow: 0 0 15px rgba(0,240,255,0.2); }
                 
                 .btn-save {
                     background: #00f0ff; color: #000; border: none; padding: 6px 16px; border-radius: 6px;
@@ -728,7 +729,17 @@ function EditorContent() {
                 }
 
                 .preview-toolbar { padding: 8px 16px; background: #eee; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; color: #333; font-size: 12px; font-weight: 600; }
+                .btn-preview-action { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: 0.2s; color: #666; }
+                .btn-preview-action:hover { background: rgba(0,0,0,0.05); color: #000; }
+                .close-preview-mobile { display: none; }
                 .preview-iframe { flex: 1; width: 100%; height: 100%; border: none; }
+
+                @media (max-width: 768px) {
+                    .hide-on-mobile { display: none !important; }
+                    .project-name-input { width: 110px; }
+                    .close-preview-mobile { display: flex; color: #ff4444; }
+                    .close-preview-mobile:hover { background: rgba(255,68,68,0.1); color: #ff0000; }
+                }
 
                 /* Terminal */
                 .terminal-drawer {

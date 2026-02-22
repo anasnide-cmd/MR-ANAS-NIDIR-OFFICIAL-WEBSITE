@@ -184,14 +184,15 @@ export default function BuildLogin() {
 
                 @media (max-width: 480px) {
                     .login-wrapper { height: auto; min-height: 80vh; padding: 20px; }
-                    .login-card { padding: 30px 25px; border-radius: 20px; }
+                    .login-card { padding: 25px 20px; border-radius: 20px; }
                     .shield-icon { font-size: 2.5rem; margin-bottom: 15px; }
                     .login-header h1 { font-size: 1.4rem; }
-                    .login-header p { font-size: 0.8rem; margin-bottom: 25px; }
+                    .login-header p { font-size: 0.8rem; margin-bottom: 20px; }
                     .auth-form input { padding: 12px; font-size: 0.9rem; }
-                    .btn-primary { padding: 12px; font-size: 0.9rem; }
+                    .btn-primary { padding: 12px; font-size: 0.9rem; margin-top: 5px; }
+                    .divider { margin: 15px 0; }
                     .btn-google { padding: 10px; font-size: 0.85rem; }
-                    .toggle-auth { font-size: 0.8rem; }
+                    .toggle-auth { font-size: 0.8rem; margin-top: 20px; }
                 }
             `}</style>
         </div>

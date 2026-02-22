@@ -198,8 +198,14 @@ export default function SubscriptionPage() {
                 @keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
                 @media (max-width: 768px) {
-                    .plans-grid { grid-template-columns: 1fr; }
-                    .plan-card.pro { transform: scale(1); }
+                    .sub-container { padding: 20px 15px 60px; }
+                    .sub-header { margin-bottom: 30px; }
+                    .sub-header h1 { font-size: 1.8rem; }
+                    .plans-grid { grid-template-columns: 1fr; gap: 20px; }
+                    .plan-card { padding: 24px; }
+                    .plan-card.pro { transform: scale(1); border: 2px solid rgba(0,240,255,0.4); }
+                    .badge { top: -10px; font-size: 0.6rem; padding: 4px 10px; }
+                    .price { font-size: 2rem; }
                 }
             `}</style>
         </div>

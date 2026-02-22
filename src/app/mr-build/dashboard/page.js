@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 
 import ArchitectModal from './ArchitectModal';
+import SiteSettingsModal from './SiteSettingsModal';
 
 export default function BuildDashboard() {
     const router = useRouter();
@@ -38,6 +39,8 @@ export default function BuildDashboard() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('repositories'); // 'repositories', 'stars', 'projects'
+    const [editingSite, setEditingSite] = useState(null); // specific site being edited
+    const [showLimitModal, setShowLimitModal] = useState(false);
 
     // Template Definitions
     const TEMPLATES = {
@@ -96,10 +99,9 @@ export default function BuildDashboard() {
         } else if (diff < -threshold) {
              // Swipe Left -> Delete
              triggerHaptic([30, 50, 30]);
-             if(confirm('Delete this project?')) {
-                 // Trigger delete logic (would need a delete function, but for now just log/stub)
-                 // In a real app we'd call deleteDoc
-                 console.log('Delete ' + swipeState.id);
+             const siteToDelete = sites.find(s => s.id === swipeState.id);
+             if (siteToDelete) {
+                  setEditingSite(siteToDelete); // Open modal with delete focus
              }
         }
         
@@ -145,9 +147,7 @@ export default function BuildDashboard() {
 
     const handleNewRepo = () => {
         if (sites.length >= userLimit) {
-            if (confirm(`You've reached your site limit (${userLimit}). Upgrade to Premium-X to deploy up to 5 sites?`)) {
-                router.push('/mr-build/subscription');
-            }
+            setShowLimitModal(true);
             return;
         }
         setShowNewModal(true); 
@@ -213,7 +213,15 @@ export default function BuildDashboard() {
         }
     };
 
-    if (loading && !user) return <Loader text="Initializing Nexus Interface..." />; 
+    const handleSiteUpdate = (updatedSiteData) => {
+        setSites(prev => prev.map(s => s.id === updatedSiteData.id ? updatedSiteData : s));
+    };
+
+    const handleSiteDelete = (deletedSiteId) => {
+        setSites(prev => prev.filter(s => s.id !== deletedSiteId));
+    };
+
+    if (loading && !user) return <Loader text="Initializing Nexus Interface..." />;  
     if (!user) return null;
 
     // Filter Logic
@@ -328,7 +336,16 @@ export default function BuildDashboard() {
                                 <div className="card-body">
                                     <div className="card-header">
                                         <h3>{site.name || 'Untitled Project'}</h3>
-                                        <span className={`status-dot ${site.status === 'public' ? 'online' : 'offline'}`}></span>
+                                        <div className="header-actions-right">
+                                            <span className={`status-dot ${site.status === 'public' ? 'online' : 'offline'}`} title={`Status: ${site.status}`}></span>
+                                            <button 
+                                                className="btn-settings-icon" 
+                                                onClick={(e) => { e.stopPropagation(); setEditingSite(site); }}
+                                                title="Construct Settings"
+                                            >
+                                                <Settings size={14} />
+                                            </button>
+                                        </div>
                                     </div>
                                     <p className="card-desc">{site.description || 'No description provided.'}</p>
                                     <div className="card-meta">
@@ -353,6 +370,39 @@ export default function BuildDashboard() {
 
             {/* Architect Modal */}
             {showArchitect && <ArchitectModal onClose={() => setShowArchitect(false)} user={user} />}
+
+            {/* Site Settings Modal */}
+            {editingSite && (
+                <SiteSettingsModal 
+                    site={editingSite} 
+                    onClose={() => setEditingSite(null)} 
+                    onUpdate={handleSiteUpdate} 
+                    onDelete={handleSiteDelete}
+                />
+            )}
+
+            {/* Limit Exceeded Modal */}
+            {showLimitModal && (
+                <div className="modal-backdrop" onClick={() => setShowLimitModal(false)}>
+                    <div className="modal-content limit-modal" onClick={e => e.stopPropagation()}>
+                        <div className="limit-icon-wrapper">
+                            <span className="limit-icon">⚠️</span>
+                        </div>
+                        <h2>System Capacity Reached</h2>
+                        <p>
+                            You have reached your maximum allocation of <span className="highlight-text">{userLimit} active {userLimit === 1 ? 'construct' : 'constructs'}</span>. 
+                            Upgrade your protocol to <strong style={{color: '#00f0ff'}}>PREMIUM-X</strong> to deploy up to 5 concurrent sites, access advanced AI capabilities, 
+                            and unlock priority processing logic.
+                        </p>
+                        <div className="limit-actions">
+                            <button className="btn-secondary" onClick={() => setShowLimitModal(false)}>CANCEL</button>
+                            <button className="btn-primary" onClick={() => router.push('/mr-build/subscription')}>
+                                UPGRADE PROTOCOL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* New Project Modal */}
             {showNewModal && (
@@ -417,7 +467,7 @@ export default function BuildDashboard() {
                 .avatar-sm { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); }
 
                 /* Main */
-                .nebula-main { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+                .nebula-main { max-width: 1200px; margin: 0 auto; padding: 32px 20px; overflow-x: hidden; }
 
                 /* Welcome Banner */
                 .welcome-banner { 
@@ -436,7 +486,7 @@ export default function BuildDashboard() {
 
                 /* Controls */
                 .controls-bar { display: flex; gap: 16px; margin-bottom: 30px; flex-wrap: wrap; }
-                @media (max-width: 600px) { .controls-bar { flex-direction: column-reverse; } }
+                @media (max-width: 600px) { .controls-bar { flex-direction: column; } .search-wrapper { min-width: 100%; } }
 
                 .search-wrapper { 
                     flex: 1; display: flex; align-items: center; gap: 10px; 
@@ -451,7 +501,6 @@ export default function BuildDashboard() {
                     font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;
                     transition: 0.2s; box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
                 }
-                @media (max-width: 600px) { .btn-new-project { width: 100%; justify-content: center; } }
                 .btn-new-project:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(0, 240, 255, 0.5); }
 
                 .btn-analytics {
@@ -460,6 +509,8 @@ export default function BuildDashboard() {
                     display: flex; align-items: center; gap: 8px; transition: 0.2s;
                 }
                 .btn-analytics:hover { background: rgba(0, 240, 255, 0.2); box-shadow: 0 0 15px rgba(0, 240, 255, 0.2); }
+                
+                @media (max-width: 600px) { .btn-new-project, .btn-analytics { width: 100%; justify-content: center; } }
 
                 /* Grid */
                 .projects-grid {
@@ -520,6 +571,14 @@ export default function BuildDashboard() {
                 .card-body { padding: 20px; }
                 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
                 .card-header h3 { font-size: 1.1rem; font-weight: 600; color: #fff; }
+                
+                .header-actions-right { display: flex; align-items: center; gap: 8px; }
+                .btn-settings-icon { 
+                    background: transparent; border: none; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center;
+                    padding: 4px; border-radius: 4px; transition: 0.2s;
+                }
+                .btn-settings-icon:hover { color: #00f0ff; background: rgba(0, 240, 255, 0.1); }
+
                 .status-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 5px currentColor; }
                 .status-dot.online { color: #00ff80; background: #00ff80; }
                 .status-dot.offline { color: #666; background: #666; }
@@ -551,7 +610,7 @@ export default function BuildDashboard() {
                 .modal-head button { background: none; border: none; color: #666; cursor: pointer; }
                 .modal-head button:hover { color: #fff; }
 
-                .modal-options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; }
+                .modal-options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; }
                 .option-tile {
                     background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
                     padding: 24px; border-radius: 12px; cursor: pointer; text-align: center; transition: 0.2s;
@@ -562,6 +621,32 @@ export default function BuildDashboard() {
                 .option-tile p { font-size: 0.8rem; color: #666; }
                 .option-tile.architect .tile-icon { color: #d000ff; }
                 .option-tile.architect:hover { border-color: #d000ff; background: rgba(208, 0, 255, 0.05); }
+
+                /* Limit Modal Specific */
+                .limit-modal {
+                    text-align: center; max-width: 480px; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+                }
+                .limit-icon-wrapper {
+                    width: 70px; height: 70px; background: rgba(255, 68, 68, 0.1); border: 1px solid rgba(255, 68, 68, 0.3);
+                    border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+                    box-shadow: 0 0 30px rgba(255, 68, 68, 0.2);
+                }
+                .limit-icon { font-size: 2rem; }
+                .limit-modal h2 { font-family: 'Orbitron'; font-size: 1.5rem; color: #fff; margin-bottom: 12px; }
+                .limit-modal p { color: #aaa; font-size: 0.95rem; line-height: 1.5; margin-bottom: 30px; }
+                .highlight-text { color: #fff; font-weight: 700; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }
+                
+                .limit-actions { display: flex; gap: 16px; width: 100%; }
+                .limit-actions .btn-secondary { flex: 1; padding: 12px; border-radius: 8px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; cursor: pointer; font-weight: 600; transition: 0.2s; }
+                .limit-actions .btn-secondary:hover { color: #fff; border-color: rgba(255,255,255,0.5); }
+                .limit-actions .btn-primary { flex: 2; padding: 12px; border-radius: 8px; background: #00f0ff; color: #000; border: none; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 0 15px rgba(0, 240, 255, 0.3); }
+                .limit-actions .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(0, 240, 255, 0.5); }
+                
+                @media (max-width: 600px) {
+                    .limit-modal { padding: 30px 20px; }
+                    .limit-actions { flex-direction: column-reverse; }
+                    .limit-actions button { width: 100%; }
+                }
 
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             `}</style>

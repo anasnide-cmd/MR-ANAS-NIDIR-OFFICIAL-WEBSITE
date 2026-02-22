@@ -180,6 +180,14 @@ export default function AnalyticsPage() {
 
                 /* KPIs */
                 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+                @media (max-width: 600px) {
+                    .kpi-grid { grid-template-columns: 1fr; }
+                    .analytics-header { padding: 15px 20px; flex-wrap: wrap; }
+                    .analytics-header h1 { font-size: 1.2rem; }
+                    .analytics-main { padding: 20px 15px; }
+                    .chart-wrapper { padding: 10px; min-height: 300px; }
+                }
+
                 .kpi-card {
                     background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
                     padding: 24px; border-radius: 16px; position: relative; overflow: hidden;

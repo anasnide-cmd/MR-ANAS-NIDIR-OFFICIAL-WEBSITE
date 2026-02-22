@@ -239,6 +239,15 @@ export default function LandingClient() {
                     .hero-desc { margin-left: auto; margin-right: auto; }
                     .code-block { transform: none; margin: 0 auto; }
                 }
+
+                @media (max-width: 480px) {
+                    .hero-actions { flex-direction: column; width: 100%; }
+                    .hero-actions > * { width: 100%; text-align: center; }
+                    h1 { font-size: clamp(2.5rem, 10vw, 3rem); text-align: center; }
+                    .hero-desc { text-align: center; font-size: 1rem; }
+                    .feature-card { padding: 30px 20px; }
+                    .stats-section { flex-direction: column; gap: 40px; padding: 60px 20px; }
+                }
             `}</style>
         </div>
     );
