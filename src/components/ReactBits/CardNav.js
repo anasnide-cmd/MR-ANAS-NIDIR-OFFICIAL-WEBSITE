@@ -138,8 +138,8 @@ const CardNav = ({
     if (el) cardsRef.current[i] = el;
   };
 
-  // Hide on user sites, admin pages, or SavoirPedia (Wiki)
-  if (pathname?.startsWith('/s/') || pathname?.startsWith('/admin') || pathname?.startsWith('/savoirpedia')) return null;
+  // Hide on user sites, admin pages, SavoirPedia, or Creovate
+  if (pathname?.startsWith('/s/') || pathname?.startsWith('/admin') || pathname?.startsWith('/savoirpedia') || pathname?.startsWith('/creovate')) return null;
 
   return (
     <div className={`card-nav-container ${className}`}>

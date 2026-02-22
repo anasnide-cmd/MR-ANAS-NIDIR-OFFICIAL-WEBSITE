@@ -133,6 +133,7 @@ export default function Navbar() {
     { href: '/savoirpedia', label: 'SavoirPedia', icon: '📝' },
     { href: '/nex-ai', label: 'NEX AI', icon: '🤖' },
     { href: '/mr-build', label: 'Mr Build', icon: '🔨' },
+    { href: '/creovate', label: 'Creovate', icon: '✨' },
     { href: '/#contact', label: 'Contact', icon: '📧' },
   ];
 
@@ -1207,29 +1208,7 @@ export default function Navbar() {
           }
           
           .mobile-nav-grid {
-             grid-template-columns: repeat(2, 1fr); /* Keep 2 cols even on small screens if possible, or 1 if too small. User said "navcard frame", implied grid. */
-             /* Actually, previous css had 1fr for max-width 768px. If user sees overflow, maybe they want 2 cols? Or maybe 1 col is too wide? 
-                Wait, step 152 shows:
-                @media (max-width: 768px) {
-                  .mobile-nav-grid {
-                    grid-template-columns: 1fr;
-                  }
-                }
-                If it's 1 column, overflow is less likely unless padding is huge.
-                However, in step 153, the default .mobile-nav-grid (line 858) is `grid-template-columns: repeat(2, 1fr);`.
-                The media query at 768px overrides it to 1fr.
-                If the user is on a phone (likely < 768px), they see 1 column.
-                If the content is getting out, maybe the padding is too large?
-                Or maybe the "navcard frame" refers to the card itself.
-                Let's stick to reducing padding and ensuring text wrap.
-             */
-             grid-template-columns: repeat(2, 1fr); /* Revert to 2 cols for better density, or keep 1? 
-                If 2 columns on 480px (mobile portrait), 480/2 = 240px minus gaps/padding.
-                240px is tight. 
-                Let's keep the existing 768px override (1fr) but maybe the user *wants* 2 columns?
-                No, the issue is "content out of frame". 1 column avoids this better.
-                I will assume the issue is simply lack of space due to padding.
-             */
+            grid-template-columns: 1fr;
           }
         }
 

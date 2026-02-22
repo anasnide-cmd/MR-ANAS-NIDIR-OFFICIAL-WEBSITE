@@ -71,6 +71,7 @@ export default function HomeClient() {
       links: [
         { label: 'SavoirPedia', href: '/savoirpedia', ariaLabel: 'Read SavoirPedia' },
         { label: 'Mr Build', href: '/mr-build', ariaLabel: 'Mr Build Dashboard' },
+        { label: 'Creovate', href: '/creovate', ariaLabel: 'Creovate AI Studio' },
         { label: 'Games', href: '/mr-games', ariaLabel: 'Mr Arcade Games' }
       ]
     },
