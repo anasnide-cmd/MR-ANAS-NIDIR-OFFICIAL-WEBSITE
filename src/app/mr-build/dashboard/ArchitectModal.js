@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, X, Mic, Volume2, VolumeX, Globe, Cpu, Paperclip } from 'lucide-react';
+import { Sparkles, Send, X, Mic, Volume2, VolumeX, Globe, Cpu, Paperclip, MicOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { doc, collection, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
+import 'regenerator-runtime/runtime';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 export default function ArchitectModal({ onClose, user }) {
     const router = useRouter();
@@ -21,7 +23,48 @@ export default function ArchitectModal({ onClose, user }) {
     const [cachedKey, setCachedKey] = useState(null);
     const [showManualInput, setShowManualInput] = useState(false);
     const [manualKey, setManualKey] = useState('');
+    const [voiceActive, setVoiceActive] = useState(true); // TTS Enabled
     const messagesEndRef = useRef(null);
+
+    const {
+        transcript,
+        listening,
+        resetTranscript,
+        browserSupportsSpeechRecognition
+    } = useSpeechRecognition();
+
+    // Voice Synthesis
+    const speak = (text) => {
+        if (!voiceActive) return;
+        const synth = window.speechSynthesis;
+        if (synth.speaking) synth.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.1;
+        utterance.pitch = 0.9;
+        // Try to select a "Google US English" or similar futuristic voice if available
+        const voices = synth.getVoices();
+        const techVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Samantha'));
+        if (techVoice) utterance.voice = techVoice;
+        
+        synth.speak(utterance);
+    };
+
+    // Auto-update input with transcript
+    useEffect(() => {
+        if (transcript) {
+            setInput(transcript);
+        }
+    }, [transcript]);
+
+    const toggleListening = () => {
+        if (listening) {
+            SpeechRecognition.stopListening();
+        } else {
+            resetTranscript();
+            SpeechRecognition.startListening({ continuous: true });
+        }
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -208,7 +251,9 @@ export default function ArchitectModal({ onClose, user }) {
             } else {
                 // Normal chat response (clarification)
                 setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+                speak(data.message);
             }
+
 
         } catch (err) {
             console.error(err);
@@ -235,7 +280,12 @@ export default function ArchitectModal({ onClose, user }) {
                             <span>{systemStatus === 'online' ? 'ONLINE' : (manualKey ? 'MANUAL' : 'OFFLINE')}</span>
                         </div>
                     </div>
-                    <button onClick={onClose} className="close-btn"><X size={20}/></button>
+                    <div className="header-actions" style={{display:'flex', gap: '10px'}}>
+                         <button onClick={() => setVoiceActive(!voiceActive)} className="icon-btn-sm" title="Toggle Voice Synthesis">
+                            {voiceActive ? <Volume2 size={16}/> : <VolumeX size={16}/>}
+                        </button>
+                        <button onClick={onClose} className="close-btn"><X size={20}/></button>
+                    </div>
                 </div>
 
                 {/* MANUAL KEY INPUT OVERLAY */}
@@ -313,8 +363,18 @@ export default function ArchitectModal({ onClose, user }) {
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSend()}
                         placeholder="Describe your site (or upload a mockup)..."
-                        disabled={generating || loading}
+
+                        disabled={generating || loading || listening}
                     />
+                    {browserSupportsSpeechRecognition && (
+                         <button 
+                            className={`mic-btn ${listening ? 'listening' : ''}`}
+                            onClick={toggleListening}
+                            title="Voice Command"
+                        >
+                            {listening ? <MicOff size={18} /> : <Mic size={18} />}
+                        </button>
+                    )}
                     <button onClick={handleSend} disabled={generating || loading || (!input && attachments.length === 0)}>
                         <Send size={18} />
                     </button>
@@ -432,6 +492,19 @@ export default function ArchitectModal({ onClose, user }) {
                     background: transparent !important; color: #666 !important; width: auto !important;
                 }
                 .attach-btn:hover { color: #00f0ff !important; }
+
+                .mic-btn {
+                    background: transparent; color: #666; width: auto; border: 1px solid transparent; transition: 0.3s;
+                }
+                .mic-btn:hover { color: #fff; }
+                .mic-btn.listening { color: #ff0055; animation: pulse 1.5s infinite; border-color: rgba(255, 0, 85, 0.3); }
+
+                .icon-btn-sm {
+                   background: none; border: none; color: #00f0ff; opacity: 0.7; cursor: pointer;
+                }
+                .icon-btn-sm:hover { opacity: 1; }
+
+                @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 0, 85, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); } }
             `}</style>
         </div>
     );

@@ -7,6 +7,7 @@ import { collection, query, orderBy, getDocs, limit, where } from 'firebase/fire
 import Link from 'next/link';
 import CommandGrid, { GridItem } from '../../components/Admin/CommandGrid';
 import SystemTerminal from '../../components/Admin/SystemTerminal';
+import { Shield } from 'lucide-react';
 
 export default function AdminDashboard() {
     const [user, setUser] = useState(null);
@@ -120,6 +121,7 @@ export default function AdminDashboard() {
                     </div>
                 </div>
                 <div className="header-meta">
+                    <Link href="/admin/god-mode" className="god-mode-link">⚡ GOD MODE</Link>
                     <span>USER: {user.email}</span>
                     <span>ID: {user.uid.slice(0, 8)}...</span>
                 </div>
@@ -139,6 +141,14 @@ export default function AdminDashboard() {
                         <span className="label">DEPLOYED PLATFORMS</span>
                     </div>
                 </GridItem>
+                <Link href="/admin/audit-logs" style={{display:'contents'}}>
+                    <GridItem colSpan={3} title="SECURITY AUDIT" border={true} className="audit-item">
+                        <div className="stat-display audit-display">
+                            <span className="value red"><Shield size={32}/></span>
+                            <span className="label">VIEW LOGS</span>
+                        </div>
+                    </GridItem>
+                </Link>
                 <GridItem colSpan={3} title="INTEL DATABASE">
                     <div className="stat-display">
                         <span className="value">{stats.totalPosts}</span>
@@ -182,64 +192,74 @@ export default function AdminDashboard() {
 
             <style jsx global>{`
                 .cia-dashboard {
-                    background-color: var(--cia-bg);
-                    min-height: 100vh;
-                    color: var(--cia-accent);
-                    font-family: 'Share Tech Mono', monospace;
+                    background-color: transparent;
+                    min-height: 100%;
+                    color: #e2e8f0;
+                    font-family: 'Inter', 'Roboto', sans-serif;
                     position: relative;
                 }
                 .scanline-overlay {
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-                    background-size: 100% 2px, 3px 100%;
-                    pointer-events: none;
-                    z-index: 100;
+                    display: none;
                 }
                 .cia-header {
-                    padding: 20px 30px;
-                    border-bottom: 2px solid var(--cia-accent);
+                    padding: 0 0 24px 0;
                     display: flex;
                     justify-content: space-between;
                     align-items: flex-end;
-                    background: rgba(0, 243, 255, 0.05);
                 }
-                .cia-title { margin: 0; font-size: 2rem; color: #fff; letter-spacing: 5px; }
-                .cia-title .sub { color: var(--cia-accent); font-size: 1rem; }
-                .status-line { font-size: 0.8rem; margin-top: 5px; color: var(--cia-success); }
-                .blink { animation: flicker 1s infinite; margin-right: 5px; color: var(--cia-success); }
+                .cia-title { margin: 0; font-size: 1.5rem; color: #f8fafc; font-weight: 600; text-shadow: 0 0 20px rgba(168, 85, 247, 0.4); }
+                .cia-title .sub { color: #cbd5e1; font-size: 1rem; font-weight: 400; margin-left: 8px; }
+                .status-line { font-size: 0.85rem; margin-top: 5px; color: #4ade80; font-weight: 500; }
+                .blink { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; margin-right: 6px; box-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
                 
-                .header-meta { text-align: right; display: flex; flex-direction: column; opacity: 0.7; font-size: 0.8rem; }
+                .header-meta { text-align: right; display: flex; flex-direction: column; font-size: 0.85rem; gap: 4px; color: #cbd5e1; }
+                .god-mode-link { color: #fca5a5; text-decoration: none; font-weight: 500; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 12px; align-self: flex-end; margin-bottom: 5px; border-radius: 16px; transition: all 0.2s; background: rgba(239, 68, 68, 0.1); }
+                .god-mode-link:hover { background: rgba(239, 68, 68, 0.2); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); color: #fff; }
 
                 /* Stats */
-                .stat-display { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
-                .stat-display .value { font-size: 3rem; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
-                .stat-display .value.cyan { color: var(--cia-accent); text-shadow: 0 0 10px var(--cia-accent); }
-                .stat-display .value.red { color: var(--cia-alert); text-shadow: 0 0 10px var(--cia-alert); }
-                .stat-display .label { font-size: 0.7rem; opacity: 0.7; margin-top: 5px; letter-spacing: 1px; }
+                .stat-display { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; height: 100%; text-align: left; }
+                .stat-display .value { font-size: 3.5rem; font-weight: 600; line-height: 1; color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.2); margin-bottom: 8px; }
+                .stat-display .value.cyan { color: #d8b4fe; text-shadow: 0 0 20px rgba(168, 85, 247, 0.4); }
+                .stat-display .value.red { color: #fca5a5; text-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+                .stat-display .label { font-size: 0.85rem; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
 
                 /* Map Placeholder */
-                .map-placeholder { width: 100%; height: 100%; background: #000; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+                .map-placeholder { 
+                    width: 100%; height: 100%; 
+                    background: radial-gradient(circle at center, rgba(168, 85, 247, 0.1) 0%, transparent 70%); 
+                    position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; 
+                    border-radius: 8px;
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                }
                 .grid-lines { 
                     position: absolute; inset: 0; 
-                    background-image: linear-gradient(var(--cia-accent) 1px, transparent 1px), linear-gradient(90deg, var(--cia-accent) 1px, transparent 1px);
-                    background-size: 50px 50px;
-                    opacity: 0.1;
+                    background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+                    background-size: 40px 40px;
+                    transform: perspective(600px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+                    animation: gridMove 20s linear infinite;
                 }
-                .radar-sweep {
-                    position: absolute; width: 100%; height: 100%;
-                    background: conic-gradient(from 0deg, transparent 0deg, rgba(0, 243, 255, 0.1) 60deg, transparent 60deg);
-                    animation: radar 4s infinite linear;
-                    border-radius: 50%;
+                @keyframes gridMove {
+                    from { background-position: 0 0; }
+                    to { background-position: 0 40px; }
                 }
-                @keyframes radar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                .map-text { z-index: 2; background: #000; padding: 5px 10px; border: 1px solid var(--cia-accent); }
+                .map-text { z-index: 2; color: #f8fafc; font-weight: 600; font-size: 1rem; letter-spacing: 2px; text-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
 
                 /* Recent List */
-                .recent-list { display: flex; flex-direction: column; gap: 5px; height: 100%; overflow-y: auto; padding-right: 5px; }
-                .recent-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(255,255,255,0.05); text-decoration: none; color: inherit; font-size: 0.8rem; border-left: 2px solid transparent; }
-                .recent-row:hover { background: rgba(0, 243, 255, 0.1); border-left-color: var(--cia-accent); }
-                .status.active { color: var(--cia-success); }
-                .status.banned { color: var(--cia-alert); }
+                .recent-list { display: flex; flex-direction: column; gap: 8px; height: 100%; overflow-y: auto; padding-right: 8px; }
+                .recent-list::-webkit-scrollbar { width: 4px; }
+                .recent-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+                .recent-row { 
+                    display: flex; justify-content: space-between; align-items: center;
+                    padding: 12px 16px; background: rgba(255, 255, 255, 0.03); 
+                    text-decoration: none; color: #cbd5e1; font-size: 0.9rem; 
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 8px;
+                    transition: all 0.2s ease;
+                }
+                .recent-row:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(168, 85, 247, 0.3); transform: translateX(4px); }
+                .status { font-weight: 600; font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; }
+                .status.active { color: #4ade80; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.2); }
+                .status.banned { color: #f87171; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); }
 
                 /* Loading */
                 .cia-loading { height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; color: var(--cia-accent); font-family: monospace; font-size: 1.5rem; }

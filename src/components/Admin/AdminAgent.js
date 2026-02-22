@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 
 export default function AdminAgent() {
     const [apiKey, setApiKey] = useState(null);
+    const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
         // Fetch API Key from system_config (Client Side - Authenticated)

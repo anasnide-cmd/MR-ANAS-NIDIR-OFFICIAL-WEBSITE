@@ -5,6 +5,8 @@ import { doc, setDoc, deleteDoc, collection, query, where, getDocs, getDoc } fro
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import Link from 'next/link';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 import Loader from '../../../components/Loader';
 import Editor from 'react-simple-code-editor';
@@ -20,7 +22,9 @@ const Terminal = dynamic(() => import('./Terminal'), {
     ssr: false, 
     loading: () => <div style={{padding: '20px', color: '#666'}}>Initializing Terminal...</div>
 });
-import 'prismjs/themes/prism-tomorrow.css'; 
+const ARPreview = dynamic(() => import('./ARPreview'), { ssr: false });
+const AssetManager = dynamic(() => import('./AssetManager'), { ssr: false });
+import 'prismjs/themes/prism-tomorrow.css';  
 import { 
     GitBranch, 
     Star, 
@@ -46,13 +50,34 @@ import {
     X,
     Maximize,
     Minimize,
-    Plus
+
+    Plus,
+    Download,
+    Image as ImageIcon
 } from 'lucide-react';
 
 /* --- ICONS & STYLES --- */
 // Using local styled-jsx at the bottom
 
 import { Suspense } from 'react';
+
+// Template Presets (Shared with Dashboard ideally, but kept here for stability)
+const TEMPLATES = {
+    'cyberpunk': {
+        files: {
+            'index.html': { content: '<div class="cyber-card">\n  <h1>NEON FUTURE</h1>\n  <p>System Online</p>\n  <button>JACK IN</button>\n</div>', language: 'html' },
+            'styles.css': { content: 'body { background: #050505; color: #00f0ff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: monospace; }\n\n.cyber-card {\n  border: 1px solid #00f0ff;\n  padding: 40px;\n  box-shadow: 0 0 20px rgba(0,240,255,0.2);\n  text-align: center;\n}\n\nh1 { letter-spacing: 5px; text-shadow: 0 0 10px #00f0ff; }\n\nbutton {\n  background: #00f0ff; color: #000; border: none; padding: 10px 20px;\n  font-weight: bold; cursor: pointer; margin-top: 20px;\n}\nbutton:hover { box-shadow: 0 0 15px #00f0ff; }', language: 'css' },
+            'README.md': { content: '# Cyberpunk Template\nA neon-soaked starting point.', language: 'markdown' }
+        }
+    },
+    'saas': {
+        files: {
+            'index.html': { content: '<nav>\n  <h3>SaaS.io</h3>\n  <button>Get Started</button>\n</nav>\n<header>\n  <h1>Scale Your Business</h1>\n  <p>The ultimate platform for growth.</p>\n</header>', language: 'html' },
+            'styles.css': { content: 'body { font-family: sans-serif; margin: 0; color: #333; }\nnav { display: flex; justify-content: space-between; padding: 20px; border-bottom: 1px solid #eee; }\nheader { text-align: center; padding: 100px 20px; }\nh1 { font-size: 3rem; margin-bottom: 10px; }\nbutton { background: #000; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }', language: 'css' },
+            'README.md': { content: '# SaaS Landing Page\nClean, modern, convertible.', language: 'markdown' }
+        }
+    }
+};
 
 function EditorContent() {
     const router = useRouter();
@@ -66,6 +91,7 @@ function EditorContent() {
     const [saving, setSaving] = useState(false);
     const [activeFile, setActiveFile] = useState('index.html'); 
     const [showPreview, setShowPreview] = useState(false); // Default to FALSE
+    const [arMode, setArMode] = useState(false); // Holographic AR Mode
     const [copilotOpen, setCopilotOpen] = useState(false);
     const [terminalOpen, setTerminalOpen] = useState(false); // Default to FALSE
     const [previewKey, setPreviewKey] = useState(0); // For forcing iframe reload
@@ -81,6 +107,7 @@ function EditorContent() {
     });
 
     const [showSidebar, setShowSidebar] = useState(false);
+    const [sidebarMode, setSidebarMode] = useState('files'); // 'files' | 'assets'
     
     // UI States
     const [isCreating, setIsCreating] = useState(false);
@@ -108,6 +135,15 @@ function EditorContent() {
         const isNew = searchParams.get('new') === 'true';
 
         if (isNew && templateId) {
+            // Check local presets first
+            if (TEMPLATES[templateId]) {
+                setSiteData(prev => ({
+                    ...prev,
+                    files: { ...prev.files, ...TEMPLATES[templateId].files }
+                }));
+                return; // Skip firestore fetch
+            }
+
             const fetchTemplate = async () => {
                 try {
                     const tempRef = doc(db, 'system_templates', templateId);
@@ -281,9 +317,24 @@ function EditorContent() {
         } catch (err) {
             console.error('Save failed:', err);
             alert('Failed to save changes.');
-        } finally {
             setSaving(false);
         }
+    };
+
+    // Export Function
+    const handleExport = async () => {
+        const zip = new JSZip();
+        
+        // Add files to zip
+        Object.entries(siteData.files).forEach(([filename, file]) => {
+            zip.file(filename, file.content);
+        });
+
+        // Generate zip
+        const content = await zip.generateAsync({ type: "blob" });
+        saveAs(content, `${siteData.slug || 'project'}.zip`);
+        setSuccessMsg('Project exported successfully.');
+        setTimeout(() => setSuccessMsg(''), 3000);
     };
 
     // AI Fix Handler (Self-Healing)
@@ -320,15 +371,24 @@ function EditorContent() {
                             onChange={(e) => setSiteData({...siteData, name: e.target.value})}
                             placeholder="Project Name"
                         />
-                        <span className={`status-badge ${siteData.status}`}>{siteData.status}</span>
+                        <button 
+                            className={`status-badge ${siteData.status}`}
+                            onClick={() => setSiteData(prev => ({ ...prev, status: prev.status === 'public' ? 'draft' : 'public' }))}
+                            title="Click to toggle Public/Draft"
+                        >
+                            {siteData.status === 'public' ? 'PUBLIC 🌐' : 'DRAFT 🔒'}
+                        </button>
                     </div>
                 </div>
                 <div className="header-right">
                     <button className={`btn-icon ${zenMode ? 'active' : ''}`} onClick={() => setZenMode(!zenMode)} title="Toggle Zen Mode">
                         <Maximize size={18} />
                     </button>
-                    <button className={`btn-icon ${showSidebar ? 'active' : ''}`} onClick={() => setShowSidebar(!showSidebar)}>
+                    <button className={`btn-icon ${showSidebar && sidebarMode === 'files' ? 'active' : ''}`} onClick={() => { setShowSidebar(true); setSidebarMode('files'); }}>
                         <Folder size={18} />
+                    </button>
+                    <button className={`btn-icon ${showSidebar && sidebarMode === 'assets' ? 'active' : ''}`} onClick={() => { setShowSidebar(true); setSidebarMode('assets'); }}>
+                        <ImageIcon size={18} />
                     </button>
                     <button className={`btn-icon ${terminalOpen ? 'active' : ''}`} onClick={() => setTerminalOpen(!terminalOpen)}>
                         <TerminalIcon size={18} />
@@ -338,6 +398,9 @@ function EditorContent() {
                     </button>
                     <button className="btn-save" onClick={handleSave} disabled={saving}>
                         <Save size={16} /> <span>{saving ? 'Saving...' : 'Save'}</span>
+                    </button>
+                    <button className="btn-icon" onClick={handleExport} title="Export as ZIP">
+                        <Download size={18} />
                     </button>
                     <div className="divider"></div>
                      <button className={`btn-icon ${showPreview ? 'active' : ''}`} onClick={() => setShowPreview(!showPreview)}>
@@ -370,49 +433,56 @@ function EditorContent() {
                 {!zenMode && (
                 <aside className={`file-explorer ${showSidebar ? 'visible' : ''}`}>
                     <div className="explorer-header">
-                        <span>FILES</span>
-                        <button onClick={startCreating} className="btn-add-file" title="New File"><Plus size={16}/></button>
+                        <span>{sidebarMode === 'files' ? 'FILES' : 'ASSETS'}</span>
+                        {sidebarMode === 'files' && <button onClick={startCreating} className="btn-add-file" title="New File"><Plus size={16}/></button>}
+                        <button onClick={() => setShowSidebar(false)} className="btn-close-sidebar"><X size={14}/></button>
                     </div>
                     
-                    {isCreating && (
-                        <div className="file-creation-row">
-                            <input 
-                                autoFocus
-                                value={newFileName}
-                                onChange={e => setNewFileName(e.target.value)}
-                                onKeyDown={e => { if(e.key === 'Enter') confirmCreate(); if(e.key === 'Escape') cancelCreate(); }}
-                                onBlur={cancelCreate}
-                                className="new-file-input"
-                                placeholder="filename.ext"
-                            />
-                        </div>
-                    )}
+                    {sidebarMode === 'files' ? (
+                        <>
+                            {isCreating && (
+                                <div className="file-creation-row">
+                                    <input 
+                                        autoFocus
+                                        value={newFileName}
+                                        onChange={e => setNewFileName(e.target.value)}
+                                        onKeyDown={e => { if(e.key === 'Enter') confirmCreate(); if(e.key === 'Escape') cancelCreate(); }}
+                                        onBlur={cancelCreate}
+                                        className="new-file-input"
+                                        placeholder="filename.ext"
+                                    />
+                                </div>
+                            )}
 
-                    <div className="file-list">
-                        {Object.keys(siteData.files).sort().map(fileName => (
-                            <div 
-                                key={fileName}
-                                className={`file-item ${activeFile === fileName ? 'active' : ''}`} 
-                                onClick={() => { setActiveFile(fileName); if(window.innerWidth < 768) setShowSidebar(false); }}
-                            >
-                                <span className="file-icon">
-                                    {fileName.endsWith('.html') && <Code size={14} color="#e34c26" />}
-                                    {fileName.endsWith('.css') && <Code size={14} color="#563d7c" />}
-                                    {fileName.endsWith('.js') && <FileCode size={14} color="#f7df1e" />}
-                                    {fileName.endsWith('.md') && <Book size={14} color="#fff" />}
-                                </span>
-                                <span className="file-name">{fileName}</span>
-                                {fileName !== 'index.html' && (
-                                    <button 
-                                        className="btn-delete"
-                                        onClick={(e) => deletingFile === fileName ? confirmDelete(e, fileName) : startDelete(e, fileName)}
+                            <div className="file-list">
+                                {Object.keys(siteData.files).sort().map(fileName => (
+                                    <div 
+                                        key={fileName}
+                                        className={`file-item ${activeFile === fileName ? 'active' : ''}`} 
+                                        onClick={() => { setActiveFile(fileName); if(window.innerWidth < 768) setShowSidebar(false); }}
                                     >
-                                        {deletingFile === fileName ? <span className="confirm-del">Sure?</span> : <X size={12} />}
-                                    </button>
-                                )}
+                                        <span className="file-icon">
+                                            {fileName.endsWith('.html') && <Code size={14} color="#e34c26" />}
+                                            {fileName.endsWith('.css') && <Code size={14} color="#563d7c" />}
+                                            {fileName.endsWith('.js') && <FileCode size={14} color="#f7df1e" />}
+                                            {fileName.endsWith('.md') && <Book size={14} color="#fff" />}
+                                        </span>
+                                        <span className="file-name">{fileName}</span>
+                                        {fileName !== 'index.html' && (
+                                            <button 
+                                                className="btn-delete"
+                                                onClick={(e) => deletingFile === fileName ? confirmDelete(e, fileName) : startDelete(e, fileName)}
+                                            >
+                                                {deletingFile === fileName ? <span className="confirm-del">Sure?</span> : <X size={12} />}
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        </>
+                    ) : (
+                        <AssetManager />
+                    )}
                 </aside>
                 )}
 
@@ -458,11 +528,29 @@ function EditorContent() {
                     {/* Preview (Conditional or Split) */}
                     <div className={`preview-wrapper ${showPreview ? 'visible' : ''}`}>
                         <div className="preview-toolbar">
-                            <span>Preview</span>
-                            <button onClick={() => setPreviewKey(k => k + 1)} title="Refresh"><Play size={12} /></button>
+                            <span>Preview {arMode ? '(AR Hologram)' : ''}</span>
+                            <div className="preview-actions" style={{display:'flex', gap:'10px'}}>
+                                <button onClick={() => setArMode(!arMode)} title="Toggle AR Hologram" style={{color: arMode ? '#00f0ff' : '#666'}}>
+                                    <Sparkles size={14} />
+                                </button>
+                                <button onClick={() => setPreviewKey(k => k + 1)} title="Refresh"><Play size={12} /></button>
+                            </div>
                         </div>
-                         <iframe 
-                            key={previewKey}
+                        {arMode ? (
+                            <ARPreview url={`data:text/html;charset=utf-8,${encodeURIComponent(`
+                                <html>
+                                    <head><style>${siteData.files['styles.css']?.content || ''}</style></head>
+                                    <body>
+                                        ${(siteData.files['index.html']?.content || '').replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '').replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')}
+                                        <script>
+                                            ${Object.keys(siteData.files).filter(f => f.endsWith('.js')).map(f => `try { ${siteData.files[f].content} } catch(e) { console.error(e); }`).join('\n')}
+                                        </script>
+                                    </body>
+                                </html>
+                            `)}`} />
+                        ) : (
+                            <iframe 
+                                key={previewKey}
                             title="Live Preview"
                             srcDoc={`
                                 <html>
@@ -496,6 +584,7 @@ function EditorContent() {
                             `}
                             className="preview-iframe"
                         />
+                        )}
                     </div>
 
                     {/* Terminal Pane */}
@@ -600,8 +689,8 @@ function EditorContent() {
                     padding: 16px; font-size: 12px; color: #666; font-weight: 700; letter-spacing: 1px;
                     display: flex; justify-content: space-between; align-items: center;
                 }
-                .btn-add-file { background: none; border: none; color: #666; cursor: pointer; }
-                .btn-add-file:hover { color: #fff; }
+                .btn-add-file, .btn-close-sidebar { background: none; border: none; color: #666; cursor: pointer; }
+                .btn-add-file:hover, .btn-close-sidebar:hover { color: #fff; }
 
                 .file-list { flex: 1; overflow-y: auto; }
                 .file-item {

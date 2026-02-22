@@ -21,7 +21,8 @@ import {
     Code,
     Layout,
     ChevronDown,
-    X
+    X,
+    TrendingUp
 } from 'lucide-react';
 
 import ArchitectModal from './ArchitectModal';
@@ -37,6 +38,31 @@ export default function BuildDashboard() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('repositories'); // 'repositories', 'stars', 'projects'
+
+    // Template Definitions
+    const TEMPLATES = {
+        'blank': {
+            files: {
+                'index.html': { content: '<!-- New Project -->\n<h1>Hello World</h1>', language: 'html' },
+                'styles.css': { content: 'body { background: #000; color: #fff; }', language: 'css' },
+                'README.md': { content: '# New Project', language: 'markdown' }
+            }
+        },
+        'cyberpunk': {
+            files: {
+                'index.html': { content: '<div class="cyber-card">\n  <h1>NEON FUTURE</h1>\n  <p>System Online</p>\n  <button>JACK IN</button>\n</div>', language: 'html' },
+                'styles.css': { content: 'body { background: #050505; color: #00f0ff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: monospace; }\n\n.cyber-card {\n  border: 1px solid #00f0ff;\n  padding: 40px;\n  box-shadow: 0 0 20px rgba(0,240,255,0.2);\n  text-align: center;\n}\n\nh1 { letter-spacing: 5px; text-shadow: 0 0 10px #00f0ff; }\n\nbutton {\n  background: #00f0ff; color: #000; border: none; padding: 10px 20px;\n  font-weight: bold; cursor: pointer; margin-top: 20px;\n}\nbutton:hover { box-shadow: 0 0 15px #00f0ff; }', language: 'css' },
+                'README.md': { content: '# Cyberpunk Template\nA neon-soaked starting point.', language: 'markdown' }
+            }
+        },
+        'saas': {
+            files: {
+                'index.html': { content: '<nav>\n  <h3>SaaS.io</h3>\n  <button>Get Started</button>\n</nav>\n<header>\n  <h1>Scale Your Business</h1>\n  <p>The ultimate platform for growth.</p>\n</header>', language: 'html' },
+                'styles.css': { content: 'body { font-family: sans-serif; margin: 0; color: #333; }\nnav { display: flex; justify-content: space-between; padding: 20px; border-bottom: 1px solid #eee; }\nheader { text-align: center; padding: 100px 20px; }\nh1 { font-size: 3rem; margin-bottom: 10px; }\nbutton { background: #000; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }', language: 'css' },
+                'README.md': { content: '# SaaS Landing Page\nClean, modern, convertible.', language: 'markdown' }
+            }
+        }
+    };
 
     // Swipe State
     const [swipeState, setSwipeState] = useState({ id: null, startX: 0, currentX: 0, showAction: null });
@@ -131,7 +157,11 @@ export default function BuildDashboard() {
         router.push('/mr-build/editor?new=true');
     };
 
-    const startFromTemplate = (templateId) => {
+    const startFromTemplate = async (templateId) => {
+        // We will pass the template ID via query param, and the Editor will look it up.
+        // For system templates (hardcoded), we can handle them in the Editor initialization or 
+        // inject them into the URL as encoded data if small, OR just use the ID and let Editor resolve it.
+        // Let's assume the Editor knows these IDs or we pass a flag.
         router.push(`/mr-build/editor?new=true&template=${templateId}`);
     };
 
@@ -248,6 +278,9 @@ export default function BuildDashboard() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
+                    <button onClick={() => router.push('/mr-build/analytics')} className="btn-analytics">
+                        <TrendingUp size={16} /> Earnings
+                    </button>
                     <button onClick={handleNewRepo} className="btn-new-project">
                         <Plus size={16} /> New Project
                     </button>
@@ -340,13 +373,16 @@ export default function BuildDashboard() {
                                 <h3>Blank Core</h3>
                                 <p>Start from scratch.</p>
                             </button>
-                            {unlockedTemplates.map(tid => (
-                                <button key={tid} className="option-tile template" onClick={() => startFromTemplate(tid)}>
-                                    <div className="tile-icon"><Layout size={24}/></div>
-                                    <h3>{tid.replace(/_/g, ' ')}</h3>
-                                    <p>Template</p>
-                                </button>
-                            ))}
+                            <button className="option-tile template" onClick={() => startFromTemplate('cyberpunk')}>
+                                <div className="tile-icon" style={{color: '#00f0ff'}}><Layout size={24}/></div>
+                                <h3>Cyberpunk</h3>
+                                <p>Neon & Glass</p>
+                            </button>
+                            <button className="option-tile template" onClick={() => startFromTemplate('saas')}>
+                                <div className="tile-icon" style={{color: '#ff0055'}}><Box size={24}/></div>
+                                <h3>SaaS Landing</h3>
+                                <p>Clean & Modern</p>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -417,6 +453,13 @@ export default function BuildDashboard() {
                 }
                 @media (max-width: 600px) { .btn-new-project { width: 100%; justify-content: center; } }
                 .btn-new-project:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(0, 240, 255, 0.5); }
+
+                .btn-analytics {
+                    background: rgba(0, 240, 255, 0.1); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3);
+                    padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; 
+                    display: flex; align-items: center; gap: 8px; transition: 0.2s;
+                }
+                .btn-analytics:hover { background: rgba(0, 240, 255, 0.2); box-shadow: 0 0 15px rgba(0, 240, 255, 0.2); }
 
                 /* Grid */
                 .projects-grid {

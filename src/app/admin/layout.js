@@ -754,9 +754,17 @@ export default function AdminLayout({ children }) {
                 .admin-layout {
                     display: flex;
                     min-height: 100vh;
-                    background: linear-gradient(135deg, #0a0a0f 0%, #020202 100%);
-                    color: #fff;
+                    background: linear-gradient(45deg, #0f172a, #1e1b4b, #312e81, #0f172a);
+                    background-size: 400% 400%;
+                    animation: aurora 20s ease infinite;
+                    color: #e2e8f0;
                     position: relative;
+                }
+                
+                @keyframes aurora {
+                    0% { background-position: 0% 50%; }
+                    50% { background-position: 100% 50%; }
+                    100% { background-position: 0% 50%; }
                 }
                 
                 .mobile-toggle {
@@ -808,10 +816,14 @@ export default function AdminLayout({ children }) {
                 }
                 
                 .admin-header {
-                    padding: 24px 40px;
-                    background: rgba(255, 255, 255, 0.02);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                    padding: 16px 40px;
+                    background: rgba(255, 255, 255, 0.05);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
                     animation: slideDown 0.3s ease-out;
+                    z-index: 10;
                 }
                 
                 .header-content {
@@ -827,17 +839,17 @@ export default function AdminLayout({ children }) {
                 }
                 
                 .avatar {
-                    width: 48px;
-                    height: 48px;
-                    background: linear-gradient(135deg, #00f0ff 0%, #0080ff 100%);
-                    border-radius: 12px;
+                    width: 44px;
+                    height: 44px;
+                    background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+                    border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-weight: 800;
+                    font-weight: 700;
                     font-size: 1.2rem;
-                    color: #000;
-                    box-shadow: 0 5px 20px rgba(0, 240, 255, 0.2);
+                    color: #FFFFFF;
+                    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
                 }
                 
                 .user-details {
@@ -846,34 +858,36 @@ export default function AdminLayout({ children }) {
                 }
                 
                 .user-name {
-                    font-weight: 700;
-                    font-size: 1.1rem;
+                    font-weight: 600;
+                    font-size: 1rem;
+                    color: #f8fafc;
                 }
                 
                 .user-email {
                     font-size: 0.85rem;
-                    color: rgba(255, 255, 255, 0.5);
+                    color: #94a3b8;
                 }
                 
                 .logout-button {
                     display: flex;
                     align-items: center;
                     gap: 8px;
-                    padding: 12px 24px;
-                    background: rgba(255, 50, 50, 0.1);
-                    border: 1px solid rgba(255, 50, 50, 0.2);
-                    border-radius: 10px;
-                    color: #ff8080;
-                    font-weight: 600;
-                    font-size: 0.9rem;
+                    padding: 8px 16px;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    color: #cbd5e1;
+                    font-weight: 500;
+                    font-size: 0.85rem;
                     cursor: pointer;
                     transition: all 0.2s ease;
                 }
                 
                 .logout-button:hover {
-                    background: rgba(255, 50, 50, 0.2);
-                    transform: translateY(-2px);
-                    box-shadow: 0 5px 20px rgba(255, 0, 0, 0.2);
+                    background: rgba(255, 255, 255, 0.15);
+                    color: #ffffff;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
                 }
                 
                 .admin-content-wrapper {
@@ -886,8 +900,9 @@ export default function AdminLayout({ children }) {
                 }
                 
                 .admin-footer {
-                    padding: 20px 40px;
+                    padding: 16px 40px;
                     background: rgba(255, 255, 255, 0.02);
+                    backdrop-filter: blur(10px);
                     border-top: 1px solid rgba(255, 255, 255, 0.05);
                     display: flex;
                     justify-content: space-between;
@@ -895,23 +910,23 @@ export default function AdminLayout({ children }) {
                 }
                 
                 .admin-footer p {
-                    color: rgba(255, 255, 255, 0.3);
+                    color: #94a3b8;
                     font-size: 0.8rem;
                     letter-spacing: 0.5px;
                 }
                 
                 .minimize-toggle {
-                    width: 40px;
-                    height: 40px;
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 10px;
-                    color: rgba(255, 255, 255, 0.5);
+                    width: 32px;
+                    height: 32px;
+                    background: transparent;
+                    border: none;
+                    border-radius: 50%;
+                    color: #5F6368;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    transition: all 0.2s ease;
+                    transition: background 0.2s ease;
                 }
                 
                 .minimize-toggle:hover {

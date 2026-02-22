@@ -58,23 +58,24 @@ export default function AdminSidebar({ isOpen, close, isMinimized, toggleMinimiz
                 .admin-sidebar {
                     width: 280px;
                     height: 100vh;
-                    background: rgba(5, 5, 5, 0.84);
-                    border-right: 1px solid rgba(0, 240, 255, 0.1);
+                    background: rgba(15, 23, 42, 0.4);
+                    border-right: 1px solid rgba(255, 255, 255, 0.1);
                     display: flex;
                     flex-direction: column;
                     position: fixed;
                     left: 0;
                     top: 0;
                     z-index: 9999;
-                    backdrop-filter: blur(30px);
+                    backdrop-filter: blur(24px);
+                    -webkit-backdrop-filter: blur(24px);
                     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                 }
                 .admin-sidebar.minimized {
                     width: 80px;
                 }
                 .sidebar-header {
-                    padding: 40px 20px;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                    padding: 32px 20px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                     position: relative;
                     text-align: center;
                 }
@@ -83,36 +84,35 @@ export default function AdminSidebar({ isOpen, close, isMinimized, toggleMinimiz
                 }
                 .logo-text {
                     font-size: 1.4rem;
-                    font-weight: 900;
-                    letter-spacing: 2px;
-                    color: #fff;
-                    background: linear-gradient(to right, #ffffff, #00f0ff);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
+                    font-weight: 700;
+                    letter-spacing: 0.5px;
+                    color: #f8fafc;
+                    font-family: 'Inter', 'Roboto', sans-serif;
                     transition: all 0.3s;
                 }
-                .minimized .logo-text { font-size: 1.8rem; letter-spacing: 0; }
+                .minimized .logo-text { font-size: 1.8rem; letter-spacing: 0; color: #a855f7; }
 
                 .minimize-toggle {
                     position: absolute;
                     top: 50%;
-                    right: -15px;
+                    right: -14px;
                     transform: translateY(-50%);
-                    width: 32px;
-                    height: 32px;
-                    background: #00f0ff;
-                    color: #000;
-                    border: 2px solid #020202;
+                    width: 28px;
+                    height: 28px;
+                    background: rgba(30, 41, 59, 0.8);
+                    color: #f8fafc;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
                     border-radius: 50%;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 0.9rem;
-                    font-weight: 900;
+                    font-size: 0.8rem;
+                    font-weight: 700;
                     z-index: 100;
-                    box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                    backdrop-filter: blur(10px);
+                    transition: all 0.2s ease;
                 }
                 .minimized .minimize-toggle { 
                     right: -16px;
@@ -123,69 +123,82 @@ export default function AdminSidebar({ isOpen, close, isMinimized, toggleMinimiz
                 }
 
                 .status-badge {
-                    font-size: 0.6rem;
-                    background: rgba(0, 240, 255, 0.1);
-                    color: #00f0ff;
-                    padding: 3px 8px;
-                    border-radius: 20px;
+                    font-size: 0.65rem;
+                    background: rgba(168, 85, 247, 0.2);
+                    color: #d8b4fe;
+                    border: 1px solid rgba(168, 85, 247, 0.3);
+                    padding: 4px 10px;
+                    border-radius: 12px;
                     display: inline-block;
-                    margin-top: 8px;
-                    font-weight: 800;
-                    letter-spacing: 1px;
+                    margin-top: 4px;
+                    font-weight: 600;
+                    letter-spacing: 0.5px;
                 }
                 .sidebar-nav {
                     flex: 1;
-                    padding: 30px 15px;
+                    padding: 20px 12px;
                     display: flex;
                     flex-direction: column;
-                    gap: 8px;
+                    gap: 4px;
                 }
                 .nav-item {
                     display: flex;
                     align-items: center;
-                    gap: 15px;
-                    padding: 14px;
-                    color: rgba(255, 255, 255, 0.5);
+                    gap: 16px;
+                    padding: 12px 16px;
+                    color: #cbd5e1;
+                    font-size: 0.95rem;
+                    font-weight: 500;
                     text-decoration: none;
                     border-radius: 12px;
-                    transition: all 0.3s;
+                    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
                 }
-                .minimized .nav-item { justify-content: center; padding: 14px 0; }
+                .minimized .nav-item { justify-content: center; padding: 12px 0; border-radius: 24px; margin: 0 8px; }
                 .nav-item:hover {
                     background: rgba(255, 255, 255, 0.05);
-                    color: #fff;
+                    color: #f8fafc;
+                    transform: translateX(4px);
                 }
                 .nav-item.active {
-                    background: rgba(0, 240, 255, 0.1);
-                    color: #00f0ff;
-                    border: 1px solid rgba(0, 240, 255, 0.2);
+                    background: linear-gradient(90deg, rgba(168, 85, 247, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+                    color: #ffffff;
+                    border-left: 3px solid #a855f7;
+                    border-radius: 0 12px 12px 0;
+                }
+                .minimized .nav-item.active {
+                    border-left: none;
+                    border-radius: 12px;
+                    background: rgba(168, 85, 247, 0.2);
+                    border: 1px solid rgba(168, 85, 247, 0.3);
                 }
                 .nav-icon {
-                    font-size: 1.4rem;
+                    font-size: 1.25rem;
+                    opacity: 0.8;
                 }
+                .nav-item.active .nav-icon { opacity: 1; }
                 .sidebar-footer {
-                    padding: 20px 15px;
-                    border-top: 1px solid rgba(255, 255, 255, 0.05);
+                    padding: 16px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
                 }
                 .logout-btn {
                     width: 100%;
                     padding: 12px;
-                    background: rgba(255, 50, 50, 0.05);
-                    color: #ff4d4d;
-                    border: 1px solid rgba(255, 77, 77, 0.1);
-                    border-radius: 10px;
+                    background: rgba(239, 68, 68, 0.1);
+                    color: #fca5a5;
+                    border: 1px solid rgba(239, 68, 68, 0.2);
+                    border-radius: 8px;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     gap: 10px;
-                    transition: all 0.3s;
-                    font-weight: 600;
+                    transition: all 0.2s ease;
+                    font-weight: 500;
                 }
-                .minimized .logout-btn { padding: 12px 0; }
+                .minimized .logout-btn { padding: 12px 0; border: none; }
                 .logout-btn:hover {
-                    background: #ff4d4d;
-                    color: #fff;
+                    background: rgba(239, 68, 68, 0.2);
+                    color: #ffffff;
                 }
 
                 @media (max-width: 1024px) {
