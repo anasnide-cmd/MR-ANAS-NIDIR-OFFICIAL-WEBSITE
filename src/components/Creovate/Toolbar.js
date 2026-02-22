@@ -1,8 +1,8 @@
 'use client';
 import { useState, useRef } from 'react';
-import { Sparkles, LayoutGrid, Type, Square, Image as ImageIcon, Search } from 'lucide-react';
+import { Sparkles, LayoutGrid, Type, Square, Image as ImageIcon, Search, Circle } from 'lucide-react';
 
-export default function Toolbar({ addElement }) {
+export default function Toolbar({ addElement, canvasBg, setCanvasBg }) {
     const [activeTab, setActiveTab] = useState('text');
 
     const handleAddText = (type) => {
@@ -15,7 +15,7 @@ export default function Toolbar({ addElement }) {
         addElement({
             type: 'text',
             ...textConfig[type],
-            color: '#ffffff',
+            color: '#000000',
             x: 200,
             y: 200,
             width: 300,
@@ -23,14 +23,20 @@ export default function Toolbar({ addElement }) {
         });
     };
 
-    const handleAddShape = () => {
+    const handleAddShape = (shapeType) => {
+        const shapeConfig = {
+            square: { width: 150, height: 150, shapeType: 'square' },
+            circle: { width: 150, height: 150, shapeType: 'circle' },
+            rounded: { width: 150, height: 150, shapeType: 'rounded' },
+            triangle: { width: 150, height: 150, shapeType: 'triangle' }
+        };
+
         addElement({
             type: 'shape',
             color: '#ffca28', // gold
             x: 200,
             y: 200,
-            width: 150,
-            height: 150
+            ...shapeConfig[shapeType]
         });
     };
 
@@ -90,6 +96,21 @@ export default function Toolbar({ addElement }) {
 
             {/* Flyout Panel */}
             <div className="panel-content custom-scrollbar">
+                {activeTab === 'design' && (
+                    <div className="tab-pane">
+                        <h3>Canvas Settings</h3>
+                        <div className="setting-group">
+                            <label style={{fontSize: '0.8rem', color: '#ccc'}}>Background Color</label>
+                            <input 
+                                type="color" 
+                                value={canvasBg}
+                                onChange={(e) => setCanvasBg(e.target.value)}
+                                className="color-picker"
+                            />
+                        </div>
+                    </div>
+                )}
+
                 {activeTab === 'text' && (
                     <div className="tab-pane">
                         <div className="search-box">
@@ -120,8 +141,17 @@ export default function Toolbar({ addElement }) {
                         
                         <h3>Shapes</h3>
                         <div className="shape-grid">
-                            <button className="shape-btn" onClick={handleAddShape}>
+                            <button className="shape-btn" onClick={() => handleAddShape('square')}>
                                 <div className="square-shape"></div>
+                            </button>
+                            <button className="shape-btn" onClick={() => handleAddShape('circle')}>
+                                <div className="circle-shape"></div>
+                            </button>
+                            <button className="shape-btn" onClick={() => handleAddShape('rounded')}>
+                                <div className="rounded-shape"></div>
+                            </button>
+                            <button className="shape-btn" onClick={() => handleAddShape('triangle')}>
+                                <div className="triangle-shape"></div>
                             </button>
                         </div>
                     </div>
@@ -254,8 +284,65 @@ export default function Toolbar({ addElement }) {
                     cursor: pointer;
                 }
                 .shape-btn:hover { background: rgba(255,255,255,0.1); }
-                .square-shape { width: 50%; height: 50%; background: #ccc; border-radius: 4px; }
+                .square-shape { width: 50%; height: 50%; background: #ccc; }
+                .circle-shape { width: 50%; height: 50%; background: #ccc; border-radius: 50%; }
+                .rounded-shape { width: 50%; height: 50%; background: #ccc; border-radius: 8px; }
+                .triangle-shape { 
+                    width: 50%; height: 50%; background: #ccc; 
+                    clip-path: polygon(50% 0%, 0% 100%, 100% 100%); 
+                }
 
+                .setting-group {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    background: rgba(255,255,255,0.05);
+                    padding: 10px;
+                    border-radius: 8px;
+                    margin-top: 10px;
+                }
+
+                .color-picker {
+                    width: 30px; 
+                    height: 30px; 
+                    padding: 0; 
+                    border: 1px solid rgba(255,255,255,0.2); 
+                    border-radius: 4px; 
+                    cursor: pointer;
+                    background: transparent;
+                }
+
+                @media (max-width: 768px) {
+                    .design-sidebar {
+                        width: 100%;
+                        flex-direction: column-reverse; /* Tabs on bottom, panel above */
+                        border-right: none;
+                        border-top: 1px solid rgba(255, 215, 0, 0.1);
+                        z-index: 100;
+                    }
+                    
+                    .tab-bar {
+                        width: 100%;
+                        height: 70px;
+                        flex-direction: row;
+                        justify-content: space-around;
+                        padding-top: 0;
+                        border-right: none;
+                        border-top: 1px solid rgba(255,255,255,0.05);
+                    }
+                    
+                    .tab-btn {
+                        width: auto;
+                        height: 100%;
+                        flex: 1;
+                        margin-bottom: 0;
+                    }
+
+                    .panel-content {
+                        max-height: 40vh; /* Don't take up entire screen */
+                        padding: 15px;
+                    }
+                }
             `}</style>
         </aside>
     );

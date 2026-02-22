@@ -17,7 +17,7 @@ export default function SystemMonitorPage() {
                 const data = await getSystemLogs(100);
                 setLogs(data);
             } catch (error) {
-                console.error("Failed to load system logs", error);
+                console.warn("Failed to load system logs (Permissions restricted for non-admins)", error.message);
             } finally {
                 setLoading(false);
             }

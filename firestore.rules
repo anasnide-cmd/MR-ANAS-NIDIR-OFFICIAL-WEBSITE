@@ -9,7 +9,8 @@ service cloud.firestore {
         request.auth.token.email.matches('.*anasnidir.*') || 
         request.auth.token.email == 'anasnide@gmail.com' ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner'))
       );
     }
 
@@ -129,6 +130,11 @@ service cloud.firestore {
     match /user_chats/{chatId} {
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Creovate Projects
+    match /creovate_projects/{projectId} {
+      allow read, write: if true;
     }
   }
 }

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-export default function CanvasWorkspace({ elements, updateElement, selectedId, setSelectedId, canvasRef }) {
+export default function CanvasWorkspace({ elements, updateElement, selectedId, setSelectedId, canvasRef, scale, canvasBg, commitHistory }) {
     const [draggingId, setDraggingId] = useState(null);
     const [resizingId, setResizingId] = useState(null);
     const [resizeHandle, setResizeHandle] = useState(null);
@@ -23,8 +23,8 @@ export default function CanvasWorkspace({ elements, updateElement, selectedId, s
             // We use clientX, clientY minus canvas bounding box, then minus element x,y
             if (canvasRef.current) {
                 const rect = canvasRef.current.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const mouseY = e.clientY - rect.top;
+                const mouseX = (e.clientX - rect.left) / scale;
+                const mouseY = (e.clientY - rect.top) / scale;
                 setDragOffset({ x: mouseX - el.x, y: mouseY - el.y });
             }
         }
@@ -35,13 +35,13 @@ export default function CanvasWorkspace({ elements, updateElement, selectedId, s
 
         if (canvasRef.current) {
             const rect = canvasRef.current.getBoundingClientRect();
-            let mouseX = e.clientX - rect.left;
-            let mouseY = e.clientY - rect.top;
+            let mouseX = (e.clientX - rect.left) / scale;
+            let mouseY = (e.clientY - rect.top) / scale;
 
             if (draggingId) {
                 const newX = mouseX - dragOffset.x;
                 const newY = mouseY - dragOffset.y;
-                updateElement(draggingId, { x: newX, y: newY });
+                updateElement(draggingId, { x: newX, y: newY }, false);
             }
 
             if (resizingId) {
@@ -49,23 +49,44 @@ export default function CanvasWorkspace({ elements, updateElement, selectedId, s
                 if (!el) return;
                 
                 let { x, y, width, height } = el;
-                // Simple resize math (bottom right only for now to keep it simple but functional)
+                
                 if (resizeHandle === 'br') {
                     width = mouseX - x;
                     height = mouseY - y;
+                } else if (resizeHandle === 'bl') {
+                    width = (x + width) - mouseX;
+                    height = mouseY - y;
+                    x = mouseX;
+                } else if (resizeHandle === 'tr') {
+                    width = mouseX - x;
+                    height = (y + height) - mouseY;
+                    y = mouseY;
+                } else if (resizeHandle === 'tl') {
+                    width = (x + width) - mouseX;
+                    height = (y + height) - mouseY;
+                    x = mouseX;
+                    y = mouseY;
                 }
-                // Math can be expanded for tl, tr, bl 
                 
-                // Keep min dims
-                if (width < 20) width = 20;
-                if (height < 20) height = 20;
+                // Keep min dims to prevent inversion
+                if (width < 20) {
+                    if (resizeHandle === 'tl' || resizeHandle === 'bl') x -= (20 - width);
+                    width = 20;
+                }
+                if (height < 20) {
+                    if (resizeHandle === 'tl' || resizeHandle === 'tr') y -= (20 - height);
+                    height = 20;
+                }
 
-                updateElement(resizingId, { width, height });
+                updateElement(resizingId, { x, y, width, height }, false);
             }
         }
     };
 
     const handlePointerUp = () => {
+        if (draggingId || resizingId) {
+            commitHistory();
+        }
         setDraggingId(null);
         setResizingId(null);
         setResizeHandle(null);
@@ -88,10 +109,11 @@ export default function CanvasWorkspace({ elements, updateElement, selectedId, s
     return (
         <main className="design-canvas-wrapper custom-scrollbar" onClick={() => setSelectedId(null)}>
             <div className="canvas-background">
-                {/* Fixed size Artboard */}
-                <div className="artboard" ref={canvasRef} onClick={(e) => e.stopPropagation()}>
-                    
-                    {elements.map((el) => {
+                <div className="artboard-container">
+                    {/* Fixed size Artboard */}
+                    <div className="artboard" ref={canvasRef} onClick={(e) => e.stopPropagation()}>
+                        
+                        {elements.map((el) => {
                         const isSelected = selectedId === el.id;
                         
                         return (
@@ -102,12 +124,14 @@ export default function CanvasWorkspace({ elements, updateElement, selectedId, s
                                     transform: `translate(${el.x}px, ${el.y}px)`,
                                     width: el.width,
                                     height: el.type === 'shape' ? el.height : (el.type === 'image' ? el.height : 'auto'),
-                                    zIndex: isSelected ? 10 : 1,
+                                    zIndex: el.zIndex || 1,
                                     cursor: draggingId === el.id ? 'grabbing' : 'grab',
                                     backgroundColor: el.type === 'shape' ? el.color : 'transparent',
                                     backgroundImage: el.type === 'image' ? `url(${el.url})` : 'none',
                                     backgroundSize: 'cover',
                                     backgroundPosition: 'center',
+                                    borderRadius: el.shapeType === 'circle' ? '50%' : (el.shapeType === 'rounded' ? '16px' : '0px'),
+                                    opacity: el.opacity ?? 1,
                                 }}
                                 onPointerDown={(e) => handlePointerDown(e, el.id, 'drag')}
                             >
@@ -120,11 +144,16 @@ export default function CanvasWorkspace({ elements, updateElement, selectedId, s
                                         style={{
                                             color: el.color,
                                             fontSize: `${el.fontSize}px`,
-                                            fontWeight: el.fontWeight,
-                                            fontFamily: 'inherit',
+                                            fontWeight: el.fontWeight || 'normal',
+                                            fontStyle: el.fontStyle || 'normal',
+                                            textDecoration: el.textDecoration || 'none',
+                                            textAlign: el.textAlign || 'left',
+                                            fontFamily: el.fontFamily || 'inherit',
                                             padding: '4px',
                                             outline: 'none',
-                                            pointerEvents: isSelected ? 'auto' : 'none'
+                                            pointerEvents: isSelected ? 'auto' : 'none',
+                                            width: '100%',
+                                            height: '100%'
                                         }}
                                     >
                                         {el.content}
@@ -143,6 +172,7 @@ export default function CanvasWorkspace({ elements, updateElement, selectedId, s
                             </div>
                         );
                     })}
+                    </div>
                 </div>
             </div>
 
@@ -169,13 +199,17 @@ export default function CanvasWorkspace({ elements, updateElement, selectedId, s
                     justify-content: center;
                 }
 
+                .artboard-container {
+                     transform: scale(${scale});
+                     transform-origin: center center;
+                     transition: transform 0.2s ease-out;
+                }
+
                 .artboard {
                     width: 1080px; 
                     height: 1080px; /* Instagram post size standard */
-                    background: #fff; /* White canvas is standard for editors */
-                    box-shadow: 
-                        0 20px 50px rgba(0,0,0,0.8),
-                        0 0 0 1px rgba(255,255,255,0.1);
+                    background: ${canvasBg};
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
                     position: relative;
                     overflow: hidden;
                     touch-action: none; /* Prevents scroll on mobile when dragging */

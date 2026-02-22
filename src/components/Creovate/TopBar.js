@@ -1,9 +1,9 @@
 'use client';
 import html2canvas from 'html2canvas';
 
-import { Menu, Undo2, Redo2, Download, Play, ZoomIn, ZoomOut, Trash2 } from 'lucide-react';
+import { Menu, Undo2, Redo2, Download, Play, ZoomIn, ZoomOut, Trash2, ArrowUp, ArrowDown, Copy, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, SlidersHorizontal, Cloud, Loader } from 'lucide-react';
 
-export default function TopBar({ selectedElement, updateElement, deleteElement, canvasRef, setSelectedId }) {
+export default function TopBar({ selectedElement, updateElement, deleteElement, duplicateElement, canvasRef, setSelectedId, scale, setScale, undo, redo, canUndo, canRedo, elements, saveProject, isSaving }) {
   const handleColorChange = (e) => {
     if (selectedElement) {
         updateElement(selectedElement.id, { color: e.target.value });
@@ -14,6 +14,42 @@ export default function TopBar({ selectedElement, updateElement, deleteElement, 
     if (selectedElement && selectedElement.type === 'text') {
         updateElement(selectedElement.id, { fontSize: parseInt(e.target.value) || 16 });
     }
+  };
+
+  const handleFontFamilyChange = (e) => {
+    if (selectedElement && selectedElement.type === 'text') {
+        updateElement(selectedElement.id, { fontFamily: e.target.value });
+    }
+  };
+
+  const toggleTextStyle = (styleKey, activeValue, inactiveValue) => {
+    if (selectedElement && selectedElement.type === 'text') {
+        const currentValue = selectedElement[styleKey] || inactiveValue;
+        updateElement(selectedElement.id, { [styleKey]: currentValue === activeValue ? inactiveValue : activeValue });
+    }
+  };
+
+  const handleOpacityChange = (e) => {
+      if (selectedElement) {
+          updateElement(selectedElement.id, { opacity: parseFloat(e.target.value) });
+      }
+  };
+
+  const handleLayerChange = (direction) => {
+      if (!selectedElement) return;
+      const currentZ = selectedElement.zIndex || 1;
+      // Using min 1 and max 999 to stay safely within basic rendering stacking contexts
+      let newZ = currentZ;
+
+      if (direction === 'up') {
+          // Find max zIndex to just put it on top if needed, or simple increment
+          const maxZ = Math.max(...elements.map(el => el.zIndex || 1));
+          newZ = currentZ >= maxZ ? currentZ + 1 : maxZ + 1;
+      } else {
+          newZ = Math.max(1, currentZ - 1);
+      }
+      
+      updateElement(selectedElement.id, { zIndex: newZ });
   };
 
   const handleExport = async () => {
@@ -58,16 +94,84 @@ export default function TopBar({ selectedElement, updateElement, deleteElement, 
                  />
                  
                  {selectedElement.type === 'text' && (
-                     <div className="font-size-control">
-                        <input 
-                            type="number" 
-                            title="Font Size"
-                            value={selectedElement.fontSize || 24} 
-                            onChange={handleFontSizeChange}
-                            min="8" max="200"
-                        />
-                     </div>
+                     <>
+                         <select 
+                            className="font-family-select"
+                            value={selectedElement.fontFamily || 'inherit'}
+                            onChange={handleFontFamilyChange}
+                            title="Font Family"
+                         >
+                            <option value="inherit">Default</option>
+                            <option value="Inter, sans-serif">Inter</option>
+                            <option value="Roboto, sans-serif">Roboto</option>
+                            <option value="Outfit, sans-serif">Outfit</option>
+                            <option value="monospace">Monospace</option>
+                            <option value="serif">Serif</option>
+                            <option value="cursive">Cursive</option>
+                         </select>
+
+                         <div className="font-size-control">
+                            <input 
+                                type="number" 
+                                title="Font Size"
+                                value={selectedElement.fontSize || 24} 
+                                onChange={handleFontSizeChange}
+                                min="8" max="200"
+                            />
+                         </div>
+                         <div className="divider"></div>
+                         
+                         {/* Text Formatting Toggles */}
+                         <button className={`icon-btn action ${(selectedElement.fontWeight === 'bold' || selectedElement.fontWeight === 700) ? 'active' : ''}`} title="Bold" onClick={() => toggleTextStyle('fontWeight', 'bold', 'normal')}><Bold size={16} /></button>
+                         <button className={`icon-btn action ${selectedElement.fontStyle === 'italic' ? 'active' : ''}`} title="Italic" onClick={() => toggleTextStyle('fontStyle', 'italic', 'normal')}><Italic size={16} /></button>
+                         <button className={`icon-btn action ${selectedElement.textDecoration === 'underline' ? 'active' : ''}`} title="Underline" onClick={() => toggleTextStyle('textDecoration', 'underline', 'none')}><Underline size={16} /></button>
+                         
+                         <div className="divider"></div>
+                         
+                         {/* Text Alignment */}
+                         <button className={`icon-btn action ${(!selectedElement.textAlign || selectedElement.textAlign === 'left') ? 'active' : ''}`} title="Align Left" onClick={() => updateElement(selectedElement.id, { textAlign: 'left' })}><AlignLeft size={16} /></button>
+                         <button className={`icon-btn action ${selectedElement.textAlign === 'center' ? 'active' : ''}`} title="Align Center" onClick={() => updateElement(selectedElement.id, { textAlign: 'center' })}><AlignCenter size={16} /></button>
+                         <button className={`icon-btn action ${selectedElement.textAlign === 'right' ? 'active' : ''}`} title="Align Right" onClick={() => updateElement(selectedElement.id, { textAlign: 'right' })}><AlignRight size={16} /></button>
+                     </>
                  )}
+
+                 <div className="divider"></div>
+
+                 {/* Opacity Control */}
+                 <div className="opacity-control" title="Opacity">
+                    <SlidersHorizontal size={14} color="#888" style={{marginLeft: '10px'}} />
+                    <input 
+                        type="range" 
+                        min="0" max="1" step="0.05"
+                        value={selectedElement.opacity ?? 1}
+                        onChange={handleOpacityChange}
+                        className="opacity-slider"
+                    />
+                 </div>
+
+                 <div className="divider"></div>
+
+                 <button 
+                    className="icon-btn action" 
+                    title="Bring Forward" 
+                    onClick={() => handleLayerChange('up')}
+                 >
+                    <ArrowUp size={16} />
+                 </button>
+                 <button 
+                    className="icon-btn action" 
+                    title="Send Backward" 
+                    onClick={() => handleLayerChange('down')}
+                 >
+                    <ArrowDown size={16} />
+                 </button>
+                 <button 
+                    className="icon-btn action" 
+                    title="Duplicate Element" 
+                    onClick={() => duplicateElement(selectedElement.id)}
+                 >
+                    <Copy size={16} />
+                 </button>
                  <div className="divider"></div>
                  <button 
                     className="icon-btn action danger" 
@@ -78,20 +182,27 @@ export default function TopBar({ selectedElement, updateElement, deleteElement, 
                  </button>
              </div>
          ) : (
-             <div className="action-group">
-                <button className="icon-btn action" title="Undo"><Undo2 size={18} /></button>
-                <button className="icon-btn action" title="Redo"><Redo2 size={18} /></button>
+             <div className="action-group hide-mobile">
+                <button className={`icon-btn action ${canUndo ? '' : 'disabled'}`} title="Undo" onClick={undo} disabled={!canUndo}>
+                    <Undo2 size={18} />
+                </button>
+                <button className={`icon-btn action ${canRedo ? '' : 'disabled'}`} title="Redo" onClick={redo} disabled={!canRedo}>
+                    <Redo2 size={18} />
+                </button>
                 <div className="divider"></div>
-                <button className="icon-btn" title="Zoom Out"><ZoomOut size={18}/></button>
-                <span className="zoom-level">100%</span>
-                <button className="icon-btn" title="Zoom In"><ZoomIn size={18}/></button>
+                <button className="icon-btn" title="Zoom Out" onClick={() => setScale(s => Math.max(0.1, s - 0.1))}><ZoomOut size={18}/></button>
+                <span className="zoom-level">{Math.round(scale * 100)}%</span>
+                <button className="icon-btn" title="Zoom In" onClick={() => setScale(s => Math.min(3, s + 0.1))}><ZoomIn size={18}/></button>
              </div>
          )}
       </div>
 
       <div className="topbar-right">
-        <button className="presence-avatar">A</button>
-        <button className="btn-play" title="Present"><Play size={16} fill="currentColor" /></button>
+        <button className="icon-btn hide-mobile" onClick={saveProject} disabled={isSaving} title="Save to Cloud">
+            {isSaving ? <Loader size={16} /> : <Cloud size={16} />} 
+        </button>
+        <button className="presence-avatar hide-mobile">A</button>
+        <button className="btn-play hide-mobile" title="Present"><Play size={16} fill="currentColor" /></button>
         <button className="btn-export" onClick={handleExport}>
             <Download size={16} /> Export
         </button>
@@ -125,6 +236,18 @@ export default function TopBar({ selectedElement, updateElement, deleteElement, 
         .project-title { display: flex; align-items: center; gap: 12px; }
         .file-name { font-size: 0.95rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
 
+        .opacity-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .opacity-slider {
+            width: 60px;
+            accent-color: #ffca28;
+            cursor: pointer;
+        }
+
         .action-group, .formatting-bar {
             display: flex; align-items: center; gap: 8px;
             background: #111; padding: 4px 8px; border-radius: 8px;
@@ -136,7 +259,10 @@ export default function TopBar({ selectedElement, updateElement, deleteElement, 
             border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center;
         }
         .icon-btn:hover { color: #fff; background: rgba(255, 215, 0, 0.1); }
+        .icon-btn.active { color: #ffca28; background: rgba(255, 215, 0, 0.2); }
         .icon-btn.danger:hover { color: #ff4757; background: rgba(255, 71, 87, 0.1); }
+        .icon-btn.disabled { opacity: 0.3; cursor: not-allowed; }
+        .icon-btn.disabled:hover { background: transparent; color: #888; }
 
         .color-picker {
             width: 28px; height: 28px; padding: 0; border: 1px solid rgba(255,255,255,0.2);
@@ -146,11 +272,16 @@ export default function TopBar({ selectedElement, updateElement, deleteElement, 
         .color-picker::-webkit-color-swatch { border: none; border-radius: 3px; }
 
         .font-size-control input {
-            background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff;
-            width: 50px; text-align: center; border-radius: 4px; padding: 4px; outline: none;
+            width: 45px; background: transparent; border: none; color: #fff; text-align: center;
+            outline: none; font-size: 0.9rem;
+        }
+        
+        .font-family-select {
+            background: #222; border: 1px solid #333; color: #fff; padding: 4px; border-radius: 4px;
+            outline: none; font-size: 0.85rem; cursor: pointer;
         }
 
-        .divider { width: 1px; height: 20px; background: rgba(255,255,255,0.1); }
+        .divider { width: 1px; height: 16px; background: rgba(255,255,255,0.1); }
         .zoom-level { font-size: 0.8rem; font-weight: 500; width: 45px; text-align: center; color: #ccc; }
 
         .presence-avatar {
@@ -172,6 +303,12 @@ export default function TopBar({ selectedElement, updateElement, deleteElement, 
             gap: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
         }
         .btn-export:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4); background: #ffe066; }
+
+        @media (max-width: 768px) {
+            .hide-mobile { display: none !important; }
+            .design-topbar { padding: 0 10px; }
+            .project-title { display: none; }
+        }
       `}</style>
     </header>
   );
