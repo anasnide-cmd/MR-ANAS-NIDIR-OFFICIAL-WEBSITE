@@ -22,7 +22,9 @@ import {
     Layout,
     ChevronDown,
     X,
-    TrendingUp
+    TrendingUp,
+    Share2,
+    Check
 } from 'lucide-react';
 
 import ArchitectModal from './ArchitectModal';
@@ -41,6 +43,7 @@ export default function BuildDashboard() {
     const [activeTab, setActiveTab] = useState('repositories'); // 'repositories', 'stars', 'projects'
     const [editingSite, setEditingSite] = useState(null); // specific site being edited
     const [showLimitModal, setShowLimitModal] = useState(false);
+    const [copiedSiteId, setCopiedSiteId] = useState(null); // tracking link copy feedback
 
     // Template Definitions
     const TEMPLATES = {
@@ -221,6 +224,20 @@ export default function BuildDashboard() {
         setSites(prev => prev.filter(s => s.id !== deletedSiteId));
     };
 
+    const copyToClipboard = async (e, site) => {
+        e.stopPropagation();
+        if (!site.slug || site.status !== 'public') return;
+        
+        try {
+            const url = `https://anasnidir.com/s/${site.slug}`;
+            await navigator.clipboard.writeText(url);
+            setCopiedSiteId(site.id);
+            setTimeout(() => setCopiedSiteId(null), 2000); // Reset after 2s
+        } catch (err) {
+            console.error("Failed to copy link: ", err);
+        }
+    };
+
     if (loading && !user) return <Loader text="Initializing Nexus Interface..." />;  
     if (!user) return null;
 
@@ -338,6 +355,17 @@ export default function BuildDashboard() {
                                         <h3>{site.name || 'Untitled Project'}</h3>
                                         <div className="header-actions-right">
                                             <span className={`status-dot ${site.status === 'public' ? 'online' : 'offline'}`} title={`Status: ${site.status}`}></span>
+                                            
+                                            {site.status === 'public' && site.slug && (
+                                                <button 
+                                                    className="btn-settings-icon" 
+                                                    onClick={(e) => copyToClipboard(e, site)}
+                                                    title="Copy Public Link"
+                                                >
+                                                    {copiedSiteId === site.id ? <Check size={14} color="#00ff80"/> : <Share2 size={14} />}
+                                                </button>
+                                            )}
+                                            
                                             <button 
                                                 className="btn-settings-icon" 
                                                 onClick={(e) => { e.stopPropagation(); setEditingSite(site); }}

@@ -102,7 +102,7 @@ export default function SiteSettingsModal({ site, onClose, onUpdate, onDelete })
                     <div className="form-group">
                         <label>NEX URL Slug</label>
                         <div className="slug-input-wrapper">
-                            <span className="slug-prefix">mr-anas-nidir.com/s/</span>
+                            <span className="slug-prefix">anasnidir.com/s/</span>
                             <input 
                                 name="slug" 
                                 value={formData.slug} 
