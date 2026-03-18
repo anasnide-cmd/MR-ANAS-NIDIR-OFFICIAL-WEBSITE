@@ -40,14 +40,14 @@ export const GridItem = ({ children, colSpan = 3, rowSpan = 1, title, border = t
                 flex-direction: column;
                 border-radius: 16px;
                 border: 1px solid rgba(255, 255, 255, 0.1);
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-                transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+                transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease;
                 overflow: hidden;
             }
             .grid-item:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 12px 40px rgba(168, 85, 247, 0.15);
-                border-color: rgba(255, 255, 255, 0.2);
+                transform: translateY(-6px) scale(1.02);
+                box-shadow: 0 20px 40px rgba(0, 240, 255, 0.15), 0 0 20px rgba(0, 240, 255, 0.1);
+                border-color: rgba(0, 240, 255, 0.3);
             }
             
             .item-header {

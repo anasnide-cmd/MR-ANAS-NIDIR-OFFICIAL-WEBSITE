@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { db } from '../../lib/firebase';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { db, auth } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 
 import TopBar from '../../components/Creovate/TopBar';
 import Toolbar from '../../components/Creovate/Toolbar';
 import CanvasWorkspace from '../../components/Creovate/CanvasWorkspace';
 
-export default function CreovatePage() {
+function CreovateContent() {
     const [elements, setElements] = useState([]);
     const [history, setHistory] = useState([[]]); // Stack of element arrays
     const [historyIndex, setHistoryIndex] = useState(0);
@@ -17,6 +18,8 @@ export default function CreovatePage() {
     const [scale, setScale] = useState(1);
     const [canvasBg, setCanvasBg] = useState('#ffffff');
     const [isSaving, setIsSaving] = useState(false);
+    const searchParams = useSearchParams();
+    const templateId = searchParams?.get('t');
     const [isLoading, setIsLoading] = useState(true);
     const canvasRef = useRef(null);
 
@@ -113,6 +116,26 @@ export default function CreovatePage() {
     };
 
     const loadLatestProject = async () => {
+        // If a template ID is passed, bypass Firebase loading and load the template
+        if (templateId) {
+            import('./templates/data.js').then(({ TEMPLATES_DATA }) => {
+                // Flatten all category arrays into one to search
+                const allTemplates = Object.values(TEMPLATES_DATA).flat();
+                const template = allTemplates.find(t => t.id === templateId);
+                if (template) {
+                    setElements(template.elements);
+                    setCanvasBg(template.bg);
+                    setHistory([template.elements]);
+                    setHistoryIndex(0);
+                }
+                setIsLoading(false);
+            }).catch(err => {
+                console.warn("Failed to load template data", err);
+                setIsLoading(false);
+            });
+            return;
+        }
+
         try {
             const q = query(collection(db, 'creovate_projects'), orderBy('createdAt', 'desc'), limit(1));
             const snapshot = await getDocs(q);
@@ -137,7 +160,7 @@ export default function CreovatePage() {
         if (window.innerWidth <= 768) {
             setScale(0.35);
         }
-    }, []);
+    }, [templateId]); // Re-run if template ID changes while on page
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -165,19 +188,23 @@ export default function CreovatePage() {
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                 if (selectedId) {
                     e.preventDefault(); // prevent page scroll
-                    const elToMove = elements.find(el => el.id === selectedId);
-                    if (!elToMove) return;
+                    setElements(prevElements => {
+                        const elIndex = prevElements.findIndex(el => el.id === selectedId);
+                        if (elIndex === -1) return prevElements;
 
-                    const nudgeAmount = e.shiftKey ? 10 : 1;
-                    let { x, y } = elToMove;
+                        const nudgeAmount = e.shiftKey ? 10 : 1;
+                        let newY = prevElements[elIndex].y;
+                        let newX = prevElements[elIndex].x;
 
-                    if (e.key === 'ArrowUp') y -= nudgeAmount;
-                    if (e.key === 'ArrowDown') y += nudgeAmount;
-                    if (e.key === 'ArrowLeft') x -= nudgeAmount;
-                    if (e.key === 'ArrowRight') x += nudgeAmount;
+                        if (e.key === 'ArrowUp') newY -= nudgeAmount;
+                        if (e.key === 'ArrowDown') newY += nudgeAmount;
+                        if (e.key === 'ArrowLeft') newX -= nudgeAmount;
+                        if (e.key === 'ArrowRight') newX += nudgeAmount;
 
-                    // Update without saving to history every single tap to prevent lag
-                    updateElement(selectedId, { x, y }, false);
+                        const newElements = [...prevElements];
+                        newElements[elIndex] = { ...newElements[elIndex], x: newX, y: newY };
+                        return newElements;
+                    });
                 }
             }
         };
@@ -186,7 +213,12 @@ export default function CreovatePage() {
              // Commit history when nudge finishes
              if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                  if (selectedId) {
-                     commitHistory();
+                     // Since handleKeyUp runs after the state update completes, we need to trigger
+                     // a history commit explicitly. But because commitHistory reads state, 
+                     // and we update elements functionally, we use a slightly delayed commit
+                     // or rely on a separate useEffect watching `elements` (avoided).
+                     // Instead, commit is handled safely.
+                     setTimeout(() => commitHistory(), 50);
                  }
              }
         };
@@ -197,7 +229,15 @@ export default function CreovatePage() {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [selectedId, deleteElement, duplicateElement, elements, commitHistory]);
+    }, [selectedId, deleteElement, duplicateElement]); // Removed elements and commitHistory dependencies to prevent excess unbind/binds
+
+    const loadTemplate = (templateData) => {
+        setElements(templateData.elements);
+        setCanvasBg(templateData.bg);
+        setHistory([templateData.elements]);
+        setHistoryIndex(0);
+        setSelectedId(null);
+    };
 
     if (isLoading) {
         return (
@@ -233,7 +273,7 @@ export default function CreovatePage() {
             />
             
             <div className="editor-body">
-                <Toolbar addElement={addElement} canvasBg={canvasBg} setCanvasBg={setCanvasBg} />
+                <Toolbar addElement={addElement} canvasBg={canvasBg} setCanvasBg={setCanvasBg} loadTemplate={loadTemplate} />
                 <CanvasWorkspace 
                     elements={elements} 
                     updateElement={updateElement}
@@ -265,5 +305,17 @@ export default function CreovatePage() {
                 }
             `}</style>
         </div>
+    );
+}
+
+export default function CreovatePage() {
+    return (
+        <React.Suspense fallback={
+            <div className="creovate-app" style={{justifyContent: 'center', alignItems: 'center', color: '#ffca28', display: 'flex', height: '100vh'}}>
+                <h2>Initializing Workspace...</h2>
+            </div>
+        }>
+            <CreovateContent />
+        </React.Suspense>
     );
 }

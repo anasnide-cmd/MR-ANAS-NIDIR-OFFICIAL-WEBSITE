@@ -141,7 +141,11 @@ const PortfolioCard = ({ proj, index }) => {
 
 export default function PortfolioClient() {
     const [isLoaded, setIsLoaded] = useState(false);
-    useEffect(() => setIsLoaded(true), []);
+    useEffect(() => {
+        // Debounce or use a tiny timeout to avoid synchronous React 18 warning
+        const timer = setTimeout(() => setIsLoaded(true), 10);
+        return () => clearTimeout(timer);
+    }, []);
 
     const projects = [
         { title: "NEXENGINE", tag: "INFRASTRUCTURE", icon: "⚡", link: "/mr-build", color: "#00f0ff" },

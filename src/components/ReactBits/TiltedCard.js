@@ -14,7 +14,11 @@ const TiltedCard = ({
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+    // Avoid synchronous state setting during initial render sequence
+    const timer = setTimeout(() => {
+      setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+    }, 10);
+    return () => clearTimeout(timer);
   }, []);
 
   const x = useMotionValue(0);

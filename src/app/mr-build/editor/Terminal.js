@@ -258,7 +258,7 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
             xtermRef.current = null;
             fitAddonRef.current = null;
         };
-    }, [handleCommand, handleLinkClick]);
+    }, [handleCommand, handleLinkClick, prompt]);
 
 
     useEffect(() => {

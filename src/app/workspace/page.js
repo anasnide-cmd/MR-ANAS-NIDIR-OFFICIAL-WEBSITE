@@ -4,6 +4,7 @@ import { auth, db } from '../../lib/firebase';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import Link from 'next/link';
 import { onAuthStateChanged } from 'firebase/auth';
+import { motion } from 'framer-motion';
 
 export default function WorkspaceDashboard() {
     const [user, setUser] = useState(null);
@@ -14,8 +15,7 @@ export default function WorkspaceDashboard() {
         const unsub = onAuthStateChanged(auth, async (u) => {
             if (u) {
                 setUser(u);
-                // Fetch stats (mock for now, or real if collections exist)
-                // Real implementation would count documents
+                // Simulate fetching tasks/members or replace with actual Firestore calls if rules allow
                 setStats({ tasks: 5, members: 3 }); 
             }
             setLoading(false);
@@ -25,46 +25,63 @@ export default function WorkspaceDashboard() {
 
     if (loading) return <div className="loading">Initializing Mission Control...</div>;
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+    };
+
     return (
-        <div className="dashboard-container">
-            <header className="dashboard-header animate-reveal">
+        <motion.div className="dashboard-container" variants={containerVariants} initial="hidden" animate="show">
+            <motion.header className="dashboard-header" variants={itemVariants}>
                 <h1>MISSION CONTROL</h1>
                 <p>Welcome back, Staff Member {user?.email}</p>
-            </header>
+            </motion.header>
 
-            <div className="stats-grid">
-                <div className="stat-card animate-reveal">
+            <motion.div className="stats-grid" variants={containerVariants}>
+                <motion.div className="stat-card" variants={itemVariants}>
                     <h3>Pending Tasks</h3>
-                    <span className="sc-value">{stats.tasks}</span>
+                    {loading ? <div className="skeleton-box" /> : <span className="sc-value">{stats.tasks}</span>}
                     <span className="sc-icon">📋</span>
-                </div>
-                <div className="stat-card animate-reveal" style={{ animationDelay: '0.1s' }}>
+                </motion.div>
+                <motion.div className="stat-card" variants={itemVariants}>
                     <h3>Team Online</h3>
-                    <span className="sc-value">{stats.members}</span>
+                    {loading ? <div className="skeleton-box" /> : <span className="sc-value">{stats.members}</span>}
                     <span className="sc-icon">🟢</span>
-                </div>
-                <div className="stat-card animate-reveal" style={{ animationDelay: '0.2s' }}>
+                </motion.div>
+                <motion.div className="stat-card" variants={itemVariants}>
                     <h3>System Status</h3>
                     <span className="sc-value status-ok">NOMINAL</span>
                     <span className="sc-icon">🛡️</span>
-                </div>
-            </div>
+                </motion.div>
+            </motion.div>
 
-            <div className="modules-grid">
-                <Link href="/workspace/chat" className="module-card chat animate-reveal" style={{ animationDelay: '0.3s' }}>
-                    <h2>COMMUNICATION HUB</h2>
-                    <p>Real-time team collaboration and announcements.</p>
-                    <span className="module-arrow">ACCESS CHANNEL ➜</span>
+            <motion.div className="modules-grid" variants={containerVariants}>
+                <Link href="/workspace/chat" passHref legacyBehavior>
+                    <motion.a className="module-card chat" variants={itemVariants} whileHover={{ y: -5, boxShadow: '0 10px 40px rgba(80, 80, 255, 0.2)' }}>
+                        <h2>COMMUNICATION HUB</h2>
+                        <p>Real-time team collaboration and announcements.</p>
+                        <span className="module-arrow">ACCESS CHANNEL ➜</span>
+                    </motion.a>
                 </Link>
 
-                <Link href="/workspace/tasks" className="module-card tasks animate-reveal" style={{ animationDelay: '0.4s' }}>
-                    <h2>TASK ENGINE</h2>
-                    <p>Manage assignments, track progress, and execute workflows.</p>
-                    <span className="module-arrow">VIEW BOARDS ➜</span>
+                <Link href="/workspace/tasks" passHref legacyBehavior>
+                    <motion.a className="module-card tasks" variants={itemVariants} whileHover={{ y: -5, boxShadow: '0 10px 40px rgba(0, 255, 136, 0.1)' }}>
+                        <h2>TASK ENGINE</h2>
+                        <p>Manage assignments, track progress, and execute workflows.</p>
+                        <span className="module-arrow">VIEW BOARDS ➜</span>
+                    </motion.a>
                 </Link>
-            </div>
+            </motion.div>
 
-            <div className="recent-activity animate-reveal" style={{ animationDelay: '0.5s' }}>
+            <motion.div className="recent-activity" variants={itemVariants}>
                 <h3>Recent Activity Log</h3>
                 <ul className="activity-list">
                     <li>
@@ -79,7 +96,7 @@ export default function WorkspaceDashboard() {
                     </li>
                     <li className="empty">No other recent events.</li>
                 </ul>
-            </div>
+            </motion.div>
 
             <style jsx>{`
                 .dashboard-container { padding: 40px; }
@@ -157,8 +174,8 @@ export default function WorkspaceDashboard() {
                 .action { opacity: 0.8; }
                 .empty { opacity: 0.3; font-style: italic; }
 
-                .animate-reveal { animation: reveal 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; transform: translateY(20px); }
-                @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
+                .skeleton-box { height: 40px; width: 60px; background: rgba(255,255,255,0.05); border-radius: 8px; animation: pulse 1.5s infinite; }
+                @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 0.2; } 100% { opacity: 0.5; } }
 
                 .loading { padding: 40px; text-align: center; opacity: 0.5; }
                 
@@ -169,6 +186,6 @@ export default function WorkspaceDashboard() {
                     h1 { font-size: 1.8rem; }
                 }
             `}</style>
-        </div>
+        </motion.div>
     );
 }

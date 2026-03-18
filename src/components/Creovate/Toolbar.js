@@ -1,8 +1,9 @@
 'use client';
 import { useState, useRef } from 'react';
-import { Sparkles, LayoutGrid, Type, Square, Image as ImageIcon, Search, Circle } from 'lucide-react';
+import { Sparkles, LayoutGrid, Type, Square, Image as ImageIcon, Search, Circle, Layers } from 'lucide-react';
+import { TEMPLATES_DATA } from '../../app/creovate/templates/data';
 
-export default function Toolbar({ addElement, canvasBg, setCanvasBg }) {
+export default function Toolbar({ addElement, canvasBg, setCanvasBg, loadTemplate }) {
     const [activeTab, setActiveTab] = useState(null); // default closed on mobile to show canvas
 
     const toggleTab = (tab) => {
@@ -80,6 +81,10 @@ export default function Toolbar({ addElement, canvasBg, setCanvasBg }) {
         <aside className="design-sidebar">
             {/* Primary Tab Bar */}
             <div className="tab-bar">
+                <button className={`tab-btn ${activeTab === 'templates' ? 'active' : ''}`} onClick={() => toggleTab('templates')}>
+                    <Layers size={20} />
+                    <span>Templates</span>
+                </button>
                 <button className={`tab-btn ${activeTab === 'design' ? 'active' : ''}`} onClick={() => toggleTab('design')}>
                     <LayoutGrid size={20} />
                     <span>Design</span>
@@ -101,6 +106,39 @@ export default function Toolbar({ addElement, canvasBg, setCanvasBg }) {
             {/* Flyout Panel */}
             {activeTab && (
             <div className="panel-content custom-scrollbar">
+                {activeTab === 'templates' && (
+                    <div className="tab-pane">
+                        <h3>Templates</h3>
+                        <p style={{fontSize: '0.8rem', color: '#888', marginBottom: '15px'}}>Warning: Applying a template will overwrite your current design.</p>
+                        
+                        <div className="templates-list custom-scrollbar">
+                            {Object.entries(TEMPLATES_DATA).map(([category, items]) => (
+                                <div key={category} className="template-category">
+                                    <h4 style={{fontSize: '0.85rem', margin: '10px 0 5px 0', color: '#aaa'}}>{category}</h4>
+                                    <div className="template-grid">
+                                        {items.map(t => (
+                                            <div 
+                                                key={t.id} 
+                                                className="template-sidebar-card"
+                                                onClick={() => {
+                                                    if(confirm("Apply template? This overwrites your canvas.")) {
+                                                        loadTemplate(t);
+                                                        setActiveTab(null);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="template-preview" style={{backgroundColor: t.bg}}>
+                                                   <span style={{color: t.bg === '#050505' ? '#fff' : '#000'}}>{t.name.split(' ')[0]}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {activeTab === 'design' && (
                     <div className="tab-pane">
                         <h3>Canvas Settings</h3>
@@ -304,6 +342,31 @@ export default function Toolbar({ addElement, canvasBg, setCanvasBg }) {
                     justify-content: space-between;
                     background: rgba(255,255,255,0.05);
                     padding: 10px;
+                    border-radius: 8px;
+                    margin-top: 10px;
+                }
+
+                .template-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                }
+                
+                .template-sidebar-card {
+                    aspect-ratio: 1;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    cursor: pointer;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    transition: 0.2s;
+                }
+                .template-sidebar-card:hover { border-color: #ffca28; }
+                
+                .template-preview {
+                    width: 100%; height: 100%;
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 0.7rem; font-weight: bold; text-align: center; padding: 5px;
+                }
                     border-radius: 8px;
                     margin-top: 10px;
                 }

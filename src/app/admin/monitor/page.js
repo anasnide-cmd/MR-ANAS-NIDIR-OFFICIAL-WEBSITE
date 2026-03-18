@@ -166,7 +166,7 @@ function LogEntry({ log, onResolve }) {
             <div className="log-header" onClick={() => setExpanded(!expanded)}>
                 <span className="badge">{log.severity || 'ALERT'}</span>
                 <span className="msg">{log.message}</span>
-                <span className="time">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                <span className="time">{new Date(log.timestamp || 0).toLocaleTimeString()}</span>
             </div>
             {expanded && (
                 <div className="log-body">

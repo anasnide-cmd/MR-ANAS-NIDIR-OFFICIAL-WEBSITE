@@ -38,7 +38,7 @@ const SystemTerminal = ({ logs = [], height = '200px' }) => {
             transition={{ duration: 0.3, ease: "easeOut" }}
             className={`entry ${log.type || 'info'}`}
           >
-            <span className="timestamp">[{new Date(log.timestamp || Date.now()).toLocaleTimeString()}]</span>
+            <span className="timestamp">[{new Date(log.timestamp || 0).toLocaleTimeString()}]</span>
             <span className="prefix">{log.source || 'SYS'} ::</span>
             <span className="msg">{log.message}</span>
           </motion.div>

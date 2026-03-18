@@ -5,6 +5,7 @@ import { auth, db } from '../../lib/firebase';
 import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { updateProfile, onAuthStateChanged, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import Loader from '../../components/Loader';
 import PayPalButton from '../../components/PayPalButton';
 
@@ -138,13 +139,30 @@ export default function AccountClient() {
                     </div>
                 </header>
                 
-                <div className="content-body animate-fade-in">
-                    {msg.text && (
-                        <div className={`status-banner ${msg.type} glass`}>{msg.text}</div>
-                    )}
+                <div className="content-body">
+                    <AnimatePresence mode="wait">
+                        {msg.text && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className={`status-banner ${msg.type} glass`}
+                            >
+                                {msg.text}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
+                    <AnimatePresence mode="wait">
                     {activeTab === 'home' && (
-                        <div className="dashboard-grid">
+                        <motion.div 
+                            key="home"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="dashboard-grid"
+                        >
                             <div className="card glass welcome-card">
                                 <h2>Welcome, {userData.displayName || 'User'}</h2>
                                 <p>Manage your info, privacy, and security to make Mr Build work better for you.</p>
@@ -165,11 +183,18 @@ export default function AccountClient() {
                                 <div className="stat-val safe">Protected</div>
                                 <p>2-Step Verification is off</p>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
 
                     {activeTab === 'personal' && (
-                        <div className="card glass form-card">
+                        <motion.div 
+                            key="personal"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="card glass form-card"
+                        >
                             <h3>Basic Info</h3>
                             <p>Some info may be visible to other people using Mr Build services.</p>
                             
@@ -274,11 +299,18 @@ export default function AccountClient() {
                                     <option value="prefer-not-to-say">Prefer not to say</option>
                                 </select>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
 
                     {activeTab === 'security' && (
-                        <div className="card glass form-card">
+                        <motion.div 
+                            key="security"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="card glass form-card"
+                        >
                             <h3>Signing in into Google</h3>
                             <div className="security-row">
                                 <div>
@@ -294,11 +326,18 @@ export default function AccountClient() {
                                 </div>
                                 <button className="btn-arrow">→</button>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
 
                     {activeTab === 'data' && (
-                         <div className="card glass form-card">
+                         <motion.div 
+                            key="data"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="card glass form-card"
+                         >
                             <h3>Data & Privacy</h3>
                             <p>You have control over what data is saved.</p>
                              <div className="security-row">
@@ -308,8 +347,9 @@ export default function AccountClient() {
                                 </div>
                                 <button className="btn-arrow" onClick={() => router.push('/mr-build/dashboard')}>Manage Sites</button>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
+                    </AnimatePresence>
                 </div>
 
                 {/* Refuel Modal */}
@@ -510,10 +550,18 @@ export default function AccountClient() {
 
                 @media (max-width: 768px) {
                     .account-shell { flex-direction: column; }
-                    .account-sidebar { width: 100%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+                    .account-sidebar { width: 100%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px; }
+                    .brand { margin-bottom: 20px; }
+                    .sidebar-nav { display: flex; overflow-x: auto; padding-bottom: 15px; -webkit-overflow-scrolling: touch; }
+                    .nav-item { flex: 0 0 auto; margin-right: 10px; margin-bottom: 0; border-radius: 20px; padding: 10px 15px; }
                     .dashboard-grid { grid-template-columns: 1fr; }
-                    .form-row { flex-direction: column; align-items: flex-start; }
+                    .form-row { flex-direction: column; align-items: flex-start; gap: 10px; }
                     .modern-input { width: 100%; }
+                    .content-padding { padding: 20px; }
+                    .sidebar-footer { margin-top: 15px; }
+                    
+                    .refuel-modal { width: 100%; max-width: 100%; margin: 0 10px; border-radius: 16px; padding: 25px; }
+                    .modal-header h2 { font-size: 1rem; }
                 }
             `}</style>
         </div>

@@ -113,7 +113,7 @@ export default function UserProfile() {
         return (
             <div className="not-found-container">
                 <h1>404</h1>
-                <p>Agent "{decodeURIComponent(username)}" not found in the registry.</p>
+                <p>Agent &quot;{decodeURIComponent(username)}&quot; not found in the registry.</p>
                 <Link href="/mr-build/dashboard" className="btn-back">Return to Base</Link>
                 <style jsx>{`
                     .not-found-container {
@@ -194,7 +194,7 @@ export default function UserProfile() {
                     )) : (
                         <div className="empty-state">
                             <Box size={40} className="empty-icon"/>
-                            <p>This agent hasn't published any constructs yet.</p>
+                            <p>This agent hasn&apos;t published any constructs yet.</p>
                         </div>
                     )}
                 </div>

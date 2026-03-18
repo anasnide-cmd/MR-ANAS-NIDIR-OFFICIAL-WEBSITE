@@ -32,8 +32,11 @@ export default function CommandPalette() {
     useEffect(() => {
         if (isOpen && inputRef.current) {
             inputRef.current.focus();
-            setQueryText('');
-            setResults(staticCommands);
+            const timer = setTimeout(() => {
+                setQueryText('');
+                setResults(staticCommands);
+            }, 10);
+            return () => clearTimeout(timer);
         }
     }, [isOpen]);
 

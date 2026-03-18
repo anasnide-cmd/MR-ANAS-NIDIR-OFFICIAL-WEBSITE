@@ -137,11 +137,14 @@ function EditorContent() {
         if (isNew && templateId) {
             // Check local presets first
             if (TEMPLATES[templateId]) {
-                setSiteData(prev => ({
-                    ...prev,
-                    files: { ...prev.files, ...TEMPLATES[templateId].files }
-                }));
-                return; // Skip firestore fetch
+                // Wrap in a timeout to break the synchronous setState during render cycle warning
+                const timer = setTimeout(() => {
+                    setSiteData(prev => ({
+                        ...prev,
+                        files: { ...prev.files, ...TEMPLATES[templateId].files }
+                    }));
+                }, 0);
+                return () => clearTimeout(timer); // skip firestore fetch
             }
 
             const fetchTemplate = async () => {

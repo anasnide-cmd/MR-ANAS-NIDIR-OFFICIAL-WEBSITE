@@ -130,9 +130,9 @@ export default function Navbar() {
     { href: '/', label: 'Home', icon: '🏠' },
     { href: '/#projects', label: 'Projects', icon: '🚀' },
     { href: '/#products', label: 'Products', icon: '🛍️' },
-    { href: '/savoirpedia', label: 'SavoirPedia', icon: '📝' },
-    { href: '/nex-ai', label: 'NEX AI', icon: '🤖' },
-    { href: '/mr-build', label: 'Mr Build', icon: '🔨' },
+    { href: '/savoirpedia', label: 'Savoirpedia', icon: '🧠' },
+    { href: '/creovate/templates', label: 'Creovate', icon: '✨' },
+    { href: '/fund', label: 'Fund', icon: '💼' },
     { href: '/creovate', label: 'Creovate', icon: '✨' },
     { href: '/#contact', label: 'Contact', icon: '📧' },
   ];

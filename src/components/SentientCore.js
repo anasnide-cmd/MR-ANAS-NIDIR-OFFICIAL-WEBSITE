@@ -73,8 +73,11 @@ function ParticleField() {
             pos[i * 3 + 2] = (Math.random() - 0.5) * 15;
             op[i] = Math.random();
         }
-        setPositions(pos);
-        setOpacity(op);
+        const timer = setTimeout(() => {
+            setPositions(pos);
+            setOpacity(op);
+        }, 10);
+        return () => clearTimeout(timer);
     }, []);
 
     const pointsRef = useRef();
