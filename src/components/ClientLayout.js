@@ -8,8 +8,8 @@ export default function ClientLayout({ children, navItems }) {
     const pathname = usePathname();
     const isSearchPage = pathname?.startsWith('/mr-search') || pathname?.startsWith('/nex-ai') || pathname?.startsWith('/web-store');
 
-    // Conditionally render based on '/mr-build' path
-    if (pathname?.startsWith('/mr-build')) {
+    // Conditionally render based on '/mr-build' or shared site '/s/' path
+    if (pathname?.startsWith('/mr-build') || pathname?.startsWith('/s/')) {
         return (
             <>
                 <PresenceTracker />

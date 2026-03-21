@@ -63,7 +63,47 @@ export default function UserSiteClient() {
         </div>
     );
 
-    // If custom HTML is provided, render it instead of the template
+    // V2: If files object is provided (New Editor Format)
+    if (site.files && site.files['index.html']) {
+        const html = site.files['index.html'].content;
+        const css = site.files['styles.css']?.content || '';
+        const jsFiles = Object.keys(site.files).filter(f => f.endsWith('.js'));
+        const js = jsFiles.map(f => `try { ${site.files[f].content} } catch(e) { console.error(e); }`).join('\n');
+
+        const srcDoc = `
+            <!DOCTYPE html>
+            <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${site.title || 'Created Site'}</title>
+                    <style>
+                        /* Reset default iframe spacing */
+                        body { margin: 0; padding: 0; overflow-x: hidden; }
+                        ${css}
+                    </style>
+                </head>
+                <body>
+                    ${html.replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '')
+                          .replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')
+                    }
+                    <script>${js}</script>
+                </body>
+            </html>
+        `;
+
+        return (
+            <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', background: '#000' }}>
+                <iframe
+                    title={site.title || 'User Site'}
+                    srcDoc={srcDoc}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                />
+            </div>
+        );
+    }
+
+    // V1: If custom HTML is provided, render it instead of the template
     if (site.customHtml) {
         return (
             <div>
