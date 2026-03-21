@@ -5,7 +5,7 @@ import { Sparkles, Send, Bot, User, ChevronRight, Mic, Volume2, VolumeX, Papercl
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import { db, auth } from '../../../lib/firebase'; // Added db and auth import
-import { doc, getDoc, onSnapshot } from 'firebase/firestore'; // Added firestore imports
+import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'; // Added firestore imports
 import { onAuthStateChanged } from 'firebase/auth'; // Added auth import
 
 export default function AICopilot({ siteData, onCodeUpdate }) {
@@ -307,6 +307,18 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
         const data = await res.json();
         const aiMsg = { role: 'assistant', content: JSON.stringify(data), id: (Date.now() + 1).toString() };
         
+        // --- SECURE CLIENT-SIDE DECREMENT ---
+        if (user?.uid && aiCredits > 0) {
+            try {
+                await updateDoc(doc(db, 'users', user.uid), {
+                    aiCredits: aiCredits - 1,
+                    lastAiUsage: new Date().toISOString()
+                });
+            } catch (err) {
+                console.error("Credit sync failed:", err);
+            }
+        }
+
         setMessages([...newMessages, aiMsg]);
         
         if (voiceEnabled && data.message) {

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Send, X, Mic, Volume2, VolumeX, Globe, Cpu, Paperclip, MicOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { doc, collection, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, collection, setDoc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import 'regenerator-runtime/runtime';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
@@ -214,6 +214,18 @@ export default function ArchitectModal({ onClose, user }) {
             if (!res.ok) throw new Error(await res.text());
 
             const data = await res.json();
+            
+            // --- SECURE CLIENT-SIDE DECREMENT ---
+            if (user?.uid && !manualKey) {
+                try {
+                    await updateDoc(doc(db, 'users', user.uid), {
+                        aiCredits: increment(-1),
+                        lastAiUsage: new Date().toISOString()
+                    });
+                } catch (err) {
+                    console.error("Credit sync failed:", err);
+                }
+            }
             
             // IF AI returns a "GENERATE_SITE" action
             if (data.action === 'GENERATE_SITE') {

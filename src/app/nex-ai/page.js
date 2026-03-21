@@ -374,6 +374,18 @@ export default function NexAI() {
 
             const data = await res.json();
             
+            // --- SECURE CLIENT-SIDE DECREMENT ---
+            if (user?.uid && aiCredits > 0) {
+                try {
+                    await updateDoc(doc(db, 'users', user.uid), {
+                        aiCredits: aiCredits - 1,
+                        lastAiUsage: new Date().toISOString()
+                    });
+                } catch (err) {
+                    console.error("Credit sync failed:", err);
+                }
+            }
+            
             setMessages(prev => {
                 const updated = prev.map(m => 
                     m.id === aiMsgId ? { 

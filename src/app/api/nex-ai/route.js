@@ -298,21 +298,6 @@ export async function POST(req) {
              aiResponse = { message: data.choices[0].message.content, action: "NONE" };
         }
 
-        // --- DECREMENT CREDITS ---
-        try {
-            if (userId) {
-                const { updateDoc } = await import('firebase/firestore');
-                // Only attempt if we successfully read credits earlier or if we want to try blindly (which will fail if no perm)
-                 const userRef = doc(db, 'users', userId);
-                await updateDoc(userRef, {
-                    aiCredits: credits - 1, // utilize the local variable 'credits' which might be fallback
-                    lastAiUsage: new Date().toISOString()
-                });
-            }
-        } catch (e) {
-             console.warn("Credit Decrement Failed (Permission Error):", e.message);
-        }
-
         return NextResponse.json(aiResponse);
 
     } catch (error) {
