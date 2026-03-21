@@ -24,6 +24,7 @@ const Terminal = dynamic(() => import('./Terminal'), {
 });
 const ARPreview = dynamic(() => import('./ARPreview'), { ssr: false });
 const AssetManager = dynamic(() => import('./AssetManager'), { ssr: false });
+const Auditor = dynamic(() => import('./Auditor'), { ssr: false });
 import 'prismjs/themes/prism-tomorrow.css';  
 import { 
     GitBranch, 
@@ -407,6 +408,9 @@ function EditorContent() {
                     <button className={`btn-icon hide-on-mobile ${showSidebar && sidebarMode === 'assets' ? 'active' : ''}`} onClick={() => { setShowSidebar(true); setSidebarMode('assets'); }}>
                         <ImageIcon size={18} />
                     </button>
+                    <button className={`btn-icon hide-on-mobile ${showSidebar && sidebarMode === 'auditor' ? 'active' : ''}`} onClick={() => { setShowSidebar(true); setSidebarMode('auditor'); }} title="SEO & Performance Auditor">
+                        <LineChart size={18} />
+                    </button>
                     <button className={`btn-icon hide-on-mobile ${terminalOpen ? 'active' : ''}`} onClick={() => setTerminalOpen(!terminalOpen)}>
                         <TerminalIcon size={18} />
                     </button>
@@ -450,7 +454,7 @@ function EditorContent() {
                 {!zenMode && (
                 <aside className={`file-explorer ${showSidebar ? 'visible' : ''}`}>
                     <div className="explorer-header">
-                        <span>{sidebarMode === 'files' ? 'FILES' : 'ASSETS'}</span>
+                        <span>{sidebarMode === 'files' ? 'FILES' : sidebarMode === 'assets' ? 'ASSETS' : 'AUDITOR'}</span>
                         {sidebarMode === 'files' && <button onClick={startCreating} className="btn-add-file" title="New File"><Plus size={16}/></button>}
                         <button onClick={() => setShowSidebar(false)} className="btn-close-sidebar"><X size={14}/></button>
                     </div>
@@ -497,8 +501,10 @@ function EditorContent() {
                                 ))}
                             </div>
                         </>
-                    ) : (
+                    ) : sidebarMode === 'assets' ? (
                         <AssetManager />
+                    ) : (
+                        <Auditor files={siteData.files} />
                     )}
                 </aside>
                 )}
@@ -568,6 +574,9 @@ function EditorContent() {
                                     <head><style>${debouncedSiteData.files['styles.css']?.content || ''}</style></head>
                                     <body>
                                         ${(debouncedSiteData.files['index.html']?.content || '').replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '').replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')}
+                                        <div style="text-align: center; padding: 20px; font-family: 'Inter', sans-serif; font-size: 11px; color: #888; margin-top: 40px; background: transparent;">
+                                            Powered by <strong style="color: #00f0ff;">MR BUILD</strong>
+                                        </div>
                                         <script>
                                             ${Object.keys(debouncedSiteData.files).filter(f => f.endsWith('.js')).map(f => `try { ${debouncedSiteData.files[f].content} } catch(e) { console.error(e); }`).join('\n')}
                                         </script>
@@ -596,6 +605,9 @@ function EditorContent() {
                                                 [ ADS ENABLED: ${debouncedSiteData.monetization.publisherId} ]
                                             </div>
                                         ` : ''}
+                                        <div style="text-align: center; padding: 20px; font-family: 'Inter', sans-serif; font-size: 11px; color: #888; margin-top: 40px; background: transparent;">
+                                            Powered by <strong style="color: #00f0ff;">MR BUILD</strong>
+                                        </div>
                                         <script>
                                             (function() {
                                                 const oldLog = console.log; const oldError = console.error;

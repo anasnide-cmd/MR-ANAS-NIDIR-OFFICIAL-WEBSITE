@@ -54,7 +54,7 @@ export default function UserSiteClient() {
         fetchSite();
     }, [slug]);
 
-    if (loading) return <div className="loading">Initializing Neural Node...</div>;
+    if (loading) return <Loader text="Loading Construct..." />;
 
     if (!site) return (
         <div className="not-found">
@@ -87,6 +87,9 @@ export default function UserSiteClient() {
                     ${html.replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '')
                           .replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')
                     }
+                    <div style="text-align: center; padding: 20px; font-family: 'Inter', sans-serif; font-size: 11px; color: #888; margin-top: 40px; background: transparent;">
+                        Powered by <strong style="color: #00f0ff;">MR BUILD</strong>
+                    </div>
                     <script>${js}</script>
                 </body>
             </html>
@@ -103,12 +106,14 @@ export default function UserSiteClient() {
         );
     }
 
-    // V1: If custom HTML is provided, render it instead of the template
     if (site.customHtml) {
         return (
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                 <style>{site.customCss || ''}</style>
-                <div dangerouslySetInnerHTML={{ __html: site.customHtml }} />
+                <div style={{ flex: 1 }} dangerouslySetInnerHTML={{ __html: site.customHtml }} />
+                <div style={{ textAlign: 'center', padding: '20px', fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#888', background: 'transparent' }}>
+                    Powered by <strong style={{ color: '#00f0ff' }}>MR BUILD</strong>
+                </div>
             </div>
         );
     }
@@ -170,9 +175,9 @@ export default function UserSiteClient() {
             </main>
 
             <footer className="site-footer">
-                <a href="https://anasnidir.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
-                    Powered by <strong>MR ANAS NIDIR</strong>
-                </a>
+                <span style={{ color: 'inherit', textDecoration: 'none' }}>
+                    Powered by <strong style={{ color: '#00f0ff' }}>MR BUILD</strong>
+                </span>
             </footer>
 
             <style jsx>{`

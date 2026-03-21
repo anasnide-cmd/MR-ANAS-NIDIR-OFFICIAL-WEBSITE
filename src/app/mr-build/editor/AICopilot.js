@@ -339,6 +339,62 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
     }
   };
 
+  // Specialized renderer for generating images
+  const ImageGenerator = ({ description }) => {
+      const [imgUrl, setImgUrl] = useState(null);
+      const [isGenerating, setIsGenerating] = useState(false);
+      const [saved, setSaved] = useState(false);
+
+      const generate = async () => {
+          setIsGenerating(true);
+          try {
+              const res = await fetch('/api/generate-image', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ prompt: description, userId: user?.uid })
+              });
+              const data = await res.json();
+              if (data.url) setImgUrl(data.url);
+          } catch(e) {
+             console.error(e);
+          } finally {
+             setIsGenerating(false);
+          }
+      };
+
+      const saveToAssets = async () => {
+          if (!imgUrl) return;
+          try {
+              const { ref, uploadBytes } = await import('firebase/storage');
+              const { storage } = await import('../../../lib/firebase');
+              const res = await fetch(imgUrl);
+              const blob = await res.blob();
+              const sRef = ref(storage, `users/${user.uid}/uploads/ai_${Date.now()}.png`);
+              await uploadBytes(sRef, blob);
+              setSaved(true);
+          } catch (e) {
+              console.error(e);
+          }
+      };
+
+      if (imgUrl) {
+          return (
+              <div style={{ marginTop: '10px', background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <img src={imgUrl} alt="Generated" style={{ width: '100%', borderRadius: '4px', marginBottom: '10px' }} />
+                  <button onClick={saveToAssets} disabled={saved} style={{ width: '100%', padding: '8px', background: saved ? 'rgba(0, 255, 128, 0.2)' : 'rgba(0, 240, 255, 0.2)', color: saved ? '#00ff80' : '#00f0ff', border: saved ? '1px solid #00ff80' : '1px solid #00f0ff', borderRadius: '4px', cursor: saved ? 'default' : 'pointer', fontWeight: 'bold' }}>
+                      {saved ? 'Saved to Asset Depot' : 'Add to Asset Depot'}
+                  </button>
+              </div>
+          );
+      }
+
+      return (
+          <button onClick={generate} disabled={isGenerating} style={{ marginTop: '10px', width: '100%', padding: '8px', background: 'rgba(208, 0, 255, 0.1)', color: '#d000ff', border: '1px solid rgba(208, 0, 255, 0.3)', borderRadius: '4px', cursor: isGenerating ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: '0.2s' }} onMouseOver={e => !isGenerating && (e.currentTarget.style.background = 'rgba(208,0,255,0.2)')} onMouseOut={e => !isGenerating && (e.currentTarget.style.background = 'rgba(208,0,255,0.1)')}>
+              <Sparkles size={14} /> {isGenerating ? 'Synthesizing...' : `Generate: "${description}"`}
+          </button>
+      )
+  };
+
   // specialized renderer for the copilot to handle thinking blocks and code buttons
   const MessageContent = ({ content, role }) => {
       if (role === 'assistant') {
@@ -354,6 +410,11 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
                           </details>
                       )}
                       <div className="text-content">{data.message}</div>
+                      
+                      {data.action === 'GENERATE_IMAGE' && data.data?.description && (
+                          <ImageGenerator description={data.data.description} />
+                      )}
+
                       {data.modifications && data.modifications.length > 0 && (
                           <div className="action-badge">
                               <Sparkles size={10} />

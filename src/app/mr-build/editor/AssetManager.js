@@ -2,13 +2,16 @@
 import { useState, useEffect } from 'react';
 import { storage, auth } from '../../../lib/firebase';
 import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
-import { Loader2, Upload, Trash2, Copy, Image as ImageIcon, X, AlertCircle } from 'lucide-react';
+import { Loader2, Upload, Trash2, Copy, Image as ImageIcon, X, AlertCircle, Sparkles } from 'lucide-react';
 
 export default function AssetManager({ onInsert }) {
     const [assets, setAssets] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showAiPrompt, setShowAiPrompt] = useState(false);
+    const [aiPrompt, setAiPrompt] = useState('');
+    const [generating, setGenerating] = useState(false);
 
     useEffect(() => {
         fetchAssets();
@@ -55,6 +58,44 @@ export default function AssetManager({ onInsert }) {
         }
     };
 
+    const handleGenerate = async () => {
+        if (!aiPrompt.trim() || !auth.currentUser) return;
+        setGenerating(true);
+        setError(null);
+        try {
+            const res = await fetch('/api/generate-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: aiPrompt, userId: auth.currentUser.uid })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.message || 'Generation failed');
+            }
+
+            const data = await res.json();
+            
+            // Fetch generated image as Blob
+            const imgRes = await fetch(data.url);
+            if (!imgRes.ok) throw new Error('Failed to download generated image');
+            const blob = await imgRes.blob();
+
+            // Upload to User Storage
+            const storageRef = ref(storage, `users/${auth.currentUser.uid}/uploads/ai_${Date.now()}.png`);
+            await uploadBytes(storageRef, blob);
+            await fetchAssets();
+
+            setShowAiPrompt(false);
+            setAiPrompt('');
+        } catch (err) {
+            console.error("AI Generation failed:", err);
+            setError(err.message);
+        } finally {
+            setGenerating(false);
+        }
+    };
+
     const handleDelete = async (path) => {
         if (!confirm("Delete this asset?")) return;
         try {
@@ -76,12 +117,33 @@ export default function AssetManager({ onInsert }) {
         <div className="asset-manager">
             <div className="am-header">
                 <h3>ASSET DEPOT</h3>
-                <label className={`upload-btn ${uploading ? 'disabled' : ''}`}>
-                    {uploading ? <Loader2 className="spin" size={14}/> : <Upload size={14}/>}
-                    <span>Upload</span>
-                    <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} hidden />
-                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="gen-btn" onClick={() => setShowAiPrompt(!showAiPrompt)}>
+                        <Sparkles size={14}/>
+                        <span>AI Gen</span>
+                    </button>
+                    <label className={`upload-btn ${uploading ? 'disabled' : ''}`}>
+                        {uploading ? <Loader2 className="spin" size={14}/> : <Upload size={14}/>}
+                        <span>Upload</span>
+                        <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} hidden />
+                    </label>
+                </div>
             </div>
+
+            {showAiPrompt && (
+                <div className="ai-prompt-box">
+                    <input 
+                        type="text" 
+                        value={aiPrompt} 
+                        onChange={e => setAiPrompt(e.target.value)} 
+                        placeholder="Describe an image..." 
+                        disabled={generating}
+                    />
+                    <button onClick={handleGenerate} disabled={generating || !aiPrompt.trim()}>
+                        {generating ? <Loader2 className="spin" size={14} /> : 'Generate'}
+                    </button>
+                </div>
+            )}
 
             <div className="asset-grid custom-scrollbar">
                 {error && (
@@ -132,6 +194,27 @@ export default function AssetManager({ onInsert }) {
                 }
                 .upload-btn:hover { background: rgba(0,240,255,0.2); }
                 .upload-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+
+                .gen-btn {
+                    background: rgba(208,0,255,0.1); color: #d000ff; border: 1px solid rgba(208,0,255,0.3);
+                    padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;
+                    display: flex; align-items: center; gap: 6px; transition: 0.2s;
+                }
+                .gen-btn:hover { background: rgba(208,0,255,0.2); }
+
+                .ai-prompt-box {
+                    padding: 12px; background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(255,255,255,0.1);
+                    display: flex; gap: 8px;
+                }
+                .ai-prompt-box input {
+                    flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+                    color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 12px; outline: none;
+                }
+                .ai-prompt-box button {
+                    background: #d000ff; color: #fff; border: none; padding: 6px 12px; border-radius: 4px;
+                    font-size: 12px; font-weight: bold; cursor: pointer;
+                }
+                .ai-prompt-box button:disabled { opacity: 0.5; cursor: not-allowed; }
 
                 .asset-grid {
                     flex: 1; overflow-y: auto; padding: 12px;

@@ -240,7 +240,9 @@ export async function POST(req) {
             1. Always return FULL file content in 'code'. No diffs.
             2. "Dark Nebula" aesthetic: Use heavy blacks (#050505), neon cyan (#00f0ff).
             3. If creating a new file (e.g., script.js), YOU MUST ALSO UPDATE index.html to link to it.
-            4. Be concise.
+            4. If the user explicitly asks for an image, or you need to generate one, use the "GENERATE_IMAGE" action.
+               Example: { "action": "GENERATE_IMAGE", "data": { "description": "cyberpunk city skyline" } }
+            5. Be concise.
             `;
         }
 
