@@ -31,22 +31,22 @@ export default function SubscriptionPage() {
         return () => unsub();
     }, [router]);
 
-    const isPro = userData?.plan === 'pro';
+    const currentPlan = userData?.plan || 'free';
+    const isPro = currentPlan === 'pro';
+    const isMax = currentPlan === 'max';
 
-    const handlePaymentSuccess = async (details) => {
+    const handlePaymentSuccess = async (details, planName, siteLimit) => {
         setPaymentProcessing(true);
         try {
-            // Update User Limit
-            // WARNING: In production, verify this on the server side (Cloud Functions)
             const userRef = doc(db, 'users', user.uid);
             await updateDoc(userRef, {
-                siteLimit: 5, // Upgrade to 5 sites
-                plan: 'pro',
+                siteLimit: siteLimit,
+                plan: planName,
                 subscriptionId: details.id,
                 subscriptionDate: new Date().toISOString()
             });
 
-            alert('Upgrade Successful! Deploying additional fleet capacity...');
+            alert(`Upgrade Successful! Deploying additional fleet capacity to ${siteLimit} nodes...`);
             router.push('/mr-build/dashboard');
         } catch (error) {
             console.error("Error updating profile:", error);
@@ -81,8 +81,8 @@ export default function SubscriptionPage() {
                         <li>❌ Custom Domains</li>
                         <li>❌ Priority Support</li>
                     </ul>
-                    <button className={`btn-plan ${!isPro ? 'current' : ''}`} disabled={!isPro}>
-                        {!isPro ? 'CURRENT PROTOCOL' : 'TRIAL STATUS'}
+                    <button className={`btn-plan ${currentPlan === 'free' ? 'current' : ''}`} disabled={currentPlan !== 'free'}>
+                        {currentPlan === 'free' ? 'CURRENT PROTOCOL' : 'TRIAL STATUS'}
                     </button>
                 </div>
 
@@ -108,12 +108,46 @@ export default function SubscriptionPage() {
                     </ul>
                     
                     <div className="payment-area">
-                        {isPro ? (
-                            <button className="btn-plan current" disabled>CURRENT PROTOCOL ACTIVE</button>
+                        {currentPlan === 'pro' || currentPlan === 'max' ? (
+                            <button className="btn-plan current" disabled>
+                                {currentPlan === 'pro' ? 'CURRENT PROTOCOL ACTIVE' : 'INCLUDED IN MAX'}
+                            </button>
                         ) : (
                             <>
                                 <p className="pay-label">INITIALIZE UPGRADE:</p>
-                                <PayPalButton amount="9.99" onSuccess={handlePaymentSuccess} />
+                                <PayPalButton amount="9.99" onSuccess={(details) => handlePaymentSuccess(details, 'pro', 5)} />
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                {/* Nexus Max Plan */}
+                <div className={`plan-card glass max ${paymentProcessing ? 'processing' : ''}`}>
+                     {paymentProcessing && (
+                         <div className="processing-overlay">
+                             <div className="spinner"></div>
+                             <p>PROCESSING TRANSACTION...</p>
+                         </div>
+                     )}
+                    <div className="plan-header">
+                        <span className="badge max-badge">ELITE</span>
+                        <h2 style={{color: '#d000ff'}}>NEXUS-MAX</h2>
+                        <div className="price" style={{color: '#d000ff'}}>$29.99<span>/mo</span></div>
+                    </div>
+                    <ul className="features-list">
+                        <li>✅ <strong style={{color: '#d000ff'}}>50 Active Deployments</strong></li>
+                        <li>✅ <strong>White-label Connect (No Ads)</strong></li>
+                        <li>✅ <strong>Custom Domains Built-in</strong></li>
+                        <li>✅ Elite Automation Nodes</li>
+                        <li>✅ Dedicated Agent Support</li>
+                    </ul>
+                    <div className="payment-area">
+                        {currentPlan === 'max' ? (
+                            <button className="btn-plan current" disabled>CURRENT PROTOCOL ACTIVE</button>
+                        ) : (
+                            <>
+                                <p className="pay-label">INITIALIZE OVERRIDE:</p>
+                                <PayPalButton amount="29.99" onSuccess={(details) => handlePaymentSuccess(details, 'max', 50)} />
                             </>
                         )}
                     </div>
@@ -136,9 +170,9 @@ export default function SubscriptionPage() {
 
                 .plans-grid {
                     display: grid;
-                    grid-template-columns: 1fr 1.2fr;
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
                     gap: 30px;
-                    align-items: center;
+                    align-items: stretch;
                 }
 
                 .plan-card {
@@ -161,6 +195,12 @@ export default function SubscriptionPage() {
                     transform: scale(1.05);
                     z-index: 1;
                 }
+                
+                .plan-card.max {
+                    background: rgba(208, 0, 255, 0.05);
+                    border: 1px solid rgba(208, 0, 255, 0.3);
+                    box-shadow: 0 0 30px rgba(208, 0, 255, 0.1);
+                }
 
                 .plan-header { text-align: center; margin-bottom: 30px; }
                 .plan-header h2 { font-family: var(--font-orbitron); font-size: 1.5rem; letter-spacing: 2px; margin-bottom: 10px; }
@@ -171,6 +211,12 @@ export default function SubscriptionPage() {
                     position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
                     background: #00f0ff; color: #000; font-weight: 900; font-size: 0.7rem;
                     padding: 4px 12px; border-radius: 20px; box-shadow: 0 0 15px #00f0ff;
+                }
+                
+                .badge.max-badge {
+                    background: #d000ff;
+                    box-shadow: 0 0 15px #d000ff;
+                    color: #fff;
                 }
 
                 .features-list { list-style: none; padding: 0; margin-bottom: 30px; }
