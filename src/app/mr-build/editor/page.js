@@ -53,7 +53,9 @@ import {
 
     Plus,
     Download,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Smartphone,
+    Monitor
 } from 'lucide-react';
 
 /* --- ICONS & STYLES --- */
@@ -96,6 +98,7 @@ function EditorContent() {
     const [terminalOpen, setTerminalOpen] = useState(false); // Default to FALSE
     const [previewKey, setPreviewKey] = useState(0); // For forcing iframe reload
     const [successMsg, setSuccessMsg] = useState('');
+    const [previewWidth, setPreviewWidth] = useState('100%'); // Mobile/Desktop Toggle
 
     const [siteData, setSiteData] = useState({
         name: '', slug: '', title: '', description: '',
@@ -114,6 +117,16 @@ function EditorContent() {
     const [newFileName, setNewFileName] = useState('');
     const [deletingFile, setDeletingFile] = useState(null); // filename
     const [zenMode, setZenMode] = useState(false); // Zen Mode State
+
+    // Debounce state for live preview iframe
+    const [debouncedSiteData, setDebouncedSiteData] = useState(siteData);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSiteData(siteData);
+        }, 500); // 500ms debounce
+        return () => clearTimeout(handler);
+    }, [siteData]);
 
     // Terminal Listener
     useEffect(() => {
@@ -300,6 +313,7 @@ function EditorContent() {
 
                 await setDoc(newSiteRef, {
                     ...siteData,
+                    adminStatus: 'active',
                     userId: user.uid,
                     id: targetId,
                     createdAt: new Date().toISOString(),
@@ -533,6 +547,13 @@ function EditorContent() {
                         <div className="preview-toolbar">
                             <span>Preview {arMode ? '(AR Hologram)' : ''}</span>
                             <div className="preview-actions" style={{display:'flex', gap:'10px'}}>
+                                <button className={`btn-preview-action ${previewWidth === '375px' ? 'active' : ''}`} onClick={() => setPreviewWidth('375px')} title="Mobile View" style={{color: previewWidth === '375px' ? '#00f0ff' : '#666'}}>
+                                    <Smartphone size={14} />
+                                </button>
+                                <button className={`btn-preview-action ${previewWidth === '100%' ? 'active' : ''}`} onClick={() => setPreviewWidth('100%')} title="Desktop View" style={{color: previewWidth === '100%' ? '#00f0ff' : '#666'}}>
+                                    <Monitor size={14} />
+                                </button>
+                                <div style={{width: '1px', background: '#ccc', margin: '0 5px'}}></div>
                                 <button className="btn-preview-action" onClick={() => setArMode(!arMode)} title="Toggle AR Hologram" style={{color: arMode ? '#00f0ff' : '#666'}}>
                                     <Sparkles size={14} />
                                 </button>
@@ -540,14 +561,15 @@ function EditorContent() {
                                 <button className="btn-preview-action close-preview-mobile" onClick={() => setShowPreview(false)} title="Close Preview"><X size={14}/></button>
                             </div>
                         </div>
+                        <div className="iframe-container" style={{flex: 1, backgroundColor: '#eaeff2', display: 'flex', justifyContent: 'center', overflow: 'hidden'}}>
                         {arMode ? (
                             <ARPreview url={`data:text/html;charset=utf-8,${encodeURIComponent(`
                                 <html>
-                                    <head><style>${siteData.files['styles.css']?.content || ''}</style></head>
+                                    <head><style>${debouncedSiteData.files['styles.css']?.content || ''}</style></head>
                                     <body>
-                                        ${(siteData.files['index.html']?.content || '').replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '').replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')}
+                                        ${(debouncedSiteData.files['index.html']?.content || '').replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '').replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')}
                                         <script>
-                                            ${Object.keys(siteData.files).filter(f => f.endsWith('.js')).map(f => `try { ${siteData.files[f].content} } catch(e) { console.error(e); }`).join('\n')}
+                                            ${Object.keys(debouncedSiteData.files).filter(f => f.endsWith('.js')).map(f => `try { ${debouncedSiteData.files[f].content} } catch(e) { console.error(e); }`).join('\n')}
                                         </script>
                                     </body>
                                 </html>
@@ -556,20 +578,22 @@ function EditorContent() {
                             <iframe 
                                 key={previewKey}
                             title="Live Preview"
+                            style={{ width: previewWidth, height: '100%', border: 'none', transition: 'width 0.3s ease', backgroundColor: '#fff', boxShadow: previewWidth === '375px' ? '0 0 20px rgba(0,0,0,0.2)' : 'none' }}
                             srcDoc={`
                                 <html>
                                     <head>
-                                        <style>${siteData.files['styles.css']?.content || ''}</style>
+                                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                        <style>${debouncedSiteData.files['styles.css']?.content || ''}</style>
                                     </head>
                                     <body>
-                                        ${(siteData.files['index.html']?.content || '')
+                                        ${(debouncedSiteData.files['index.html']?.content || '')
                                             .replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '')
                                             .replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')
                                         }
-                                        ${siteData.monetization?.enabled && siteData.monetization?.publisherId ? `
-                                            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${siteData.monetization.publisherId}" crossorigin="anonymous"></script>
+                                        ${debouncedSiteData.monetization?.enabled && debouncedSiteData.monetization?.publisherId ? `
+                                            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${debouncedSiteData.monetization.publisherId}" crossorigin="anonymous"></script>
                                             <div style="margin: 20px auto; padding: 20px; border: 1px dashed #00f0ff; color: #00f0ff; text-align: center; font-family: sans-serif; font-size: 12px;">
-                                                [ ADS ENABLED: ${siteData.monetization.publisherId} ]
+                                                [ ADS ENABLED: ${debouncedSiteData.monetization.publisherId} ]
                                             </div>
                                         ` : ''}
                                         <script>
@@ -581,7 +605,7 @@ function EditorContent() {
                                             })();
                                         </script>
                                         <script>
-                                            ${Object.keys(siteData.files).filter(f => f.endsWith('.js')).map(f => `try { ${siteData.files[f].content} } catch(e) { console.error(e); }`).join('\n')}
+                                            ${Object.keys(debouncedSiteData.files).filter(f => f.endsWith('.js')).map(f => `try { ${debouncedSiteData.files[f].content} } catch(e) { console.error(e); }`).join('\n')}
                                         </script>
                                     </body>
                                 </html>
@@ -589,6 +613,7 @@ function EditorContent() {
                             className="preview-iframe"
                         />
                         )}
+                        </div>
                     </div>
 
                     {/* Terminal Pane */}

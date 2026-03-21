@@ -11,6 +11,7 @@ export default function UsersPage() {
     const [usersList, setUsersList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortBy, setSortBy] = useState('deployments_desc');
     const [selectedUser, setSelectedUser] = useState(null); // For Modal
     const [selectedIds, setSelectedIds] = useState([]);
 
@@ -111,7 +112,12 @@ export default function UsersPage() {
         u.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
         u.uid.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.displayName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ).sort((a, b) => {
+        if (sortBy === 'deployments_desc') return b.siteCount - a.siteCount;
+        if (sortBy === 'intel_desc') return b.totalViews - a.totalViews;
+        if (sortBy === 'status') return (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0);
+        return 0; // Default
+    });
 
     if (loading) return <div className="cia-loading">ACCESSING AGENT DATABASE...</div>;
     if (!user) return <div className="cia-loading error">UNAUTHORIZED</div>;
@@ -133,6 +139,15 @@ export default function UsersPage() {
                         className="cia-input"
                     />
                 </div>
+                <select 
+                    value={sortBy} 
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="cia-select"
+                >
+                    <option value="deployments_desc">SORT: DEPLOYMENTS</option>
+                    <option value="intel_desc">SORT: INTEL (VIEWS)</option>
+                    <option value="status">SORT: STATUS</option>
+                </select>
             </header>
 
             <div className="agent-grid">
@@ -301,6 +316,8 @@ export default function UsersPage() {
 
                 .search-box { display: flex; align-items: center; border: 1px solid var(--cia-accent); padding: 5px 10px; background: rgba(0,0,0,0.5); }
                 .cia-input { background: transparent; border: none; color: #fff; font-family: inherit; font-size: 1rem; outline: none; width: 250px; padding-left: 10px; }
+                .cia-select { background: rgba(0,0,0,0.5); border: 1px solid var(--cia-accent); color: var(--cia-accent); font-family: inherit; font-size: 0.9rem; padding: 5px 10px; outline: none; cursor: pointer; }
+                .cia-select option { background: #000; color: #fff; }
                 
                 .agent-grid {
                     display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 0 30px;

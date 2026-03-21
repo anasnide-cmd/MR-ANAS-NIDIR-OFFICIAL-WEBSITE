@@ -3,11 +3,30 @@ import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
 import Loader from '../../components/Loader';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, query, orderBy, getDocs, limit, where } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, limit, where, getCountFromServer } from 'firebase/firestore';
 import Link from 'next/link';
 import CommandGrid, { GridItem } from '../../components/Admin/CommandGrid';
 import SystemTerminal from '../../components/Admin/SystemTerminal';
 import { Shield } from 'lucide-react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Filler,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Filler
+);
 
 export default function AdminDashboard() {
     const [user, setUser] = useState(null);
@@ -22,6 +41,54 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [permissionError, setPermissionError] = useState(false);
     const [logs, setLogs] = useState([]);
+    
+    // Chart Data Config
+    const chartData = {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        datasets: [
+            {
+                label: 'DEPLOYMENTS',
+                data: [12, 19, 15, 25, 22, 30, 45],
+                fill: true,
+                backgroundColor: 'rgba(168, 85, 247, 0.2)',
+                borderColor: '#a855f7',
+                borderWidth: 2,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#a855f7',
+                tension: 0.4
+            },
+            {
+                label: 'INTEL RECORDS',
+                data: [30, 40, 35, 55, 60, 80, 110],
+                fill: true,
+                backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                borderColor: '#00f0ff',
+                borderWidth: 2,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#00f0ff',
+                tension: 0.4
+            }
+        ]
+    };
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleColor: '#00f0ff',
+                bodyColor: '#fff',
+                borderColor: '#00f0ff',
+                borderWidth: 1
+            }
+        },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }
+        }
+    };
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (u) => {
@@ -39,31 +106,35 @@ export default function AdminDashboard() {
         setLoading(true);
         setPermissionError(false);
         try {
-            // Parallel fetching for performance
-            const [usersSnap, sitesSnap, postsSnap] = await Promise.all([
-                getDocs(collection(db, 'users')),
-                getDocs(query(collection(db, 'user_sites'), orderBy('updatedAt', 'desc'))),
-                getDocs(collection(db, 'posts'))
+            // Parallel aggregation fetching for extreme performance
+            const [usersCount, sitesCount, postsCount, bannedCount, verifiedCount, recentSitesSnap] = await Promise.all([
+                getCountFromServer(collection(db, 'users')),
+                getCountFromServer(collection(db, 'user_sites')),
+                getCountFromServer(collection(db, 'posts')),
+                getCountFromServer(query(collection(db, 'user_sites'), where('adminStatus', '==', 'banned'))),
+                getCountFromServer(query(collection(db, 'user_sites'), where('adminStatus', '==', 'verified'))),
+                getDocs(query(collection(db, 'user_sites'), orderBy('updatedAt', 'desc'), limit(5)))
             ]);
 
-            const sites = sitesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const totalUsers = usersCount.data().count;
 
             setStats({
-                totalUsers: usersSnap.size,
-                totalSites: sitesSnap.size,
-                totalPosts: postsSnap.size,
-                bannedSites: sites.filter(s => s.adminStatus === 'banned').length,
-                verifiedSites: sites.filter(s => s.adminStatus === 'verified').length
+                totalUsers,
+                totalSites: sitesCount.data().count,
+                totalPosts: postsCount.data().count,
+                bannedSites: bannedCount.data().count,
+                verifiedSites: verifiedCount.data().count
             });
 
             // Get recent 5 sites
-            setRecentSites(sites.slice(0, 5));
+            const recentSitesData = recentSitesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            setRecentSites(recentSitesData);
             
             // Simulate System Logs
             setLogs([
                 { timestamp: Date.now(), source: 'NET_SEC', message: 'SCANNING NETWORK TRAFFIC...', type: 'info' },
                 { timestamp: Date.now() - 1000, source: 'AUTH', message: 'ADMIN ACCESS GRANTED', type: 'success' },
-                { timestamp: Date.now() - 2500, source: 'DB_CORE', message: `SYNCED ${usersSnap.size} USER NODES`, type: 'info' },
+                { timestamp: Date.now() - 2500, source: 'DB_CORE', message: `SYNCED ${totalUsers} USER NODES`, type: 'info' },
                 { timestamp: Date.now() - 4000, source: 'SYS', message: 'SYSTEM INTEGRITY: 100%', type: 'success' },
             ]);
 
@@ -163,12 +234,9 @@ export default function AdminDashboard() {
                 </GridItem>
 
                 {/* Main Content Area */}
-                <GridItem colSpan={8} rowSpan={4} title="GLOBAL DEPLOYMENT MAP" border={true}>
-                    {/* Simulated Map Placeholder */}
-                    <div className="map-placeholder">
-                        <div className="grid-lines"></div>
-                        <div className="radar-sweep"></div>
-                        <div className="map-text">SATELLITE LINK ACTIVE...</div>
+                <GridItem colSpan={8} rowSpan={4} title="SYSTEM ACTIVITY GRAPH" border={true}>
+                    <div style={{ padding: '20px', height: '100%', width: '100%', boxSizing: 'border-box' }}>
+                        <Line data={chartData} options={chartOptions} />
                     </div>
                 </GridItem>
 

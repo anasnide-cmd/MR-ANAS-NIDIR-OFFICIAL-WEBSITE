@@ -323,7 +323,13 @@ export default function BuildDashboard() {
                             </div>
                         ))
                     ) : displaySites.length > 0 ? (
-                        displaySites.map(site => (
+                        displaySites.map(site => {
+                            const htmlBody = (site.files ? site.files['index.html']?.content : site.customHtml) || '';
+                            const cssStyles = (site.files ? site.files['styles.css']?.content : site.customCss) || '';
+                            const safeHtml = htmlBody.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+                            const thumbSrc = `<html><head><style>body{margin:0;overflow:hidden;pointer-events:none;}::-webkit-scrollbar{display:none;}${cssStyles}</style></head><body>${safeHtml}</body></html>`;
+
+                            return (
                             <div 
                                 key={site.id} 
                                 className="project-card" 
@@ -345,6 +351,18 @@ export default function BuildDashboard() {
                                 )}
 
                                 <div className="card-preview">
+                                    <iframe 
+                                        title={`${site.name || 'Project'} Thumbnail`}
+                                        srcDoc={thumbSrc}
+                                        loading="lazy"
+                                        style={{
+                                            width: '400%', height: '400%', 
+                                            transform: 'scale(0.25)', transformOrigin: 'top left',
+                                            border: 'none', pointerEvents: 'none', position: 'absolute', top: 0, left: 0, zIndex: 0
+                                        }}
+                                        tabIndex="-1"
+                                        sandbox="allow-same-origin"
+                                    />
                                     <div className="preview-overlay">
                                         <button className="btn-launch">ENTER CONSTRUCT <ChevronDown size={14} style={{transform: 'rotate(-90deg)'}}/></button>
                                     </div>
@@ -385,7 +403,7 @@ export default function BuildDashboard() {
                                     </div>
                                 </div>
                             </div>
-                        ))
+                        )})
                     ) : (
                         <div className="empty-state">
                             <div className="empty-icon">📂</div>
