@@ -34,10 +34,10 @@ export const metadata = {
     description: 'The official digital universe of Mr Anas Nidir. Explore projects, tools, and the future of tech.',
     images: [
       {
-        url: '/assets/logo.jpg',
+        url: '/assets/site-preview.png',
         width: 1200,
         height: 630,
-        alt: 'Mr Anas Nidir Official Logo',
+        alt: 'Mr Anas Nidir Official Website',
       },
     ],
   },
@@ -45,7 +45,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'MR ANAS NIDIR | Official Site',
     description: 'Entrepreneur • Visionary • Digital Innovator',
-    images: ['/assets/logo.jpg'],
+    images: ['/assets/site-preview.png'],
     creator: '@anasnide',
   },
   robots: {
