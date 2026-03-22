@@ -82,7 +82,8 @@ export default function RootLayout({ children }) {
       links: [
         { label: 'SavoirPedia', href: '/savoirpedia', ariaLabel: 'Read SavoirPedia' },
         { label: 'Mr Build', href: '/mr-build', ariaLabel: 'Mr Build Dashboard' },
-        { label: 'Games', href: '/mr-games', ariaLabel: 'Mr Arcade Games' }
+        { label: 'Games', href: '/mr-games', ariaLabel: 'Mr Arcade Games' },
+        { label: 'Celco', href: '/celco' }
       ]
     },
     {

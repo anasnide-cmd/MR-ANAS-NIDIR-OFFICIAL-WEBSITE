@@ -37,6 +37,16 @@
   --cia-success: #00ff9d;
   --scanline: rgba(0, 243, 255, 0.03);
   --crt-flicker: rgba(0, 243, 255, 0.02);
+
+  /* Project: CELCO (Premium Spreadsheet) */
+  --celco-bg: #020402;
+  --celco-primary: #10b981;
+  --celco-primary-glow: rgba(16, 185, 129, 0.3);
+  --celco-accent: #34d399;
+  --celco-border: rgba(16, 185, 129, 0.12);
+  --celco-surface: rgba(255, 255, 255, 0.02);
+  --celco-grid: rgba(16, 185, 129, 0.08);
+  --celco-header: rgba(16, 185, 129, 0.05);
 }
 
 @keyframes scanline {
