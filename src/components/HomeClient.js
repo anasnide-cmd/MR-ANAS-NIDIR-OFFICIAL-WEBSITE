@@ -54,34 +54,36 @@ export default function HomeClient() {
 
   const navItems = [
     {
-      label: 'Main',
+      label: 'Core',
       bgColor: '#111',
       textColor: '#fff',
       links: [
         { label: 'Home', href: '/', ariaLabel: 'Go to Home' },
-        { label: 'Portfolio', href: '/portfolio', ariaLabel: 'View Portfolio' },
-        { label: 'Projects', href: '/#projects', ariaLabel: 'View Projects' },
-        { label: 'Products', href: '/#products', ariaLabel: 'View Products' }
+        { label: 'Mr Build', href: '/mr-build', ariaLabel: 'Launch Mr Build' },
+        { label: 'Celco', href: '/celco', ariaLabel: 'Open Celco Spreadsheet' },
+        { label: 'Nex AI', href: '/nex-ai', ariaLabel: 'Interact with Nex AI' }
       ]
     },
     {
-      label: 'Content',
+      label: 'Ecosystem',
       bgColor: '#161616',
       textColor: '#00f0ff',
       links: [
         { label: 'SavoirPedia', href: '/savoirpedia', ariaLabel: 'Read SavoirPedia' },
-        { label: 'Mr Search', href: '/s', ariaLabel: 'Mr Search' },
+        { label: 'Mr Search', href: '/mr-search', ariaLabel: 'Mr Search' },
         { label: 'Creovate', href: '/creovate/templates', ariaLabel: 'Creovate AI Studio' },
-        { label: 'Fund', href: '/fund', ariaLabel: 'Investment Fund' }
+        { label: 'Mr Shop', href: '/mr-shop', ariaLabel: 'Browse Assets' }
       ]
     },
     {
-      label: 'Socials',
+      label: 'Connect',
       bgColor: '#00f0ff',
       textColor: '#000',
       links: [
+        { label: 'Portfolio', href: '/portfolio', ariaLabel: 'View Portfolio' },
+        { label: 'TikTok', href: 'https://tiktok.com/@anasnide', ariaLabel: 'TikTok' },
         { label: 'Instagram', href: 'https://www.instagram.com/anasnide', ariaLabel: 'Instagram' },
-        { label: 'TikTok', href: 'https://tiktok.com/@anasnide', ariaLabel: 'TikTok' }
+        { label: 'Join Hub', href: '/#community', ariaLabel: 'Join the Community' }
       ]
     }
   ];

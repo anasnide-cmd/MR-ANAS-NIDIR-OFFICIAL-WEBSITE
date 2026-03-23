@@ -57,6 +57,9 @@ service cloud.firestore {
       // Users can update their own doc provided they don't modify protected fields
       allow update: if isOwner(userId) && 
                     (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'siteLimit']));
+
+      // Allow lookup by email for transfer protocol
+      allow list: if request.auth != null && request.query.limit <= 1;
     }
 
     // User Sites
@@ -83,6 +86,13 @@ service cloud.firestore {
       allow delete: if request.auth != null && (
         resource.data.userId == request.auth.uid || isAdmin()
       );
+
+      // Site History Logs
+      match /history/{logId} {
+        allow read, write: if request.auth != null && (
+          get(/databases/$(database)/documents/user_sites/$(siteId)).data.userId == request.auth.uid || isAdmin()
+        );
+      }
     }
 
     // Messaging System

@@ -266,14 +266,20 @@ const CardNav = ({
         }
 
         .card-nav-cta-button {
-            padding: 10px 20px;
+            padding: 10px 24px;
             border-radius: 30px;
             font-weight: 700;
             text-decoration: none;
             font-size: 0.85rem;
-            transition: opacity 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .card-nav-cta-button:hover { opacity: 0.9; }
+        .card-nav-cta-button:hover { 
+            opacity: 1;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+        }
 
         .card-nav-content {
             display: grid;
@@ -290,10 +296,24 @@ const CardNav = ({
             flex-direction: column;
             justify-content: space-between;
             min-height: 200px;
-            transition: transform 0.3s;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.03), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
         }
         .nav-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .nav-card:hover::after {
+            transform: translateX(100%);
         }
 
         .nav-card-label {

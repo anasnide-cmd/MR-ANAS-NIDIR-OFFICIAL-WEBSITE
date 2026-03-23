@@ -26,6 +26,7 @@ const ARPreview = dynamic(() => import('./ARPreview'), { ssr: false });
 const AssetManager = dynamic(() => import('./AssetManager'), { ssr: false });
 const Auditor = dynamic(() => import('./Auditor'), { ssr: false });
 import 'prismjs/themes/prism-tomorrow.css';  
+import { addSiteLog } from '../../../lib/siteHistory';
 import { 
     GitBranch, 
     Star, 
@@ -321,6 +322,15 @@ function EditorContent() {
                     updatedAt: new Date().toISOString()
                 });
                 setSiteId(targetId);
+                
+                // Log creation
+                await addSiteLog(
+                    targetId, 
+                    user.uid, 
+                    user.displayName || user.email, 
+                    "Initialized new construct"
+                );
+
                 // Redirect to official editor URL for this site
                 router.replace(`/mr-build/editor?id=${targetId}`);
             } else {
@@ -328,6 +338,14 @@ function EditorContent() {
                     ...siteData,
                     updatedAt: new Date().toISOString()
                 }, { merge: true });
+
+                // Log code save
+                await addSiteLog(
+                    targetId, 
+                    user.uid, 
+                    user.displayName || user.email, 
+                    "Committed code changes"
+                );
             }
             
             setSuccessMsg('Changes committed successfully.');

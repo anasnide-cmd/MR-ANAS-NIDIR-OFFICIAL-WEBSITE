@@ -421,6 +421,7 @@ export default function BuildDashboard() {
             {editingSite && (
                 <SiteSettingsModal 
                     site={editingSite} 
+                    user={user}
                     onClose={() => setEditingSite(null)} 
                     onUpdate={handleSiteUpdate} 
                     onDelete={handleSiteDelete}
