@@ -6,14 +6,16 @@ import { X, Save, Trash2, Globe, Lock, DollarSign, Clock, UserPlus, ShieldAlert 
 import { addSiteLog } from '../../../lib/siteHistory';
 
 export default function SiteSettingsModal({ site, user, onClose, onUpdate, onDelete }) {
-    const [activeTab, setActiveTab] = useState('params'); // 'params', 'history', 'ownership'
+    const [activeTab, setActiveTab] = useState('params'); // 'params', 'history', 'ownership', 'marketplace'
     const [formData, setFormData] = useState({
         name: site.name || '',
         slug: site.slug || '',
         description: site.description || '',
         status: site.status || 'draft',
         monetizationEnabled: site.monetization?.enabled || false,
-        publisherId: site.monetization?.publisherId || ''
+        publisherId: site.monetization?.publisherId || '',
+        isForSale: site.isForSale || false,
+        salePrice: site.salePrice || 0
     });
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -73,6 +75,8 @@ export default function SiteSettingsModal({ site, user, onClose, onUpdate, onDel
                     enabled: formData.monetizationEnabled,
                     publisherId: formData.publisherId
                 },
+                isForSale: formData.isForSale,
+                salePrice: parseFloat(formData.salePrice) || 0,
                 updatedAt: new Date().toISOString()
             };
 
@@ -182,6 +186,7 @@ export default function SiteSettingsModal({ site, user, onClose, onUpdate, onDel
 
                 <div className="modal-tabs">
                     <button className={activeTab === 'params' ? 'active' : ''} onClick={() => setActiveTab('params')}>Parameters</button>
+                    <button className={activeTab === 'marketplace' ? 'active' : ''} onClick={() => setActiveTab('marketplace')}>Marketplace</button>
                     <button className={activeTab === 'history' ? 'active' : ''} onClick={() => setActiveTab('history')}>History</button>
                     <button className={activeTab === 'ownership' ? 'active' : ''} onClick={() => setActiveTab('ownership')}>Ownership</button>
                 </div>
@@ -270,6 +275,50 @@ export default function SiteSettingsModal({ site, user, onClose, onUpdate, onDel
                                         className="text-input"
                                     />
                                     <small className="help-text">Your Google AdSense Publisher ID. Ads will be automatically injected into the construct.</small>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'marketplace' && (
+                        <div className="tab-pane marketplace-pane">
+                            <div className="alert-box info">
+                                <DollarSign size={20} />
+                                <div>
+                                    <h4>Sell Your Construct</h4>
+                                    <p>List your site on the NEX Marketplace. Other users will be able to purchase and own this site.</p>
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="checkbox-label">
+                                    <input 
+                                        type="checkbox" 
+                                        name="isForSale" 
+                                        checked={formData.isForSale} 
+                                        onChange={handleChange} 
+                                    />
+                                    List on Marketplace
+                                </label>
+                            </div>
+
+                            {formData.isForSale && (
+                                <div className="form-group">
+                                    <label>Sale Price (USD)</label>
+                                    <div className="price-input-wrapper">
+                                        <span className="currency-prefix">$</span>
+                                        <input 
+                                            type="number"
+                                            name="salePrice" 
+                                            value={formData.salePrice} 
+                                            onChange={handleChange} 
+                                            placeholder="0.00"
+                                            className="text-input price-input"
+                                            min="0"
+                                            step="0.01"
+                                        />
+                                    </div>
+                                    <small className="help-text">Set a competitive price for your digital property.</small>
                                 </div>
                             )}
                         </div>
@@ -447,8 +496,16 @@ export default function SiteSettingsModal({ site, user, onClose, onUpdate, onDel
                     display: flex; gap: 16px; padding: 16px; border-radius: 12px; margin-bottom: 20px;
                 }
                 .alert-box.warning { background: rgba(255, 170, 0, 0.1); border: 1px solid rgba(255, 170, 0, 0.2); color: #ffaa00; }
+                .alert-box.info { background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.2); color: #00f0ff; }
                 .alert-box h4 { margin: 0 0 4px 0; font-family: 'Orbitron'; font-size: 0.9rem; letter-spacing: 0.5px; }
                 .alert-box p { margin: 0; font-size: 0.85rem; opacity: 0.8; line-height: 1.4; }
+
+                .price-input-wrapper { display: flex; align-items: stretch; }
+                .currency-prefix { 
+                    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-right: none;
+                    padding: 0 16px; border-radius: 8px 0 0 8px; display: flex; align-items: center; color: #4ade80; font-weight: 700;
+                }
+                .price-input { border-radius: 0 8px 8px 0; }
 
                 .transfer-input-group { display: flex; gap: 12px; }
                 .btn-transfer {

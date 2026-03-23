@@ -5,8 +5,12 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Grid, Terminal, Shield, Cpu, 
-  Zap, Star, MoreVertical, Menu, X, ArrowRight, Sparkles 
+  Zap, Star, MoreVertical, Menu, X, ArrowRight, Sparkles,
+  ShoppingBag
 } from 'lucide-react';
+import { db } from '../../lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import BuySiteModal from '../../components/MrShop/BuySiteModal';
 import styles from './webstore.module.css';
 
 // --- MOCK DATA ---
@@ -15,6 +19,7 @@ const CATEGORIES = [
   { id: 'ai', label: 'AI Models', icon: <Cpu size={18} /> },
   { id: 'productivity', label: 'Productivity', icon: <Zap size={18} /> },
   { id: 'dev', label: 'Developer', icon: <Terminal size={18} /> },
+  { id: 'marketplace', label: 'Marketplace', icon: <ShoppingBag size={18} /> },
   { id: 'security', label: 'Security', icon: <Shield size={18} /> },
 ];
 
@@ -109,37 +114,50 @@ const NavItem = ({ cat, active, onClick }) => (
     </button>
 );
 
-const AppCard = ({ app, index }) => (
+const AppCard = ({ app, index, onBuy }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: index * 0.05 }}
     className={styles.card}
   >
-      <Link href={app.link} style={{ display: 'flex', flexDirection: 'column', height: '100%', textDecoration: 'none' }}>
-        <div className={styles.cardHeader}>
-            <div className={styles.cardIcon}>
-                {app.icon}
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Link href={app.link} style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}>
+            <div className={styles.cardHeader}>
+                <div className={styles.cardIcon}>
+                    {app.icon}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        {app.rating} <Star size={10} fill="currentColor" />
+                    </span>
+                    <span style={{ fontSize: '10px', color: '#6b7280' }}>{app.users}</span>
+                </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {app.rating} <Star size={10} fill="currentColor" />
-                </span>
-                <span style={{ fontSize: '10px', color: '#6b7280' }}>{app.users}</span>
-            </div>
-        </div>
-        
-        <h3 className={styles.cardTitle}>{app.title}</h3>
-        <span className={styles.cardDev}>{app.developer}</span>
-        <p className={styles.cardDesc}>{app.description}</p>
+            
+            <h3 className={styles.cardTitle}>{app.title}</h3>
+            <span className={styles.cardDev}>{app.developer}</span>
+            <p className={styles.cardDesc}>{app.description}</p>
+        </Link>
         
         <div className={styles.cardFooter}>
-            <span style={{ fontSize: '12px', color: '#9ca3af' }}>Free</span>
-            <div className={styles.actionIcon}>
-                <ArrowRight size={14} />
-            </div>
+            <span style={{ fontSize: '14px', color: app.isMarketplaceItem ? '#10b981' : '#9ca3af', fontWeight: 'bold' }}>
+                {app.isMarketplaceItem ? `$${app.price}` : 'Free'}
+            </span>
+            {app.isMarketplaceItem ? (
+                <button 
+                    onClick={(e) => { e.preventDefault(); onBuy(app); }}
+                    className={styles.buyBtn}
+                >
+                    Buy Now
+                </button>
+            ) : (
+                <Link href={app.link} className={styles.actionIcon}>
+                    <ArrowRight size={14} />
+                </Link>
+            )}
         </div>
-      </Link>
+      </div>
   </motion.div>
 );
 
@@ -178,10 +196,48 @@ const HeroSpotlight = ({ app }) => {
 export default function WebStorePage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [marketplaceSites, setMarketplaceSites] = useState([]);
+  const [loadingMarketplace, setLoadingMarketplace] = useState(false);
+  const [selectedSite, setSelectedSite] = useState(null);
+
+  useEffect(() => {
+    async function fetchMarketplace() {
+        setLoadingMarketplace(true);
+        try {
+            const q = query(collection(db, 'user_sites'), where('isForSale', '==', true));
+            const snap = await getDocs(q);
+            const sites = snap.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    title: data.name || 'Untitled Site',
+                    developer: data.authorName || 'Nexus User',
+                    description: data.description || 'A custom-built digital construct.',
+                    icon: '🌐',
+                    rating: data.rating || 4.5,
+                    users: data.views ? `${data.views}+` : '0+',
+                    category: 'marketplace',
+                    link: `/s/${data.slug}`,
+                    price: data.salePrice || 0,
+                    isMarketplaceItem: true,
+                    slug: data.slug
+                };
+            });
+            setMarketplaceSites(sites);
+        } catch (err) {
+            console.error("Failed to fetch marketplace sites:", err);
+        } finally {
+            setLoadingMarketplace(false);
+        }
+    }
+    fetchMarketplace();
+  }, []);
+
+  const allDisplayApps = [...APPS, ...marketplaceSites];
 
   const filteredApps = activeCategory === 'all' 
-    ? APPS 
-    : APPS.filter(app => app.category === activeCategory);
+    ? allDisplayApps 
+    : allDisplayApps.filter(app => app.category === activeCategory);
 
   const heroApp = APPS.find(app => app.id === 'nex-ai');
 
@@ -284,12 +340,29 @@ export default function WebStorePage() {
                 <div className={styles.grid}>
                     <AnimatePresence mode="popLayout">
                         {filteredApps.map((app, idx) => (
-                            <AppCard key={app.id} app={app} index={idx} />
+                            <AppCard 
+                                key={app.id} 
+                                app={app} 
+                                index={idx} 
+                                onBuy={(item) => setSelectedSite(item)}
+                            />
                         ))}
                     </AnimatePresence>
                 </div>
             </div>
         </main>
+
+        <AnimatePresence>
+            {selectedSite && (
+                <BuySiteModal 
+                    site={selectedSite} 
+                    onClose={() => setSelectedSite(null)} 
+                    onPurchaseSuccess={() => {
+                        // Optionally refresh marketplace sites
+                    }}
+                />
+            )}
+        </AnimatePresence>
     </div>
   );
 }

@@ -12,6 +12,7 @@ export default function AdminSidebar({ isOpen, close, isMinimized, toggleMinimiz
         { name: 'Users', path: '/admin/users/', icon: '👥' },
         { name: 'Savoirpedia', path: '/savoirpedia/dashboard/', icon: '📚' },
         { name: 'Sites', path: '/admin/sites/', icon: '🌐' },
+        { name: 'Store', path: '/admin/store/', icon: '🛍️' },
         { name: 'Content', path: '/admin/content/', icon: '📝' },
         { name: 'New Post', path: '/admin/editor/', icon: '✍️' },
         { name: 'Messages', path: '/admin/messages/', icon: '📢' },
