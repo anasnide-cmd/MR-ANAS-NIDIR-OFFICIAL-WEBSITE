@@ -107,7 +107,18 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
                     if (files[args[1]]) {
                         term.writeln(`touch: ${args[1]}: File exists`);
                     } else {
-                        onUpdateFiles(args[1], '', 'javascript');
+                        const ext = args[1].split('.').pop().toLowerCase();
+                        let lang = 'javascript';
+                        if (ext === 'html') lang = 'html';
+                        else if (ext === 'css') lang = 'css';
+                        else if (ext === 'md' || ext === 'markdown') lang = 'markdown';
+                        else if (ext === 'json') lang = 'json';
+                        else if (ext === 'py' || ext === 'pyw') lang = 'python';
+                        else if (ext === 'ts' || ext === 'tsx') lang = 'typescript';
+                        else if (ext === 'sql') lang = 'sql';
+                        else if (ext === 'sh' || ext === 'bash') lang = 'bash';
+
+                        onUpdateFiles(args[1], '', lang);
                         term.writeln(`Created ${args[1]}`);
                     }
                 } else {

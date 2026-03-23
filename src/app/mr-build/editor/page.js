@@ -15,6 +15,12 @@ import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-markup';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-json';
+import 'prismjs/components/prism-markdown';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-bash';
+import 'prismjs/components/prism-sql';
 import AICopilot from './AICopilot';
 import dynamic from 'next/dynamic';
 
@@ -231,12 +237,16 @@ function EditorContent() {
         if (!newFileName.trim()) { setIsCreating(false); return; }
         if (siteData.files[newFileName]) { alert("File already exists!"); return; }
 
-        const ext = newFileName.split('.').pop();
+        const ext = newFileName.split('.').pop().toLowerCase();
         let lang = 'javascript';
         if (ext === 'html') lang = 'html';
-        if (ext === 'css') lang = 'css';
-        if (ext === 'md') lang = 'markdown';
-        if (ext === 'json') lang = 'json';
+        else if (ext === 'css') lang = 'css';
+        else if (ext === 'md' || ext === 'markdown') lang = 'markdown';
+        else if (ext === 'json') lang = 'json';
+        else if (ext === 'py' || ext === 'pyw') lang = 'python';
+        else if (ext === 'ts' || ext === 'tsx') lang = 'typescript';
+        else if (ext === 'sql') lang = 'sql';
+        else if (ext === 'sh' || ext === 'bash') lang = 'bash';
 
         setSiteData(prev => ({
             ...prev,
@@ -504,6 +514,9 @@ function EditorContent() {
                                             {fileName.endsWith('.html') && <Code size={14} color="#e34c26" />}
                                             {fileName.endsWith('.css') && <Code size={14} color="#563d7c" />}
                                             {fileName.endsWith('.js') && <FileCode size={14} color="#f7df1e" />}
+                                            {fileName.endsWith('.py') && <FileCode size={14} color="#3776ab" />}
+                                            {fileName.endsWith('.json') && <FileCode size={14} color="#fbc02d" />}
+                                            {(fileName.endsWith('.ts') || fileName.endsWith('.tsx')) && <FileCode size={14} color="#3178c6" />}
                                             {fileName.endsWith('.md') && <Book size={14} color="#fff" />}
                                         </span>
                                         <span className="file-name">{fileName}</span>
@@ -549,9 +562,10 @@ function EditorContent() {
                                 value={currentFile.content}
                                 onValueChange={code => updateFileContent(activeFile, code)}
                                 highlight={code => {
-                                    if (currentFile.language === 'html') return highlight(code, languages.markup);
-                                    if (currentFile.language === 'css') return highlight(code, languages.css);
-                                    if (currentFile.language === 'javascript') return highlight(code, languages.javascript);
+                                    const lang = currentFile.language || 'markup';
+                                    if (languages[lang]) {
+                                        return highlight(code, languages[lang]);
+                                    }
                                     return highlight(code, languages.markup);
                                 }}
                                 padding={20}
@@ -670,7 +684,18 @@ function EditorContent() {
                             siteData={siteData} 
                             onCodeUpdate={(file, code) => {
                                 if (!siteData.files[file]) {
-                                    setSiteData(prev => ({ ...prev, files: { ...prev.files, [file]: { content: code, language: file.endsWith('html')?'html':file.endsWith('css')?'css':'javascript' } } }));
+                                    const ext = file.split('.').pop().toLowerCase();
+                                    let lang = 'javascript';
+                                    if (ext === 'html') lang = 'html';
+                                    else if (ext === 'css') lang = 'css';
+                                    else if (ext === 'md' || ext === 'markdown') lang = 'markdown';
+                                    else if (ext === 'json') lang = 'json';
+                                    else if (ext === 'py' || ext === 'pyw') lang = 'python';
+                                    else if (ext === 'ts' || ext === 'tsx') lang = 'typescript';
+                                    else if (ext === 'sql') lang = 'sql';
+                                    else if (ext === 'sh' || ext === 'bash') lang = 'bash';
+
+                                    setSiteData(prev => ({ ...prev, files: { ...prev.files, [file]: { content: code, language: lang } } }));
                                 } else {
                                     updateFileContent(file, code);
                                 }
