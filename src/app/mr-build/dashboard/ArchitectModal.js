@@ -520,6 +520,19 @@ export default function ArchitectModal({ onClose, user }) {
                 .icon-btn-sm:hover { opacity: 1; }
 
                 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 0, 85, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); } }
+
+                @media (max-width: 600px) {
+                    .architect-modal { margin: 10px; height: 95vh; }
+                    .architect-header { padding: 10px 15px; }
+                    .brand span { font-size: 0.8rem; }
+                    .chat-area { padding: 15px; gap: 15px; }
+                    .bubble { max-width: 90%; font-size: 13px; padding: 10px 14px; }
+                    .input-area { padding: 10px; gap: 5px; }
+                    .input-area input { font-size: 13px; padding: 8px 10px; }
+                    .mic-btn, .attach-btn { min-width: 35px; }
+                    .manual-key-bar { flex-direction: column; }
+                    .manual-key-bar button { width: 100%; height: 35px; }
+                }
             `}</style>
         </div>
     );

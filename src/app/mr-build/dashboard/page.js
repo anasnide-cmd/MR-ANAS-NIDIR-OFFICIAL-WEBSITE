@@ -495,11 +495,12 @@ export default function BuildDashboard() {
                 /* Header */
                 .nebula-header {
                     display: flex; justify-content: space-between; align-items: center;
-                    padding: 16px 32px;
+                    padding: 12px 20px;
                     border-bottom: 1px solid rgba(255,255,255,0.05);
                     background: rgba(5,5,5,0.8); backdrop-filter: blur(10px);
                     position: sticky; top: 0; z-index: 50;
                 }
+                @media (min-width: 768px) { .nebula-header { padding: 16px 32px; } }
                 .brand-section { display: flex; align-items: center; gap: 10px; font-family: 'Orbitron', sans-serif; font-weight: 700; letter-spacing: 1px; }
                 .brand-icon { color: #00f0ff; filter: drop-shadow(0 0 5px #00f0ff); }
                 .highlight { color: #00f0ff; font-size: 0.8em; margin-left: 4px; }
@@ -523,13 +524,16 @@ export default function BuildDashboard() {
                 }
                 @media (min-width: 768px) { .welcome-banner { flex-direction: row; align-items: center; } }
                 
-                .banner-content h1 { font-family: 'Orbitron', sans-serif; font-size: 2rem; margin-bottom: 8px; background: linear-gradient(90deg, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-                .banner-content p { color: #888; }
+                .banner-content h1 { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; margin-bottom: 8px; background: linear-gradient(90deg, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+                @media (min-width: 768px) { .banner-content h1 { font-size: 2rem; } }
+                .banner-content p { color: #888; font-size: 0.9rem; }
                 
-                .stats-row { display: flex; gap: 20px; }
-                .stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px 20px; border-radius: 12px; min-width: 120px; }
-                .stat-value { font-size: 1.5rem; font-weight: 700; color: #00f0ff; }
-                .stat-label { font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+                .stats-row { display: flex; gap: 12px; width: 100%; }
+                .stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; flex: 1; }
+                @media (min-width: 768px) { .stat-card { padding: 12px 20px; min-width: 120px; flex: initial; } }
+                .stat-value { font-size: 1.2rem; font-weight: 700; color: #00f0ff; }
+                @media (min-width: 768px) { .stat-value { font-size: 1.5rem; } }
+                .stat-label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
 
                 /* Controls */
                 .controls-bar { display: flex; gap: 16px; margin-bottom: 30px; flex-wrap: wrap; }

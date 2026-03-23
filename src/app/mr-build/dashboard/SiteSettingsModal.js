@@ -410,7 +410,7 @@ export default function SiteSettingsModal({ site, user, onClose, onUpdate, onDel
                 }
                 .modal-content {
                     background: #0a0a0a; border: 1px solid rgba(0,240,255,0.2); border-radius: 16px;
-                    width: 600px; max-width: 100%; max-height: 90vh; display: flex; flex-direction: column;
+                    width: 600px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column;
                     box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(0,240,255,0.05);
                     font-family: 'Inter', sans-serif; overflow: hidden;
                 }
@@ -425,7 +425,9 @@ export default function SiteSettingsModal({ site, user, onClose, onUpdate, onDel
 
                 .modal-tabs {
                     display: flex; background: rgba(255,255,255,0.02); padding: 0 24px; border-bottom: 1px solid rgba(255,255,255,0.05);
+                    overflow-x: auto; scrollbar-width: none;
                 }
+                .modal-tabs::-webkit-scrollbar { display: none; }
                 .modal-tabs button {
                     background: none; border: none; color: #666; padding: 12px 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
                     border-bottom: 2px solid transparent; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
@@ -547,13 +549,26 @@ export default function SiteSettingsModal({ site, user, onClose, onUpdate, onDel
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
                 @media (max-width: 600px) {
-                    .modal-footer { flex-direction: column-reverse; }
+                    .modal-head h2 { font-size: 1rem; }
+                    .modal-tabs { padding: 0 12px; }
+                    .modal-tabs button { padding: 12px 14px; font-size: 0.75rem; }
+                    .modal-body { padding: 16px; }
+                    .modal-footer { flex-direction: column-reverse; padding: 16px; }
                     .footer-right { width: 100%; }
-                    .btn-danger, .footer-right > button { flex: 1; justify-content: center; }
+                    .btn-danger, .footer-right > button { flex: 1; justify-content: center; height: 45px; }
                     .row-group { flex-direction: column; align-items: stretch; gap: 16px; }
+                    .half-width.status-visual { justify-content: flex-start; padding-top: 0; }
                     .slug-prefix { padding: 0 8px; font-size: 0.75rem; }
                     .transfer-input-group { flex-direction: column; }
                     .btn-transfer { height: 45px; justify-content: center; }
+                    .history-item { padding: 10px; }
+                    .alert-box { padding: 12px; gap: 12px; }
+                    .alert-box h4 { font-size: 0.8rem; }
+                    .alert-box p { font-size: 0.75rem; }
+                }
+                
+                @media (max-height: 500px) {
+                    .modal-content { max-height: 95vh; }
                 }
             `}</style>
         </div>
