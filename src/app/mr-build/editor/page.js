@@ -558,25 +558,33 @@ function EditorContent() {
                                 </div>
                             </div>
                         ) : (
-                            <Editor
-                                value={currentFile.content}
-                                onValueChange={code => updateFileContent(activeFile, code)}
-                                highlight={code => {
-                                    const lang = currentFile.language || 'markup';
-                                    if (languages[lang]) {
-                                        return highlight(code, languages[lang]);
-                                    }
-                                    return highlight(code, languages.markup);
-                                }}
-                                padding={20}
-                                className="code-editor"
-                                style={{
-                                    fontFamily: '"JetBrains Mono", "Fira Code", monospace',
-                                    fontSize: 14,
-                                    backgroundColor: 'transparent',
-                                    minHeight: '100%'
-                                }}
-                            />
+                            <div className="editor-container">
+                                <div className="line-numbers">
+                                    {(currentFile.content || '').split('\n').map((_, i) => (
+                                        <span key={i}>{i + 1}</span>
+                                    ))}
+                                </div>
+                                <Editor
+                                    value={currentFile.content}
+                                    onValueChange={code => updateFileContent(activeFile, code)}
+                                    highlight={code => {
+                                        const lang = currentFile.language || 'markup';
+                                        if (languages[lang]) {
+                                            return highlight(code, languages[lang]);
+                                        }
+                                        return highlight(code, languages.markup);
+                                    }}
+                                    padding={20}
+                                    className="code-editor"
+                                    style={{
+                                        fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+                                        fontSize: 14,
+                                        backgroundColor: 'transparent',
+                                        minHeight: '100%',
+                                        lineHeight: '1.5'
+                                    }}
+                                />
+                            </div>
                         )}
                     </div>
 
@@ -799,6 +807,19 @@ function EditorContent() {
                 
                 .editor-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
                 .editor-wrapper.split-view { width: 50%; border-right: 1px solid rgba(255,255,255,0.1); }
+                .editor-container { 
+                    display: flex; flex: 1; overflow: auto; background: transparent; 
+                    font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 14px;
+                }
+                .line-numbers {
+                    padding: 20px 0; border-right: 1px solid rgba(255,255,255,0.15);
+                    background: rgba(255,255,255,0.02); color: #888; text-align: right; user-select: none;
+                    display: flex; flex-direction: column; min-width: 50px;
+                }
+                .line-numbers span { 
+                    line-height: 1.5; height: 21px; padding: 0 12px; font-size: 11px;
+                    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+                }
                 @media (max-width: 768px) {
                     .editor-wrapper.split-view { display: none; } /* On mobile, toggle, don't split */
                 }
