@@ -29,16 +29,24 @@ export default function AssetManager({ onInsert, onSpriteEditor }) {
             const listRef = ref(storage, `users/${auth.currentUser.uid}/uploads`);
             const res = await listAll(listRef);
             
-            const urls = await Promise.all(
-                res.items.map(async (itemRef) => {
+            // Limit parallel requests if many items to avoid 429/timeout
+            const urls = [];
+            for (const itemRef of res.items) {
+                try {
                     const url = await getDownloadURL(itemRef);
-                    return { name: itemRef.name, url, path: itemRef.fullPath };
-                })
-            );
+                    urls.push({ name: itemRef.name, url, path: itemRef.fullPath });
+                } catch (e) {
+                    console.warn(`Failed to get URL for ${itemRef.name}`, e);
+                }
+            }
             setAssets(urls);
         } catch (err) {
             console.error("Error fetching assets:", err);
-            setError(err.message);
+            if (err.code === 'storage/retry-limit-exceeded') {
+                setError("Storage connection timed out. This often happens due to network issues or if the storage bucket 'anas-nidir.firebasestorage.app' is not correctly configured in Firebase Console.");
+            } else {
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }

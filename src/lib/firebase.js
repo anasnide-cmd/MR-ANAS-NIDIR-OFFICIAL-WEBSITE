@@ -10,7 +10,7 @@ const firebaseConfig = {
     projectId: "anas-nidir",
     storageBucket: "anas-nidir.firebasestorage.app",
     messagingSenderId: "351701049742",
-    appId: "1:351701049742:web:4faa788e224e e52afe84df"
+    appId: "1:351701049742:web:4faa788e224ee52afe84df"
 };
 
 // Initialize Firebase only once
