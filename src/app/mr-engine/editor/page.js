@@ -71,7 +71,7 @@ const GAME_TEMPLATES = {
     }
 };
 
-export default function GameEditor() {
+function EditorContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const queryGameId = searchParams.get('id');
@@ -346,3 +346,12 @@ export default function GameEditor() {
         </div>
     );
 }
+
+export default function GameEditor() {
+    return (
+        <Suspense fallback={<Loader text="Syncing Game State..." />}>
+            <EditorContent />
+        </Suspense>
+    );
+}
+
