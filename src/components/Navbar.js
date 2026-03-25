@@ -119,8 +119,9 @@ export default function Navbar() {
   };
 
 
-  // Hide Navbar on user sites or admin pages
+  // Hide Navbar on user sites, admin pages, or specialized engines
   if (pathname === '/') return null; // Replaced by CardNav on homepage
+  if (pathname?.startsWith('/mr-engine')) return null;
   if (pathname?.startsWith('/s/')) return null;
   if (pathname?.startsWith('/admin')) return null;
   if (pathname?.startsWith('/nex-ai')) return null;

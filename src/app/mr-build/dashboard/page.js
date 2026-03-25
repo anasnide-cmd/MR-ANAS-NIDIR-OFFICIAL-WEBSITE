@@ -24,7 +24,8 @@ import {
     X,
     TrendingUp,
     Share2,
-    Check
+    Check,
+    Gamepad2
 } from 'lucide-react';
 
 import ArchitectModal from './ArchitectModal';
@@ -479,6 +480,11 @@ export default function BuildDashboard() {
                                 <div className="tile-icon" style={{color: '#ff0055'}}><Box size={24}/></div>
                                 <h3>SaaS Landing</h3>
                                 <p>Clean & Modern</p>
+                            </button>
+                            <button className="option-tile game" onClick={() => router.push('/mr-engine/dashboard')}>
+                                <div className="tile-icon" style={{color: '#bc00ff'}}><Gamepad2 size={24}/></div>
+                                <h3>Game Core</h3>
+                                <p>Code & Publish</p>
                             </button>
                         </div>
                     </div>
