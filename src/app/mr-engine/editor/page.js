@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { auth, db } from '../../../lib/firebase';
 import { doc, setDoc, deleteDoc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -47,7 +48,10 @@ import {
     Minimize, 
     Download, 
     Image as ImageIcon, 
-    Trophy
+    Trophy,
+    Smartphone,
+    Menu,
+    Files
 } from 'lucide-react';
 
 import { Suspense } from 'react';
@@ -100,7 +104,7 @@ function EditorContent() {
     const [newFileName, setNewFileName] = useState('');
     const [deletingFile, setDeletingFile] = useState(null);
     const [zenMode, setZenMode] = useState(false);
-    const [mobileTab, setMobileTab] = useState('editor'); // 'editor', 'preview', 'ai', 'terminal'
+    const [mobileTab, setMobileTab] = useState('editor'); // 'editor', 'preview', 'ai', 'terminal', 'assets'
 
     const [debouncedGameData, setDebouncedGameData] = useState(gameData);
 
@@ -223,16 +227,16 @@ function EditorContent() {
                     </div>
                 </div>
                 <div className="header-right">
-                    <button className={`btn-icon ${terminalOpen ? 'active' : ''} hidden-mobile`} onClick={() => setTerminalOpen(!terminalOpen)}>
+                    <button className={`btn-icon ${terminalOpen ? 'active' : ''}`} onClick={() => setTerminalOpen(!terminalOpen)}>
                         <TerminalIcon size={18} />
                     </button>
-                    <button className={`btn-icon ${copilotOpen ? 'active' : ''} hidden-mobile`} onClick={() => setCopilotOpen(!copilotOpen)}>
+                    <button className={`btn-icon ${copilotOpen ? 'active' : ''}`} onClick={() => setCopilotOpen(!copilotOpen)}>
                         <Sparkles size={18} />
                     </button>
                     <button className="btn-save" onClick={handleSave} disabled={saving}>
                         <Save size={16} /> <span className="hidden-mobile">{saving ? 'SYNCING...' : 'SYNC CORE'}</span>
                     </button>
-                    <button className={`btn-icon ${showPreview ? 'active' : ''} hidden-mobile`} onClick={() => setShowPreview(!showPreview)}>
+                    <button className={`btn-icon ${showPreview ? 'active' : ''}`} onClick={() => setShowPreview(!showPreview)}>
                         <Eye size={18} />
                     </button>
                 </div>
@@ -308,14 +312,32 @@ function EditorContent() {
                     <div className={`terminal-box ${mobileTab !== 'terminal' ? 'hidden-mobile' : ''} mobile-panel`}>
                          <Terminal files={gameData.files} onUpdateFiles={updateFileContent} />
                     </div>
+
+                    <div className={`assets-box ${mobileTab !== 'assets' ? 'hidden-mobile' : ''} mobile-panel`}>
+                         <AssetManager onSpriteEditor={() => {}} />
+                    </div>
                 </main>
             </div>
 
             <div className="mobile-nav mobile-only">
-                <button className={mobileTab === 'editor' ? 'active' : ''} onClick={() => setMobileTab('editor')}>CODE</button>
-                <button className={mobileTab === 'preview' ? 'active' : ''} onClick={() => setMobileTab('preview')}>PREVIEW</button>
-                <button className={mobileTab === 'ai' ? 'active' : ''} onClick={() => setMobileTab('ai')}>AI</button>
-                <button className={mobileTab === 'terminal' ? 'active' : ''} onClick={() => setMobileTab('terminal')}>TERM</button>
+                <button className={mobileTab === 'editor' ? 'active' : ''} onClick={() => setMobileTab('editor')}>
+                    <Code size={18} /> <span>CODE</span>
+                </button>
+                <button className={mobileTab === 'files' ? 'active' : ''} onClick={() => { setShowSidebar(true); setMobileTab('editor'); }}>
+                    <Files size={18} /> <span>FILES</span>
+                </button>
+                <button className={mobileTab === 'preview' ? 'active' : ''} onClick={() => setMobileTab('preview')}>
+                    <Eye size={18} /> <span>PREVIEW</span>
+                </button>
+                <button className={mobileTab === 'ai' ? 'active' : ''} onClick={() => setMobileTab('ai')}>
+                    <Sparkles size={18} /> <span>AI</span>
+                </button>
+                <button className={mobileTab === 'terminal' ? 'active' : ''} onClick={() => setMobileTab('terminal')}>
+                    <TerminalIcon size={18} /> <span>TERM</span>
+                </button>
+                <button className={mobileTab === 'assets' ? 'active' : ''} onClick={() => setMobileTab('assets')}>
+                    <ImageIcon size={18} /> <span>ASSETS</span>
+                </button>
             </div>
 
             {successMsg && <div className="toast">{successMsg}</div>}
@@ -377,9 +399,10 @@ function EditorContent() {
                 .preview-tools button { background: none; border: none; color: #00f0ff; cursor: pointer; }
                 iframe { flex: 1; border: none; background: #fff; }
 
-                .mobile-nav { display: none; height: 50px; background: #000; border-top: 1px solid #1a1a1a; justify-content: space-around; align-items: center; z-index: 100; }
-                .mobile-nav button { background: none; border: none; color: #444; font-size: 0.7rem; font-weight: 800; padding: 10px; }
-                .mobile-nav button.active { color: #00f0ff; border-top: 2px solid #00f0ff; }
+                .mobile-nav { display: none; height: 60px; background: #000; border-top: 1px solid #1a1a1a; justify-content: space-around; align-items: center; z-index: 100; }
+                .mobile-nav button { background: none; border: none; color: #444; font-size: 0.6rem; font-weight: 800; padding: 5px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+                .mobile-nav button.active { color: #00f0ff; }
+                .mobile-nav button.active :global(svg) { color: #00f0ff; }
 
                 .mobile-panel { width: 100%; height: 100%; position: absolute; inset: 0; z-index: 10; background: #000; }
                 

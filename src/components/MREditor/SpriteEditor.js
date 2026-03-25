@@ -382,6 +382,7 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
                         .se-sidebar { 
                             width: 100%; height: auto; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05);
                             flex-direction: row; align-items: flex-start; gap: 15px; padding: 10px;
+                            overflow-x: auto; -webkit-overflow-scrolling: touch;
                         }
                     }
                     
@@ -431,7 +432,19 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
 
                     .se-preview-panel { width: 150px; background: #151515; border-left: 1px solid rgba(255,255,255,0.05); padding: 15px; display: flex; flex-direction: column; gap: 20px; }
                     @media (max-width: 768px) {
-                        .se-preview-panel { display: none; }
+                        .se-preview-panel { 
+                            width: 100%; 
+                            height: auto; 
+                            background: #111; 
+                            border-left: none; 
+                            border-top: 1px solid rgba(255,255,255,0.05); 
+                            display: flex; 
+                            flex-direction: row; 
+                            align-items: center; 
+                            justify-content: center; 
+                            gap: 20px; 
+                            padding: 10px; 
+                        }
                     }
                     .preview-box { background: #000; padding: 10px; border-radius: 4px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
                     .preview-box.scaled { height: 120px; }

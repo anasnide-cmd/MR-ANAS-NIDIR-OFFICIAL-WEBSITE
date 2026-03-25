@@ -313,7 +313,7 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
                     const cleanMsg = text.replace(/\x1b\[[0-9;]*m/g, '').replace('[ERR]', '').trim();
                     const encoded = encodeURIComponent(cleanMsg);
                     term.write(`\r\n${text}`);
-                    term.writeln(`\r\n\x1b[33m ⚡ [AI] Issue Detected. \x1b[0m\x1b[4m\x1b[36mfix://${encoded}\x1b[0m \x1b[36m(Ctrl+Click to Auto-Fix)\x1b[0m`);
+                    term.writeln(`\r\n\x1b[33m ⚡ [AI] Issue Detected. \x1b[0m\x1b[4m\x1b[36mfix://${encoded}\x1b[0m \x1b[36m(Tap to Auto-Fix)\x1b[0m`);
                     prompt(term);
                 } else {
                     term.write(`\r\n${text}`);
@@ -333,28 +333,30 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
                 style={{ flex: 1, overflow: 'hidden' }}
             />
             <div className="virtual-keys mobile-only">
-                {['Tab', 'Clear', 'ls', 'node ', 'Enter'].map(k => (
-                    <button key={k} onClick={() => window._terminalKeyTap(k)}>{k}</button>
+                {['Tab', 'ls', 'cat ', 'mkdir ', 'touch ', 'rm ', 'npm i ', 'node ', 'Clear', 'Enter'].map(k => (
+                    <button key={k} onClick={() => window._terminalKeyTap(k)}>{k.trim()}</button>
                 ))}
             </div>
             <style jsx>{`
                 .virtual-keys {
                     display: flex;
-                    gap: 5px;
-                    padding: 5px;
+                    gap: 8px;
+                    padding: 8px;
                     background: #000;
                     border-top: 1px solid #222;
                     overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
                 }
                 .virtual-keys button {
                     background: #1a1a1a;
                     color: #fff;
                     border: 1px solid #333;
-                    padding: 6px 12px;
-                    border-radius: 4px;
-                    font-size: 10px;
+                    padding: 10px 16px;
+                    border-radius: 6px;
+                    font-size: 11px;
                     font-family: 'JetBrains Mono', monospace;
                     white-space: nowrap;
+                    font-weight: 700;
                 }
                 .mobile-only { display: none; }
                 @media (max-width: 768px) {

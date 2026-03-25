@@ -33,7 +33,10 @@ import {
     Search,
     ChevronLeft,
     Monitor,
-    Smartphone
+    Smartphone,
+    Menu,
+    Files,
+    Code
 } from 'lucide-react';
 
 function EditorContent() {
@@ -50,7 +53,7 @@ function EditorContent() {
     const [bottomPanel, setBottomPanel] = useState('terminal'); // 'terminal', 'auditor'
     const [rightPanel, setRightPanel] = useState('copilot'); // 'copilot', 'assets'
     const [showSpriteEditor, setShowSpriteEditor] = useState(false);
-    const [activeTab, setActiveTab] = useState('editor'); // 'editor', 'preview', 'ai', 'terminal'
+    const [activeTab, setActiveTab] = useState('editor'); // 'editor', 'preview', 'ai', 'terminal', 'assets'
 
     const [projectData, setProjectData] = useState({
         name: 'Untitled Project',
@@ -127,6 +130,9 @@ function EditorContent() {
                     <button onClick={() => router.push('/mr-build/dashboard')} className="btn-back">
                         <ChevronLeft size={20} />
                     </button>
+                    <button className="btn-icon mobile-only" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                        <Menu size={20} />
+                    </button>
                     <h1>{projectData.name}</h1>
                 </div>
                 <div className="nav-center">
@@ -198,20 +204,34 @@ function EditorContent() {
                     </div>
                 )}
 
-                <aside className={`right-panel ${activeTab !== 'ai' ? 'hidden-mobile' : ''}`}>
-                    {rightPanel === 'copilot' ? (
-                        <AICopilot siteData={projectData} onCodeUpdate={updateFileContent} />
-                    ) : (
+                <aside className={`right-panel ${activeTab !== 'ai' && activeTab !== 'assets' ? 'hidden-mobile' : ''}`}>
+                    {activeTab === 'assets' || rightPanel === 'assets' ? (
                         <AssetManager onSpriteEditor={() => setShowSpriteEditor(true)} />
+                    ) : (
+                        <AICopilot siteData={projectData} onCodeUpdate={updateFileContent} />
                     )}
                 </aside>
             </div>
 
             <div className="mobile-nav mobile-only">
-                <button className={activeTab === 'editor' ? 'active' : ''} onClick={() => setActiveTab('editor')}>CODE</button>
-                <button className={activeTab === 'preview' ? 'active' : ''} onClick={() => setActiveTab('preview')}>PREVIEW</button>
-                <button className={activeTab === 'ai' ? 'active' : ''} onClick={() => setActiveTab('ai')}>AI</button>
-                <button className={activeTab === 'terminal' ? 'active' : ''} onClick={() => setActiveTab('terminal')}>TERM</button>
+                <button className={activeTab === 'editor' ? 'active' : ''} onClick={() => setActiveTab('editor')}>
+                    <Code size={18} /> <span>CODE</span>
+                </button>
+                <button className={activeTab === 'files' ? 'active' : ''} onClick={() => { setSidebarOpen(true); setActiveTab('editor'); }}>
+                    <Files size={18} /> <span>FILES</span>
+                </button>
+                <button className={activeTab === 'preview' ? 'active' : ''} onClick={() => setActiveTab('preview')}>
+                    <Eye size={18} /> <span>PREVIEW</span>
+                </button>
+                <button className={activeTab === 'ai' ? 'active' : ''} onClick={() => setActiveTab('ai')}>
+                    <Sparkles size={18} /> <span>AI</span>
+                </button>
+                <button className={activeTab === 'terminal' ? 'active' : ''} onClick={() => setActiveTab('terminal')}>
+                    <TerminalIcon size={18} /> <span>TERM</span>
+                </button>
+                <button className={activeTab === 'assets' ? 'active' : ''} onClick={() => setActiveTab('assets')}>
+                    <Search size={18} /> <span>ASSETS</span>
+                </button>
             </div>
 
             {showSpriteEditor && (
@@ -261,9 +281,10 @@ function EditorContent() {
                     .bottom-panel { height: 100%; border-top: none; }
                 }
 
-                .mobile-nav { display: none; height: 50px; background: #000; border-top: 1px solid #1a1a1a; justify-content: space-around; align-items: center; z-index: 100; }
-                .mobile-nav button { background: none; border: none; color: #444; font-size: 0.7rem; font-weight: 800; padding: 10px; }
-                .mobile-nav button.active { color: #00f0ff; border-top: 2px solid #00f0ff; }
+                .mobile-nav { display: none; height: 60px; background: #000; border-top: 1px solid #1a1a1a; justify-content: space-around; align-items: center; z-index: 100; }
+                .mobile-nav button { background: none; border: none; color: #444; font-size: 0.6rem; font-weight: 800; padding: 5px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+                .mobile-nav button.active { color: #00f0ff; }
+                .mobile-nav button.active :global(svg) { color: #00f0ff; }
 
                 .sprite-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
                 .modal-content { background: #111; padding: 10px; border-radius: 12px; position: relative; width: 95%; height: 95%; }

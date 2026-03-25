@@ -88,7 +88,7 @@ export default function FileTree({
                     letter-spacing: 1px; 
                 }
                 .sidebar-actions { display: flex; gap: 10px; }
-                .sidebar-head button { background: none; border: none; color: #444; cursor: pointer; padding: 10px; }
+                .sidebar-head button { background: none; border: none; color: #888; cursor: pointer; padding: 10px; }
                 
                 .new-file { padding: 10px 15px; }
                 .new-file input {
