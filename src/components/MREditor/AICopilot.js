@@ -4,9 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Send, Bot, User, ChevronRight, Mic, Volume2, VolumeX, Paperclip, X } from 'lucide-react';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
-import { db, auth } from '../../../lib/firebase'; // Added db and auth import
-import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'; // Added firestore imports
-import { onAuthStateChanged } from 'firebase/auth'; // Added auth import
+import { db, auth } from '../../lib/firebase'; // Updated relative path
+import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'; 
+import { onAuthStateChanged } from 'firebase/auth'; 
 
 export default function AICopilot({ siteData, onCodeUpdate }) {
   const [messages, setMessages] = useState([
@@ -366,7 +366,7 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
           if (!imgUrl) return;
           try {
               const { ref, uploadBytes } = await import('firebase/storage');
-              const { storage } = await import('../../../lib/firebase');
+              const { storage } = await import('../../lib/firebase'); // Updated path
               const res = await fetch(imgUrl);
               const blob = await res.blob();
               const sRef = ref(storage, `users/${user.uid}/uploads/ai_${Date.now()}.png`);

@@ -19,11 +19,11 @@ import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-markdown';
 
-import dynamic from 'next/dynamic';
-// Import shared components from mr-build for now
-const Terminal = dynamic(() => import('../../mr-build/editor/Terminal'), { ssr: false });
-const AssetManager = dynamic(() => import('../../mr-build/editor/AssetManager'), { ssr: false });
-const AICopilot = dynamic(() => import('../../mr-build/editor/AICopilot'), { ssr: false });
+// Shared Components
+const Terminal = dynamic(() => import('../../../components/MREditor/Terminal'), { ssr: false });
+const AssetManager = dynamic(() => import('../../../components/MREditor/AssetManager'), { ssr: false });
+const AICopilot = dynamic(() => import('../../../components/MREditor/AICopilot'), { ssr: false });
+const FileTree = dynamic(() => import('../../../components/MREditor/FileTree'), { ssr: false });
 
 import 'prismjs/themes/prism-tomorrow.css';  
 import { 
@@ -38,16 +38,15 @@ import {
     FileCode,
     Folder,
     ChevronRight,
-    Save,
-    ExternalLink,
-    Terminal as TerminalIcon,
-    Sparkles,
-    X,
-    Maximize,
-    Minimize,
-    Plus,
-    Download,
-    Image as ImageIcon,
+    Save, 
+    ExternalLink, 
+    Terminal as TerminalIcon, 
+    Sparkles, 
+    X, 
+    Maximize, 
+    Minimize, 
+    Download, 
+    Image as ImageIcon, 
     Trophy
 } from 'lucide-react';
 
@@ -101,7 +100,7 @@ function EditorContent() {
     const [newFileName, setNewFileName] = useState('');
     const [deletingFile, setDeletingFile] = useState(null);
     const [zenMode, setZenMode] = useState(false);
-    const [mobileTab, setMobileTab] = useState('editor'); // 'files', 'editor', 'preview'
+    const [mobileTab, setMobileTab] = useState('editor'); // 'editor', 'preview', 'ai', 'terminal'
 
     const [debouncedGameData, setDebouncedGameData] = useState(gameData);
 
@@ -122,7 +121,12 @@ function EditorContent() {
                     const docSnap = await getDoc(doc(db, 'user_games', queryGameId));
                     if (docSnap.exists()) {
                         setGameId(docSnap.id);
-                        setGameData({ ...docSnap.data(), id: docSnap.id });
+                        const data = docSnap.data();
+                        setGameData({ 
+                            ...data, 
+                            id: docSnap.id,
+                            files: data.files || {} 
+                        });
                     }
                 } catch (err) { console.error(err); }
             } else {
@@ -197,7 +201,7 @@ function EditorContent() {
 
     if (loading) return <Loader text="Syncing Game State..." />;
 
-    const currentFile = gameData.files[activeFile] || { content: '', language: 'text' };
+    const currentFile = (gameData?.files && gameData.files[activeFile]) || { content: '', language: 'text' };
 
     return (
         <div className="engine-editor">
@@ -236,42 +240,27 @@ function EditorContent() {
              )}
 
             <div className="workspace">
-                 <aside className={`sidebar ${showSidebar ? 'visible' : ''}`}>
-                    <div className="sidebar-head">
-                        <span>FILESYSTEM</span>
-                        <div className="sidebar-actions">
-                            <button onClick={() => setIsCreating(true)}><Plus size={16}/></button>
-                            <button className="mobile-only" onClick={() => setShowSidebar(false)}><X size={16}/></button>
-                        </div>
-                    </div>
-                    {isCreating && (
-                        <div className="new-file">
-                             <input 
-                                autoFocus 
-                                value={newFileName} 
-                                onChange={e => setNewFileName(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && confirmCreate()}
-                                onBlur={() => setIsCreating(false)}
-                            />
-                        </div>
-                    )}
-                    <div className="file-list">
-                        {Object.keys(gameData.files).sort().map(f => (
-                            <div key={f} className={`file-item ${activeFile === f ? 'active' : ''}`} onClick={() => { setActiveFile(f); if(window.innerWidth < 768) { setShowSidebar(false); setMobileTab('editor'); } }}>
-                                <FileCode size={14} color={f.endsWith('.js') ? '#f7df1e' : '#00f0ff'} />
-                                <span>{f}</span>
-                            </div>
-                        ))}
-                    </div>
-                </aside>
+                 <FileTree 
+                    files={gameData.files || {}}
+                    activeFile={activeFile}
+                    onSelectFile={(f) => { setActiveFile(f); if(window.innerWidth < 768) { setShowSidebar(false); setMobileTab('editor'); } }}
+                    onCreateFile={(name) => {
+                        const ext = name.split('.').pop().toLowerCase();
+                        let lang = 'javascript';
+                        if (ext === 'html') lang = 'html';
+                        else if (ext === 'css') lang = 'css';
+                        setGameData(prev => ({
+                            ...prev,
+                            files: { ...prev.files, [name]: { content: '', language: lang } }
+                        }));
+                        setActiveFile(name);
+                    }}
+                    showSidebar={showSidebar}
+                    setShowSidebar={setShowSidebar}
+                />
 
                 <main className="main-area">
-                    <div className="mobile-tabs mobile-only">
-                        <button className={mobileTab === 'editor' ? 'active' : ''} onClick={() => setMobileTab('editor')}>CODE</button>
-                        <button className={mobileTab === 'preview' ? 'active' : ''} onClick={() => setMobileTab('preview')}>PREVIEW</button>
-                    </div>
-
-                    <div className={`editor-box ${(showPreview && mobileTab === 'editor') || (showPreview && window.innerWidth >= 768) ? 'split' : ''} ${mobileTab !== 'editor' && 'hidden-mobile'}`}>
+                    <div className={`editor-box ${(showPreview && (mobileTab === 'editor' || window.innerWidth >= 768)) ? 'split' : ''} ${mobileTab !== 'editor' && 'hidden-mobile'}`}>
                          <Editor
                             value={currentFile.content}
                             onValueChange={code => updateFileContent(activeFile, code)}
@@ -298,21 +287,35 @@ function EditorContent() {
                                 <html>
                                     <head>
                                         <style>
-                                            ${debouncedGameData.files['style.css']?.content || ''}
+                                            ${debouncedGameData?.files?.['style.css']?.content || ''}
                                             @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
                                         </style>
                                     </head>
                                     <body>
-                                        ${debouncedGameData.files['index.html']?.content || ''}
+                                        ${debouncedGameData?.files?.['index.html']?.content || ''}
                                         <script>
-                                            ${debouncedGameData.files['game.js']?.content || ''}
+                                            ${debouncedGameData?.files?.['game.js']?.content || ''}
                                         </script>
                                     </body>
                                 </html>
                             `}
                         />
                     </div>
+                    <div className={`ai-box ${mobileTab !== 'ai' ? 'hidden-mobile' : ''} mobile-panel`}>
+                         <AICopilot siteData={gameData} onCodeUpdate={updateFileContent} />
+                    </div>
+
+                    <div className={`terminal-box ${mobileTab !== 'terminal' ? 'hidden-mobile' : ''} mobile-panel`}>
+                         <Terminal files={gameData.files} onUpdateFiles={updateFileContent} />
+                    </div>
                 </main>
+            </div>
+
+            <div className="mobile-nav mobile-only">
+                <button className={mobileTab === 'editor' ? 'active' : ''} onClick={() => setMobileTab('editor')}>CODE</button>
+                <button className={mobileTab === 'preview' ? 'active' : ''} onClick={() => setMobileTab('preview')}>PREVIEW</button>
+                <button className={mobileTab === 'ai' ? 'active' : ''} onClick={() => setMobileTab('ai')}>AI</button>
+                <button className={mobileTab === 'terminal' ? 'active' : ''} onClick={() => setMobileTab('terminal')}>TERM</button>
             </div>
 
             {successMsg && <div className="toast">{successMsg}</div>}
@@ -365,10 +368,7 @@ function EditorContent() {
                 .file-item.active { background: rgba(0, 240, 255, 0.05); color: #00f0ff; border-left: 2px solid #00f0ff; }
 
                 .main-area { flex: 1; display: flex; position: relative; }
-                .mobile-tabs { display: flex; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; height: 40px; }
-                .mobile-tabs button { flex: 1; background: none; border: none; color: #444; font-size: 0.7rem; font-weight: 800; cursor: pointer; border-bottom: 2px solid transparent; }
-                .mobile-tabs button.active { color: #00f0ff; border-bottom-color: #00f0ff; background: rgba(0,240,255,0.05); }
-
+                
                 .editor-box { flex: 1; overflow-y: auto; background: #050505; }
                 .editor-box.split { border-right: 1px solid #1a1a1a; }
                 
@@ -377,7 +377,20 @@ function EditorContent() {
                 .preview-tools button { background: none; border: none; color: #00f0ff; cursor: pointer; }
                 iframe { flex: 1; border: none; background: #fff; }
 
-                .toast { position: fixed; bottom: 20px; right: 20px; background: #00f0ff; color: #000; padding: 10px 20px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; animation: slideUp 0.3s; z-index: 1000; }
+                .mobile-nav { display: none; height: 50px; background: #000; border-top: 1px solid #1a1a1a; justify-content: space-around; align-items: center; z-index: 100; }
+                .mobile-nav button { background: none; border: none; color: #444; font-size: 0.7rem; font-weight: 800; padding: 10px; }
+                .mobile-nav button.active { color: #00f0ff; border-top: 2px solid #00f0ff; }
+
+                .mobile-panel { width: 100%; height: 100%; position: absolute; inset: 0; z-index: 10; background: #000; }
+                
+                @media (max-width: 768px) {
+                    .mobile-nav { display: flex !important; }
+                    .hidden-mobile { display: none !important; }
+                    .preview-box { position: absolute; inset: 0; z-index: 10; }
+                    .main-area { flex-direction: column; }
+                }
+
+                .toast { position: fixed; bottom: 70px; right: 20px; background: #00f0ff; color: #000; padding: 10px 20px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; animation: slideUp 0.3s; z-index: 1000; }
                 @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
             `}</style>
         </div>

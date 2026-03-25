@@ -1,1059 +1,281 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { auth, db } from '../../../lib/firebase';
-import { doc, setDoc, deleteDoc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
-import Link from 'next/link';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
-
+import { auth, db } from '../../../lib/firebase';
+import { doc, getDoc, setDoc, collection } from 'firebase/firestore';
+import dynamic from 'next/dynamic';
 import Loader from '../../../components/Loader';
+
+// Shared Components
+const AICopilot = dynamic(() => import('../../../components/MREditor/AICopilot'), { ssr: false });
+const AssetManager = dynamic(() => import('../../../components/MREditor/AssetManager'), { ssr: false });
+const SpriteEditor = dynamic(() => import('../../../components/MREditor/SpriteEditor'), { ssr: false });
+const Terminal = dynamic(() => import('../../../components/MREditor/Terminal'), { ssr: false });
+const Auditor = dynamic(() => import('../../../components/MREditor/Auditor'), { ssr: false });
+const FileTree = dynamic(() => import('../../../components/MREditor/FileTree'), { ssr: false });
+const ARPreview = dynamic(() => import('../../../components/MREditor/ARPreview'), { ssr: false });
+
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-markup';
-import 'prismjs/components/prism-python';
-import 'prismjs/components/prism-json';
-import 'prismjs/components/prism-markdown';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/components/prism-bash';
-import 'prismjs/components/prism-sql';
-import AICopilot from './AICopilot';
-import dynamic from 'next/dynamic';
+import 'prismjs/themes/prism-tomorrow.css';
 
-const Terminal = dynamic(() => import('./Terminal'), { 
-    ssr: false, 
-    loading: () => <div style={{padding: '20px', color: '#666'}}>Initializing Terminal...</div>
-});
-const ARPreview = dynamic(() => import('./ARPreview'), { ssr: false });
-const AssetManager = dynamic(() => import('./AssetManager'), { ssr: false });
-const SpriteEditor = dynamic(() => import('./SpriteEditor'), { ssr: false });
-const Auditor = dynamic(() => import('./Auditor'), { ssr: false });
-import 'prismjs/themes/prism-tomorrow.css';  
-import { addSiteLog } from '../../../lib/siteHistory';
 import { 
-    GitBranch, 
-    Star, 
-    Eye, 
-    Code, 
-    AlertCircle, 
-    GitPullRequest, 
+    Save, 
     Play, 
-    Book,
-    Layout, 
-    Shield, 
-    LineChart, 
-    Settings,
-    FileCode,
-    FileText,
-    Folder,
-    ChevronRight,
-    ChevronDown,
-    Save,
-    ExternalLink,
-    Terminal as TerminalIcon, // Rename icon to avoid conflict
-    Sparkles,
-    X,
-    Maximize,
-    Minimize,
-
-    Plus,
-    FolderPlus,
-    Download,
-    Image as ImageIcon,
-    Smartphone,
-    Monitor
+    Eye, 
+    Terminal as TerminalIcon, 
+    Sparkles, 
+    Search,
+    ChevronLeft,
+    Monitor,
+    Smartphone
 } from 'lucide-react';
-
-/* --- ICONS & STYLES --- */
-// Using local styled-jsx at the bottom
-
-import { Suspense } from 'react';
-
-// Template Presets (Shared with Dashboard ideally, but kept here for stability)
-const TEMPLATES = {
-    'cyberpunk': {
-        files: {
-            'index.html': { content: '<div class="cyber-card">\n  <h1>NEON FUTURE</h1>\n  <p>System Online</p>\n  <button>JACK IN</button>\n</div>', language: 'html' },
-            'styles.css': { content: 'body { background: #050505; color: #00f0ff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: monospace; }\n\n.cyber-card {\n  border: 1px solid #00f0ff;\n  padding: 40px;\n  box-shadow: 0 0 20px rgba(0,240,255,0.2);\n  text-align: center;\n}\n\nh1 { letter-spacing: 5px; text-shadow: 0 0 10px #00f0ff; }\n\nbutton {\n  background: #00f0ff; color: #000; border: none; padding: 10px 20px;\n  font-weight: bold; cursor: pointer; margin-top: 20px;\n}\nbutton:hover { box-shadow: 0 0 15px #00f0ff; }', language: 'css' },
-            'README.md': { content: '# Cyberpunk Template\nA neon-soaked starting point.', language: 'markdown' }
-        }
-    },
-    'saas': {
-        files: {
-            'index.html': { content: '<nav>\n  <h3>SaaS.io</h3>\n  <button>Get Started</button>\n</nav>\n<header>\n  <h1>Scale Your Business</h1>\n  <p>The ultimate platform for growth.</p>\n</header>', language: 'html' },
-            'styles.css': { content: 'body { font-family: sans-serif; margin: 0; color: #333; }\nnav { display: flex; justify-content: space-between; padding: 20px; border-bottom: 1px solid #eee; }\nheader { text-align: center; padding: 100px 20px; }\nh1 { font-size: 3rem; margin-bottom: 10px; }\nbutton { background: #000; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }', language: 'css' },
-            'README.md': { content: '# SaaS Landing Page\nClean, modern, convertible.', language: 'markdown' }
-        }
-    }
-};
-
-const FileTree = ({ files, activeFile, setActiveFile, expandedFolders, setExpandedFolders, onDelete, deletingFile, confirmDelete }) => {
-    const buildTree = (files) => {
-        const tree = { name: 'root', type: 'folder', children: {}, path: '' };
-        Object.keys(files).sort().forEach(path => {
-            const parts = path.split('/');
-            let current = tree;
-            parts.forEach((part, i) => {
-                if (i === parts.length - 1) {
-                    current.children[part] = { type: 'file', name: part, path };
-                } else {
-                    if (!current.children[part]) {
-                        current.children[part] = { type: 'folder', name: part, children: {}, path: parts.slice(0, i + 1).join('/') };
-                    }
-                    current = current.children[part];
-                }
-            });
-        });
-        return tree;
-    };
-
-    const tree = buildTree(files);
-
-    const toggleFolder = (path) => {
-        setExpandedFolders(prev => 
-            prev.includes(path) ? prev.filter(p => p !== path) : [...prev, path]
-        );
-    };
-
-    const renderNodes = (nodes, depth = 0) => {
-        return Object.values(nodes).sort((a, b) => {
-            if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
-            return a.name.localeCompare(b.name);
-        }).map(node => {
-            if (node.name === '.keep') return null; // Hide placeholder files
-
-            const isOpen = expandedFolders.includes(node.path) || node.path === '';
-            const isSelected = activeFile === node.path;
-
-            if (node.type === 'folder') {
-                return (
-                    <div key={node.path} className="tree-node">
-                        <div 
-                            className={`tree-item folder ${isOpen ? 'open' : ''}`} 
-                            style={{ paddingLeft: `${depth * 12 + 16}px` }}
-                            onClick={() => toggleFolder(node.path)}
-                        >
-                            <span className="folder-toggle">
-                                {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                            </span>
-                            <Folder size={14} color="#888" />
-                            <span className="node-name">{node.name}</span>
-                        </div>
-                        {isOpen && <div className="folder-children">{renderNodes(node.children, depth + 1)}</div>}
-                    </div>
-                );
-            }
-
-            return (
-                <div 
-                    key={node.path} 
-                    className={`tree-item file ${isSelected ? 'active' : ''}`}
-                    style={{ paddingLeft: `${depth * 12 + 30}px` }}
-                    onClick={() => setActiveFile(node.path)}
-                >
-                    <span className="file-icon">
-                        {node.name.endsWith('.html') && <Code size={14} color="#e34c26" />}
-                        {node.name.endsWith('.css') && <Code size={14} color="#563d7c" />}
-                        {node.name.endsWith('.js') && <FileCode size={14} color="#f7df1e" />}
-                        {node.name.endsWith('.py') && <FileCode size={14} color="#3776ab" />}
-                        {node.name.endsWith('.json') && <FileCode size={14} color="#fbc02d" />}
-                        {(node.name.endsWith('.ts') || node.name.endsWith('.tsx')) && <FileCode size={14} color="#3178c6" />}
-                        {node.name.endsWith('.md') && <Book size={14} color="#fff" />}
-                    </span>
-                    <span className="node-name">{node.name}</span>
-                    {node.path !== 'index.html' && (
-                        <button 
-                            className="btn-delete"
-                            onClick={(e) => deletingFile === node.path ? confirmDelete(e, node.path) : onDelete(e, node.path)}
-                        >
-                            {deletingFile === node.path ? <span className="confirm-del">Sure?</span> : <X size={12} />}
-                        </button>
-                    )}
-                </div>
-            );
-        });
-    };
-
-    return <div className="tree-root">{renderNodes(tree.children)}</div>;
-};
 
 function EditorContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const querySiteId = searchParams.get('id');
+    const projectId = searchParams.get('id');
 
-    // State
     const [user, setUser] = useState(null);
-    const [siteId, setSiteId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [activeFile, setActiveFile] = useState('index.html'); 
-    const [showPreview, setShowPreview] = useState(false); // Default to FALSE
-    const [arMode, setArMode] = useState(false); // Holographic AR Mode
-    const [copilotOpen, setCopilotOpen] = useState(false);
-    const [terminalOpen, setTerminalOpen] = useState(false); // Default to FALSE
-    const [previewKey, setPreviewKey] = useState(0); // For forcing iframe reload
-    const [successMsg, setSuccessMsg] = useState('');
-    const [previewWidth, setPreviewWidth] = useState('100%'); // Mobile/Desktop Toggle
+    const [activeFile, setActiveFile] = useState('index.html');
+    const [showPreview, setShowPreview] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [bottomPanel, setBottomPanel] = useState('terminal'); // 'terminal', 'auditor'
+    const [rightPanel, setRightPanel] = useState('copilot'); // 'copilot', 'assets'
+    const [showSpriteEditor, setShowSpriteEditor] = useState(false);
+    const [activeTab, setActiveTab] = useState('editor'); // 'editor', 'preview', 'ai', 'terminal'
 
-    const [siteData, setSiteData] = useState({
-        name: '', slug: '', title: '', description: '',
-        status: 'draft',
-        theme: 'dark-nebula',
-        socials: {},
-        updatedAt: new Date().toISOString(),
-        files: {} // Virtual File System: { "filename": { content: "...", language: "..." } }
-    });
-
-    const [showSidebar, setShowSidebar] = useState(false);
-    const [sidebarMode, setSidebarMode] = useState('files'); // 'files' | 'assets'
-    
-    // UI States
-    const [isCreating, setIsCreating] = useState(false);
-    const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-    const [newFileName, setNewFileName] = useState('');
-    const [expandedFolders, setExpandedFolders] = useState(['/']);
-    const [deletingFile, setDeletingFile] = useState(null); // filename
-    const [zenMode, setZenMode] = useState(false); // Zen Mode State
-
-    // Sprite Editor state
-    const [spriteEditorOpen, setSpriteEditorOpen] = useState(false);
-    const [spriteEditorData, setSpriteEditorData] = useState(null);
-
-    // Debounce state for live preview iframe
-    const [debouncedSiteData, setDebouncedSiteData] = useState(siteData);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedSiteData(siteData);
-        }, 500); // 500ms debounce
-        return () => clearTimeout(handler);
-    }, [siteData]);
-
-    // Terminal Listener
-    useEffect(() => {
-        const handleMessage = (event) => {
-            if (event.data?.type === 'CONSOLE_LOG') {
-                event.data.args.forEach(arg => window.terminalWrite?.(`\x1b[2m[LOG]\x1b[0m ${arg}`));
-            }
-            if (event.data?.type === 'CONSOLE_ERR') {
-                event.data.args.forEach(arg => window.terminalWrite?.(`\x1b[31m[ERR]\x1b[0m ${arg}`));
-            }
-        };
-        window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
-    }, []);
-
-    // Load Template Logic
-    useEffect(() => {
-        const templateId = searchParams.get('template');
-        const isNew = searchParams.get('new') === 'true';
-
-        if (isNew && templateId) {
-            // Check local presets first
-            if (TEMPLATES[templateId]) {
-                // Wrap in a timeout to break the synchronous setState during render cycle warning
-                const timer = setTimeout(() => {
-                    setSiteData(prev => ({
-                        ...prev,
-                        files: { ...prev.files, ...TEMPLATES[templateId].files }
-                    }));
-                }, 0);
-                return () => clearTimeout(timer); // skip firestore fetch
-            }
-
-            const fetchTemplate = async () => {
-                try {
-                    const tempRef = doc(db, 'system_templates', templateId);
-                    const snap = await getDoc(tempRef);
-                    if (snap.exists()) {
-                        setSiteData(prev => ({
-                            ...prev,
-                            files: { ...prev.files, ...snap.data().files }
-                        }));
-                    }
-                } catch (err) {
-                    console.error("Failed to load template:", err);
-                }
-            };
-            fetchTemplate();
+    const [projectData, setProjectData] = useState({
+        name: 'Untitled Project',
+        files: {
+            'index.html': { content: '<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { margin: 0; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }\n  </style>\n</head>\n<body>\n  <h1>MR BUILD ACTIVE</h1>\n  <script src="script.js"></script>\n</body>\n</html>', language: 'html' },
+            'style.css': { content: 'body { margin: 0; overflow: hidden; }', language: 'css' },
+            'script.js': { content: 'console.log("MR Build Initialized");', language: 'javascript' }
         }
-    }, [searchParams]);
+    });
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (u) => {
             if (!u) { router.push('/mr-build/login'); return; }
             setUser(u);
 
-            if (querySiteId) {
-                try {
-                    const docRef = await getDoc(doc(db, 'user_sites', querySiteId));
-                    if (docRef.exists()) {
-                        setSiteId(docRef.id);
-                        const data = docRef.data();
-                        
-                        // --- MIGRATION LOGIC (V1 -> V2) ---
-                        if (!data.files) {
-                            console.log("Migrating to V2 File System...");
-                            data.files = {
-                                'index.html': { content: data.customHtml || '', language: 'html' },
-                                'styles.css': { content: data.customCss || '', language: 'css' },
-                                'README.md': { content: `# ${data.title || 'Project'}\n${data.description || ''}`, language: 'markdown' }
-                            };
-                        }
-                        
-                        setSiteData({ ...data, id: docRef.id });
+            if (projectId) {
+                const docSnap = await getDoc(doc(db, 'user_sites', projectId));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    // Handle legacy projects or projects without 'files' structure
+                    if (!data.files) {
+                        data.files = {
+                            'index.html': { 
+                                content: data.customHtml || '<!DOCTYPE html>\n<html>\n<body>\n  <h1>NEX CONSTRUCT INITIALIZED</h1>\n</body>\n</html>', 
+                                language: 'html' 
+                            },
+                            'style.css': { 
+                                content: data.customCss || 'body { background: #000; color: #fff; }', 
+                                language: 'css' 
+                            }
+                        };
                     }
-                } catch (err) { console.error(err); }
-            } else {
-                // New Project Init
-                setSiteData(prev => ({
-                    ...prev,
-                    files: {
-                        'index.html': { content: '<!-- New Project -->\n<h1>Hello World</h1>', language: 'html' },
-                        'styles.css': { content: 'body { background: #000; color: #fff; }', language: 'css' },
-                        'README.md': { content: '# New Project', language: 'markdown' }
-                    }
-                }));
+                    setProjectData({ ...data, name: data.name || 'Untitled Project' });
+                }
             }
             setLoading(false);
         });
         return () => unsub();
-    }, [querySiteId, router]);
+    }, [projectId, router]);
 
-    // File Management Functions
-    const startCreating = () => {
-        setIsCreating(true);
-        setNewFileName('');
-    };
-
-    const confirmCreate = () => {
-        if (!newFileName.trim()) { setIsCreating(false); return; }
-        if (siteData.files[newFileName]) { alert("File already exists!"); return; }
-
-        const ext = newFileName.split('.').pop().toLowerCase();
-        let lang = 'javascript';
-        if (ext === 'html') lang = 'html';
-        else if (ext === 'css') lang = 'css';
-        else if (ext === 'md' || ext === 'markdown') lang = 'markdown';
-        else if (ext === 'json') lang = 'json';
-        else if (ext === 'py' || ext === 'pyw') lang = 'python';
-        else if (ext === 'ts' || ext === 'tsx') lang = 'typescript';
-        else if (ext === 'sql') lang = 'sql';
-        else if (ext === 'sh' || ext === 'bash') lang = 'bash';
-
-        setSiteData(prev => ({
-            ...prev,
-            files: {
-                ...prev.files,
-                [newFileName]: { content: '', language: lang }
-            }
-        }));
-        setActiveFile(newFileName);
-        setIsCreating(false);
-        setNewFileName('');
-    };
-
-    const cancelCreate = () => {
-        setIsCreating(false);
-        setIsCreatingFolder(false);
-        setNewFileName('');
-    };
-
-    const startCreatingFolder = () => {
-        setIsCreatingFolder(true);
-        setIsCreating(true);
-        setNewFileName('');
-    };
-
-    const confirmCreateFolder = () => {
-        if (!newFileName.trim()) { cancelCreate(); return; }
-        // Folders are implicit in paths, but we can add a placeholder to make it "exist"
-        const folderPath = newFileName.endsWith('/') ? newFileName : newFileName + '/';
-        const placeholder = folderPath + '.keep';
-        
-        if (siteData.files[placeholder]) { alert("Folder already exists!"); return; }
-
-        setSiteData(prev => ({
-            ...prev,
-            files: {
-                ...prev.files,
-                [placeholder]: { content: '', language: 'text' }
-            }
-        }));
-        cancelCreate();
-    };
-
-    const startDelete = (e, fileName) => {
-        e.stopPropagation();
-        if (fileName === 'index.html') { alert("Cannot delete main entry file!"); return; }
-        setDeletingFile(fileName);
-    };
-
-    const confirmDelete = (e, fileName) => {
-        e.stopPropagation();
-        setSiteData(prev => {
-            const newFiles = { ...prev.files };
-            delete newFiles[fileName];
-            return { ...prev, files: newFiles };
-        });
-        if (activeFile === fileName) setActiveFile('index.html');
-        setDeletingFile(null);
-    };
-
-    const cancelDelete = (e) => {
-        e.stopPropagation();
-        setDeletingFile(null);
-    };
-
-    const updateFileContent = (fileName, newContent) => {
-        setSiteData(prev => ({
-            ...prev,
-            files: {
-                ...prev.files,
-                [fileName]: { ...prev.files[fileName], content: newContent }
-            }
-        }));
-    };
-
-    // Save Function
     const handleSave = async () => {
-        if (!user) return;
+        if (!user || !projectId) return;
         setSaving(true);
         try {
-            let targetId = siteId;
-            
-            // If new project, create the document first
-            if (!targetId) {
-                const newSiteRef = doc(collection(db, 'user_sites'));
-                targetId = newSiteRef.id;
-                
-                // Secondary Guard: Double check limit on save
-                const userRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userRef);
-                const limit = userDoc.data()?.siteLimit || 1;
-                
-                const q = query(collection(db, 'user_sites'), where('userId', '==', user.uid));
-                const snap = await getDocs(q);
-                
-                if (snap.size >= limit) {
-                    alert(`Limit reached! You can only have ${limit} sites on your current plan.`);
-                    router.push('/mr-build/subscription');
-                    return;
-                }
-
-                await setDoc(newSiteRef, {
-                    ...siteData,
-                    adminStatus: 'active',
-                    userId: user.uid,
-                    id: targetId,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                });
-                setSiteId(targetId);
-                
-                // Log creation
-                await addSiteLog(
-                    targetId, 
-                    user.uid, 
-                    user.displayName || user.email, 
-                    "Initialized new construct"
-                );
-
-                // Redirect to official editor URL for this site
-                router.replace(`/mr-build/editor?id=${targetId}`);
-            } else {
-                await setDoc(doc(db, 'user_sites', targetId), {
-                    ...siteData,
-                    updatedAt: new Date().toISOString()
-                }, { merge: true });
-
-                // Log code save
-                await addSiteLog(
-                    targetId, 
-                    user.uid, 
-                    user.displayName || user.email, 
-                    "Committed code changes"
-                );
-            }
-            
-            setSuccessMsg('Changes committed successfully.');
-            setTimeout(() => setSuccessMsg(''), 3000);
+            await setDoc(doc(db, 'user_sites', projectId), {
+                ...projectData,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
         } catch (err) {
-            console.error('Save failed:', err);
-            alert('Failed to save changes.');
-            setSaving(false);
-        }
-    };
-
-    // Export Function
-    const handleExport = async () => {
-        const zip = new JSZip();
-        
-        // Add files to zip
-        Object.entries(siteData.files).forEach(([filename, file]) => {
-            zip.file(filename, file.content);
-        });
-
-        // Generate zip
-        const content = await zip.generateAsync({ type: "blob" });
-        saveAs(content, `${siteData.slug || 'project'}.zip`);
-        setSuccessMsg('Project exported successfully.');
-        setTimeout(() => setSuccessMsg(''), 3000);
-    };
-
-    // Sprite Maker Handler
-    const handleSaveSprite = async ({ blob, name }) => {
-        if (!user) return;
-        setSaving(true);
-        try {
-            const { storage } = await import('../../../lib/firebase');
-            const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
-            
-            const storageRef = ref(storage, `users/${user.uid}/uploads/${Date.now()}_${name}`);
-            await uploadBytes(storageRef, blob);
-            
-            setSuccessMsg('Sprite saved to Asset Depot.');
-            setSpriteEditorOpen(false);
-            // AssetManager will pick up the new file on next manual/auto refresh
-            // But we can trigger a refresh via custom event if needed
-            window.dispatchEvent(new CustomEvent('ASSET_MODIFIED'));
-        } catch (err) {
-            console.error('Sprite save failed:', err);
-            alert('Failed to save sprite.');
+            console.error(err);
         } finally {
             setSaving(false);
-            setTimeout(() => setSuccessMsg(''), 3000);
         }
     };
 
-    // AI Fix Handler (Self-Healing)
-    const handleAiFix = async (errorMsg) => {
-        setCopilotOpen(true);
-        // We'll expose a method on AICopilot via ref or just trigger it via state in a real app
-        // For now, let's simulate the user typing this into the copilot
-        // In a polised version, we'd use a context or ref. 
-        // Hack: Dispatch a custom event that AICopilot listens to
-        window.dispatchEvent(new CustomEvent('AI_FIX_REQUEST', { detail: { error: errorMsg } }));
+    const updateFileContent = (fileName, content) => {
+        setProjectData(prev => ({
+            ...prev,
+            files: {
+                ...prev.files,
+                [fileName]: { ...prev.files[fileName], content }
+            }
+        }));
     };
 
-    // Derived Logic
-    const repoName = siteData.slug || 'untitled-repo';
+    if (loading) return <Loader text="Loading Project..." />;
 
-    const userName = user?.displayName || user?.email?.split('@')[0] || 'user';
-    const currentFile = siteData.files[activeFile] || { content: '', language: 'text' };
-
-    if (loading) return <Loader text="Loading Construct..." />;
+    const currentFile = (projectData?.files && projectData.files[activeFile]) || { content: '', language: 'javascript' };
 
     return (
-        <div className="nebula-editor">
-            {/* 1. Editor Header (Hidden in Zen Mode) */}
-            {!zenMode && (
-            <header className="editor-header">
-                <div className="header-left">
-                    <button className="btn-icon" onClick={() => router.push('/mr-build/dashboard')} title="Back to Dashboard">
-                        <ChevronRight size={20} style={{transform: 'rotate(180deg)'}} />
+        <div className="mr-editor">
+            <header className="editor-nav">
+                <div className="nav-left">
+                    <button onClick={() => router.push('/mr-build/dashboard')} className="btn-back">
+                        <ChevronLeft size={20} />
                     </button>
-                    <div className="project-info">
-                        <input 
-                            className="project-name-input"
-                            value={siteData.name || siteData.slug}
-                            onChange={(e) => setSiteData({...siteData, name: e.target.value})}
-                            placeholder="Project Name"
-                        />
-                        <button 
-                            className={`status-badge ${siteData.status}`}
-                            onClick={() => setSiteData(prev => ({ ...prev, status: prev.status === 'public' ? 'draft' : 'public' }))}
-                            title="Click to toggle Public/Draft"
-                        >
-                            {siteData.status === 'public' ? 'PUBLIC 🌐' : 'DRAFT 🔒'}
-                        </button>
-                    </div>
+                    <h1>{projectData.name}</h1>
                 </div>
-                <div className="header-right">
-                    <button className={`btn-icon hide-on-mobile ${zenMode ? 'active' : ''}`} onClick={() => setZenMode(!zenMode)} title="Toggle Zen Mode">
-                        <Maximize size={18} />
+                <div className="nav-center">
+                    <button className="btn-save" onClick={handleSave} disabled={saving}>
+                        <Save size={16} /> <span>{saving ? 'SAVING...' : 'SAVE'}</span>
                     </button>
-                    <button className={`btn-icon ${showSidebar && sidebarMode === 'files' ? 'active' : ''}`} onClick={() => { setShowSidebar(true); setSidebarMode('files'); }}>
-                        <Folder size={18} />
+                    <button className="btn-run">
+                        <Play size={16} /> <span>RUN</span>
                     </button>
-                    <button className={`btn-icon hide-on-mobile ${showSidebar && sidebarMode === 'assets' ? 'active' : ''}`} onClick={() => { setShowSidebar(true); setSidebarMode('assets'); }}>
-                        <ImageIcon size={18} />
-                    </button>
-                    <button className={`btn-icon hide-on-mobile ${showSidebar && sidebarMode === 'auditor' ? 'active' : ''}`} onClick={() => { setShowSidebar(true); setSidebarMode('auditor'); }} title="SEO & Performance Auditor">
-                        <LineChart size={18} />
-                    </button>
-                    <button className={`btn-icon hide-on-mobile ${terminalOpen ? 'active' : ''}`} onClick={() => setTerminalOpen(!terminalOpen)}>
-                        <TerminalIcon size={18} />
-                    </button>
-                    <button className={`btn-icon ${copilotOpen ? 'active' : ''}`} onClick={() => setCopilotOpen(!copilotOpen)}>
+                </div>
+                <div className="nav-right">
+                    <button onClick={() => setRightPanel('copilot')} className={rightPanel === 'copilot' ? 'active' : ''}>
                         <Sparkles size={18} />
                     </button>
-                    <button className="btn-save" onClick={handleSave} disabled={saving}>
-                        <Save size={16} /> <span className="hide-on-mobile">{saving ? 'Saving...' : 'Save'}</span>
+                    <button onClick={() => setRightPanel('assets')} className={rightPanel === 'assets' ? 'active' : ''}>
+                        <Search size={18} />
                     </button>
-                    <button className="btn-icon hide-on-mobile" onClick={handleExport} title="Export as ZIP">
-                        <Download size={18} />
-                    </button>
-                    <div className="divider hide-on-mobile"></div>
-                     <button className={`btn-icon ${showPreview ? 'active' : ''}`} onClick={() => setShowPreview(!showPreview)}>
+                    <button onClick={() => setShowPreview(!showPreview)} className={showPreview ? 'active' : ''}>
                         <Eye size={18} />
                     </button>
-                    {siteData.slug && (
-                        <a href={`/s/${siteData.slug}`} target="_blank" className="btn-icon hide-on-mobile" title="Open Live Site">
-                            <ExternalLink size={18}/>
-                        </a>
-                    )}
                 </div>
             </header>
-            )}
 
-            {/* Zen Mode Exit Button (Floating) */}
-            {zenMode && (
-                <button 
-                    className="zen-exit-btn"
-                    onClick={() => setZenMode(false)}
-                    title="Exit Zen Mode"
-                >
-                    <Minimize size={20} />
-                </button>
-            )}
+            <div className="editor-main">
+                <FileTree 
+                    files={projectData.files || {}}
+                    activeFile={activeFile}
+                    onSelectFile={setActiveFile}
+                    onCreateFile={(name) => updateFileContent(name, '')}
+                    showSidebar={sidebarOpen}
+                    setShowSidebar={setSidebarOpen}
+                />
 
-            {/* 2. Main Workspace */}
-            <div className="workspace-container">
-                
-                {/* File Explorer (Mobile Drawer / Desktop Sidebar) */}
-                {!zenMode && (
-                <aside className={`file-explorer ${showSidebar ? 'visible' : ''}`}>
-                    <div className="explorer-header">
-                        <span>{sidebarMode === 'files' ? 'FILES' : sidebarMode === 'assets' ? 'ASSETS' : 'AUDITOR'}</span>
-                        {sidebarMode === 'files' && (
-                            <div style={{ display: 'flex', gap: '4px' }}>
-                                <button onClick={startCreatingFolder} className="btn-add-file" title="New Folder"><FolderPlus size={16}/></button>
-                                <button onClick={startCreating} className="btn-add-file" title="New File"><Plus size={16}/></button>
-                            </div>
-                        )}
-                        <button onClick={() => setShowSidebar(false)} className="btn-close-sidebar"><X size={14}/></button>
+                <div className={`editor-content ${activeTab !== 'editor' ? 'hidden-mobile' : ''}`}>
+                    <div className="code-area">
+                        <Editor
+                            value={currentFile.content}
+                            onValueChange={code => updateFileContent(activeFile, code)}
+                            highlight={code => highlight(code, languages[currentFile.language] || languages.javascript)}
+                            padding={20}
+                            style={{
+                                fontFamily: '"Fira Code", monospace',
+                                fontSize: 13,
+                                backgroundColor: 'transparent',
+                                minHeight: '100%',
+                                color: '#fff'
+                            }}
+                        />
                     </div>
                     
-                    {sidebarMode === 'files' ? (
-                        <>
-                            {(isCreating || isCreatingFolder) && (
-                                <div className="file-creation-row">
-                                    <input 
-                                        autoFocus
-                                        value={newFileName}
-                                        onChange={e => setNewFileName(e.target.value)}
-                                        onKeyDown={e => { 
-                                            if(e.key === 'Enter') isCreatingFolder ? confirmCreateFolder() : confirmCreate(); 
-                                            if(e.key === 'Escape') cancelCreate(); 
-                                        }}
-                                        onBlur={cancelCreate}
-                                        className="new-file-input"
-                                        placeholder={isCreatingFolder ? "folder/path" : "filename.ext"}
-                                    />
-                                </div>
+                    <div className="bottom-panel">
+                        <div className="panel-tabs">
+                            <button onClick={() => setBottomPanel('terminal')} className={bottomPanel === 'terminal' ? 'active' : ''}>TERMINAL</button>
+                            <button onClick={() => setBottomPanel('auditor')} className={bottomPanel === 'auditor' ? 'active' : ''}>AUDITOR</button>
+                        </div>
+                        <div className={`panel-content ${activeTab !== 'terminal' && activeTab !== 'editor' ? 'hidden-mobile' : ''}`}>
+                            {bottomPanel === 'terminal' ? (
+                                <Terminal files={projectData.files || {}} onUpdateFiles={updateFileContent} />
+                            ) : (
+                                <Auditor files={projectData.files || {}} />
                             )}
+                        </div>
+                    </div>
+                </div>
 
-                            <div className="file-list">
-                                <FileTree 
-                                    files={siteData.files} 
-                                    activeFile={activeFile} 
-                                    setActiveFile={setActiveFile}
-                                    expandedFolders={expandedFolders}
-                                    setExpandedFolders={setExpandedFolders}
-                                    onDelete={startDelete}
-                                    deletingFile={deletingFile}
-                                    confirmDelete={confirmDelete}
-                                />
-                            </div>
-                        </>
-                    ) : sidebarMode === 'assets' ? (
-                        <AssetManager onSpriteEditor={() => setSpriteEditorOpen(true)} />
+                {showPreview && (
+                    <div className={`preview-area ${activeTab !== 'preview' ? 'hidden-mobile' : ''}`}>
+                        <ARPreview url="about:blank" />
+                    </div>
+                )}
+
+                <aside className={`right-panel ${activeTab !== 'ai' ? 'hidden-mobile' : ''}`}>
+                    {rightPanel === 'copilot' ? (
+                        <AICopilot siteData={projectData} onCodeUpdate={updateFileContent} />
                     ) : (
-                        <Auditor files={siteData.files} />
+                        <AssetManager onSpriteEditor={() => setShowSpriteEditor(true)} />
                     )}
                 </aside>
-                )}
-
-                {/* Mobile Sidebar Backdrop */}
-                {showSidebar && <div className="sidebar-backdrop" onClick={() => setShowSidebar(false)} />}
-
-                {/* Editor & Preview Area */}
-                <main className={`main-pane ${copilotOpen ? 'shrink' : ''}`}>
-                    
-                    {/* Code Editor */}
-                    <div className={`editor-wrapper ${showPreview ? 'split-view' : ''} ${activeFile === 'README.md' ? 'readme-mode' : ''}`}>
-                         {activeFile === 'README.md' ? (
-                            <div className="readme-preview">
-                                <h1>{siteData.title || 'Untitled Project'}</h1>
-                                <p>{siteData.description || 'No description found.'}</p>
-                                <hr/>
-                                <div className="readme-content">
-                                    <pre>{currentFile.content}</pre>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="editor-container">
-                                <div className="line-numbers">
-                                    {(currentFile.content || '').split('\n').map((_, i) => (
-                                        <span key={i}>{i + 1}</span>
-                                    ))}
-                                </div>
-                                <Editor
-                                    value={currentFile.content}
-                                    onValueChange={code => updateFileContent(activeFile, code)}
-                                    highlight={code => {
-                                        const lang = currentFile.language || 'markup';
-                                        if (languages[lang]) {
-                                            return highlight(code, languages[lang]);
-                                        }
-                                        return highlight(code, languages.markup);
-                                    }}
-                                    padding={20}
-                                    className="code-editor"
-                                    style={{
-                                        fontFamily: '"JetBrains Mono", "Fira Code", monospace',
-                                        fontSize: 14,
-                                        backgroundColor: 'transparent',
-                                        minHeight: '100%',
-                                        lineHeight: '1.5'
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Preview (Conditional or Split) */}
-                    <div className={`preview-wrapper ${showPreview ? 'visible' : ''}`}>
-                        <div className="preview-toolbar">
-                            <span>Preview {arMode ? '(AR Hologram)' : ''}</span>
-                            <div className="preview-actions" style={{display:'flex', gap:'10px'}}>
-                                <button className={`btn-preview-action ${previewWidth === '375px' ? 'active' : ''}`} onClick={() => setPreviewWidth('375px')} title="Mobile View" style={{color: previewWidth === '375px' ? '#00f0ff' : '#666'}}>
-                                    <Smartphone size={14} />
-                                </button>
-                                <button className={`btn-preview-action ${previewWidth === '100%' ? 'active' : ''}`} onClick={() => setPreviewWidth('100%')} title="Desktop View" style={{color: previewWidth === '100%' ? '#00f0ff' : '#666'}}>
-                                    <Monitor size={14} />
-                                </button>
-                                <div style={{width: '1px', background: '#ccc', margin: '0 5px'}}></div>
-                                <button className="btn-preview-action" onClick={() => setArMode(!arMode)} title="Toggle AR Hologram" style={{color: arMode ? '#00f0ff' : '#666'}}>
-                                    <Sparkles size={14} />
-                                </button>
-                                <button className="btn-preview-action" onClick={() => setPreviewKey(k => k + 1)} title="Refresh"><Play size={12} /></button>
-                                <button className="btn-preview-action close-preview-mobile" onClick={() => setShowPreview(false)} title="Close Preview"><X size={14}/></button>
-                            </div>
-                        </div>
-                        <div className="iframe-container" style={{flex: 1, backgroundColor: '#eaeff2', display: 'flex', justifyContent: 'center', overflow: 'hidden'}}>
-                        {arMode ? (
-                            <ARPreview url={`data:text/html;charset=utf-8,${encodeURIComponent(`
-                                <html>
-                                    <head><style>${debouncedSiteData.files['styles.css']?.content || ''}</style></head>
-                                    <body>
-                                        ${(debouncedSiteData.files['index.html']?.content || '').replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '').replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')}
-                                        <div style="text-align: center; padding: 20px; font-family: 'Inter', sans-serif; font-size: 11px; color: #888; margin-top: 40px; background: transparent;">
-                                            Powered by <strong style="color: #00f0ff;">MR BUILD</strong>
-                                        </div>
-                                        <script>
-                                            ${Object.keys(debouncedSiteData.files).filter(f => f.endsWith('.js')).map(f => `try { ${debouncedSiteData.files[f].content} } catch(e) { console.error(e); }`).join('\n')}
-                                        </script>
-                                    </body>
-                                </html>
-                            `)}`} />
-                        ) : (
-                            <iframe 
-                                key={previewKey}
-                            title="Live Preview"
-                            style={{ width: previewWidth, height: '100%', border: 'none', transition: 'width 0.3s ease', backgroundColor: '#fff', boxShadow: previewWidth === '375px' ? '0 0 20px rgba(0,0,0,0.2)' : 'none' }}
-                            srcDoc={`
-                                <html>
-                                    <head>
-                                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                        <style>${debouncedSiteData.files['styles.css']?.content || ''}</style>
-                                    </head>
-                                    <body>
-                                        ${(debouncedSiteData.files['index.html']?.content || '')
-                                            .replace(/<link[^>]*href=['"]styles\.css['"][^>]*>/g, '')
-                                            .replace(/<script[^>]*src=['"]script\.js['"][^>]*><\/script>/g, '')
-                                        }
-                                        ${debouncedSiteData.monetization?.enabled && debouncedSiteData.monetization?.publisherId ? `
-                                            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${debouncedSiteData.monetization.publisherId}" crossorigin="anonymous"></script>
-                                            <div style="margin: 20px auto; padding: 20px; border: 1px dashed #00f0ff; color: #00f0ff; text-align: center; font-family: sans-serif; font-size: 12px;">
-                                                [ ADS ENABLED: ${debouncedSiteData.monetization.publisherId} ]
-                                            </div>
-                                        ` : ''}
-                                        <div style="text-align: center; padding: 20px; font-family: 'Inter', sans-serif; font-size: 11px; color: #888; margin-top: 40px; background: transparent;">
-                                            Powered by <strong style="color: #00f0ff;">MR BUILD</strong>
-                                        </div>
-                                        <script>
-                                            (function() {
-                                                const oldLog = console.log; const oldError = console.error;
-                                                console.log = function(...args) { window.parent.postMessage({ type: 'CONSOLE_LOG', args: args.map(a => String(a)) }, '*'); oldLog.apply(console, args); };
-                                                console.error = function(...args) { window.parent.postMessage({ type: 'CONSOLE_ERR', args: args.map(a => String(a)) }, '*'); oldError.apply(console, args); };
-                                                window.onerror = function(msg) { window.parent.postMessage({ type: 'CONSOLE_ERR', args: [msg] }, '*'); };
-                                            })();
-                                        </script>
-                                        <script>
-                                            ${Object.keys(debouncedSiteData.files).filter(f => f.endsWith('.js')).map(f => `try { ${debouncedSiteData.files[f].content} } catch(e) { console.error(e); }`).join('\n')}
-                                        </script>
-                                    </body>
-                                </html>
-                            `}
-                            className="preview-iframe"
-                        />
-                        )}
-                        </div>
-                    </div>
-
-                    {/* Terminal Pane */}
-                    {terminalOpen && (
-                        <div className="terminal-drawer">
-                            <div className="drawer-header">
-                                <span>TERMINAL</span>
-                                <button onClick={() => setTerminalOpen(false)}><X size={14}/></button>
-                            </div>
-                            <Terminal 
-                                files={siteData.files} 
-                                onUpdateFiles={updateFileContent} 
-                                onRun={() => setPreviewKey(k => k + 1)}
-                                onFixError={handleAiFix}
-                            />
-                        </div>
-                    )}
-                </main>
-
-                {/* Copilot Sidebar */}
-                {copilotOpen && (
-                    <aside className="copilot-sidebar">
-                        <AICopilot 
-                            siteData={siteData} 
-                            onCodeUpdate={(file, code) => {
-                                if (!siteData.files[file]) {
-                                    const ext = file.split('.').pop().toLowerCase();
-                                    let lang = 'javascript';
-                                    if (ext === 'html') lang = 'html';
-                                    else if (ext === 'css') lang = 'css';
-                                    else if (ext === 'md' || ext === 'markdown') lang = 'markdown';
-                                    else if (ext === 'json') lang = 'json';
-                                    else if (ext === 'py' || ext === 'pyw') lang = 'python';
-                                    else if (ext === 'ts' || ext === 'tsx') lang = 'typescript';
-                                    else if (ext === 'sql') lang = 'sql';
-                                    else if (ext === 'sh' || ext === 'bash') lang = 'bash';
-
-                                    setSiteData(prev => ({ ...prev, files: { ...prev.files, [file]: { content: code, language: lang } } }));
-                                } else {
-                                    updateFileContent(file, code);
-                                }
-                                setSuccessMsg('AI updated ' + file);
-                            }} 
-                        />
-                    </aside>
-                )}
             </div>
 
-            {successMsg && <div className="toast-notification">{successMsg}</div>}
+            <div className="mobile-nav mobile-only">
+                <button className={activeTab === 'editor' ? 'active' : ''} onClick={() => setActiveTab('editor')}>CODE</button>
+                <button className={activeTab === 'preview' ? 'active' : ''} onClick={() => setActiveTab('preview')}>PREVIEW</button>
+                <button className={activeTab === 'ai' ? 'active' : ''} onClick={() => setActiveTab('ai')}>AI</button>
+                <button className={activeTab === 'terminal' ? 'active' : ''} onClick={() => setActiveTab('terminal')}>TERM</button>
+            </div>
 
-            {/* Sprite Editor Modal */}
-            {spriteEditorOpen && (
-                <SpriteEditor 
-                    onClose={() => setSpriteEditorOpen(false)}
-                    onSave={handleSaveSprite}
-                    initialData={spriteEditorData}
-                />
+            {showSpriteEditor && (
+                <div className="sprite-modal">
+                    <div className="modal-content">
+                        <button className="close-btn" onClick={() => setShowSpriteEditor(false)}>X</button>
+                        <SpriteEditor />
+                    </div>
+                </div>
             )}
 
             <style jsx>{`
-                .nebula-editor {
-                    display: flex; flex-direction: column; height: 100vh;
-                    background: #050505; color: #fff; font-family: 'Inter', sans-serif;
-                    overflow: hidden;
-                }
-
-                /* Header */
-                .editor-header {
-                    height: 60px; display: flex; justify-content: space-between; align-items: center;
-                    padding: 0 16px; background: rgba(10,10,10,0.8); border-bottom: 1px solid rgba(255,255,255,0.1);
-                    backdrop-filter: blur(10px); z-index: 50;
-                }
-                .header-left, .header-right { display: flex; align-items: center; gap: 12px; }
+                .mr-editor { height: 100vh; display: flex; flex-direction: column; background: #050505; color: #fff; overflow: hidden; }
+                .editor-nav { height: 50px; background: #000; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; flex-shrink: 0; }
+                .nav-left, .nav-center, .nav-right { display: flex; align-items: center; gap: 15px; }
+                .nav-left h1 { font-size: 0.9rem; font-family: 'Orbitron'; margin: 0; color: #00f0ff; }
                 
-                .project-info { display: flex; align-items: center; gap: 10px; }
-                .project-name-input {
-                    background: transparent; border: 1px solid transparent; color: #fff;
-                    font-size: 16px; font-weight: 600; width: 200px;
-                    padding: 4px 8px; border-radius: 4px; transition: 0.2s;
-                }
-                .project-name-input:focus { border-color: #00f0ff; outline: none; background: rgba(255,255,255,0.05); }
-                .project-name-input:hover { border-color: rgba(255,255,255,0.1); }
-                
-                .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; }
-                .status-badge.public { background: rgba(0,255,128,0.2); color: #00ff80; }
-                .status-badge.draft { background: rgba(255,255,255,0.1); color: #aaa; }
-
-                .btn-icon {
-                    background: transparent; border: none; color: #888; cursor: pointer;
-                    padding: 8px; border-radius: 6px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center;
-                }
-                .btn-icon:hover { color: #fff; background: rgba(255,255,255,0.05); box-shadow: 0 0 10px rgba(255,255,255,0.05); }
-                .btn-icon.active { color: #00f0ff; background: rgba(0,240,255,0.1); box-shadow: 0 0 15px rgba(0,240,255,0.2); }
-                
-                .btn-save {
-                    background: #00f0ff; color: #000; border: none; padding: 6px 16px; border-radius: 6px;
-                    font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;
-                    transition: 0.2s;
-                }
-                .btn-save:hover { box-shadow: 0 0 10px rgba(0,240,255,0.5); }
-                .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
-                
-                .divider { width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 4px; }
-
-                /* Workspace */
-                .workspace-container { display: flex; flex: 1; overflow: hidden; position: relative; }
-
-                /* Sidebar */
-                .file-explorer {
-                    width: 250px; background: #0a0a0a; border-right: 1px solid rgba(255,255,255,0.05);
-                    display: flex; flex-direction: column; transition: 0.3s;
-                    position: absolute; top:0; bottom:0; left:0; transform: translateX(-100%); z-index: 40;
-                }
-                .file-explorer.visible { transform: translateX(0); position: relative; }
                 @media (max-width: 768px) {
-                    .file-explorer { position: absolute; height: 100%; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
-                    .file-explorer.visible { transform: translateX(0); }
-                    .sidebar-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 30; }
+                    .nav-center span { display: none; }
+                    .nav-left h1 { font-size: 0.7rem; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
                 }
 
-                .explorer-header { 
-                    padding: 16px; font-size: 12px; color: #666; font-weight: 700; letter-spacing: 1px;
-                    display: flex; justify-content: space-between; align-items: center;
-                }
-                .btn-add-file, .btn-close-sidebar { background: none; border: none; color: #666; cursor: pointer; }
-                .btn-add-file:hover, .btn-close-sidebar:hover { color: #fff; }
-
-                .file-list { flex: 1; overflow-y: auto; }
-                .file-item {
-                    padding: 10px 16px; display: flex; align-items: center; gap: 10px;
-                    cursor: pointer; color: #888; font-size: 14px; border-left: 2px solid transparent;
-                    transition: 0.2s;
-                }
-                .file-item:hover { background: rgba(255,255,255,0.02); color: #fff; }
-                .file-item.active { background: rgba(0,240,255,0.05); color: #fff; border-left-color: #00f0ff; }
-                .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
-                .btn-delete { background: none; border: none; color: #666; cursor: pointer; opacity: 0; transition: 0.2s; }
-                .file-item:hover .btn-delete { opacity: 1; }
-                .btn-delete:hover { color: #ff4444; }
-                .confirm-del { font-size: 10px; color: #ff4444; text-transform: uppercase; }
-
-                /* Tree Styles */
-                .tree-root { display: flex; flex-direction: column; }
-                .tree-item {
-                    display: flex; align-items: center; gap: 8px; padding: 6px 12px;
-                    cursor: pointer; color: #888; font-size: 13px; transition: 0.2s;
-                    border-left: 2px solid transparent;
-                }
-                .tree-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
-                .tree-item.active { background: rgba(0,240,255,0.05); color: #fff; border-left-color: #00f0ff; }
-                .tree-item.folder { font-weight: 500; color: #aaa; }
-                .tree-item.folder:hover { color: #fff; }
-                .folder-toggle { display: flex; align-items: center; color: #666; width: 14px; }
-                .node-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-                .tree-item:hover .btn-delete { opacity: 1; }
-
-                .file-creation-row { padding: 10px 16px; background: rgba(255,255,255,0.05); }
-                .new-file-input { width: 100%; background: transparent; border: none; color: #fff; outline: none; font-size: 14px; }
-
-                /* Main Pane */
-                .main-pane { flex: 1; display: flex; position: relative; overflow: hidden; transition: 0.3s; }
-                .main-pane.shrink { margin-right: 0; } /* Copilot takes space */
+                .btn-save, .btn-run { background: #00f0ff; color: #000; border: none; padding: 5px 12px; border-radius: 4px; font-weight: 800; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+                .btn-run { background: #00ff88; }
                 
-                .editor-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-                .editor-wrapper.split-view { width: 50%; border-right: 1px solid rgba(255,255,255,0.1); }
-                .editor-container { 
-                    display: flex; flex: 1; overflow: auto; background: transparent; 
-                    font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 14px;
-                }
-                .line-numbers {
-                    padding: 20px 0; border-right: 1px solid rgba(255,255,255,0.15);
-                    background: rgba(255,255,255,0.02); color: #888; text-align: right; user-select: none;
-                    display: flex; flex-direction: column; min-width: 50px;
-                }
-                .line-numbers span { 
-                    line-height: 1.5; height: 21px; padding: 0 12px; font-size: 11px;
-                    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-                }
-                @media (max-width: 768px) {
-                    .editor-wrapper.split-view { display: none; } /* On mobile, toggle, don't split */
-                }
-
-                .preview-wrapper { 
-                    flex: 1; background: #fff; display: none; flex-direction: column; 
-                }
-                .preview-wrapper.visible { display: flex; }
-                @media (max-width: 768px) {
-                    .preview-wrapper.visible { position: absolute; inset: 0; z-index: 20; }
-                }
-
-                .preview-toolbar { padding: 8px 16px; background: #eee; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; color: #333; font-size: 12px; font-weight: 600; }
-                .btn-preview-action { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: 0.2s; color: #666; }
-                .btn-preview-action:hover { background: rgba(0,0,0,0.05); color: #000; }
-                .close-preview-mobile { display: none; }
-                .preview-iframe { flex: 1; width: 100%; height: 100%; border: none; }
-
-                @media (max-width: 768px) {
-                    .hide-on-mobile { display: none !important; }
-                    .project-name-input { width: 110px; }
-                    .close-preview-mobile { display: flex; color: #ff4444; }
-                    .close-preview-mobile:hover { background: rgba(255,68,68,0.1); color: #ff0000; }
-                }
-
-                /* Terminal */
-                .terminal-drawer {
-                    position: absolute; bottom: 0; left: 0; right: 0; height: 250px;
-                    background: #0d0d0d; border-top: 1px solid rgba(255,255,255,0.1);
-                    display: flex; flex-direction: column; z-index: 25;
-                    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
-                }
-                .drawer-header { padding: 8px 16px; background: #151515; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #888; font-weight: 700; letter-spacing: 1px; }
+                .nav-right button { background: transparent; border: none; color: #444; cursor: pointer; transition: 0.2s; }
+                .nav-right button.active { color: #00f0ff; }
                 
-                /* Copilot Sidebar */
-                .copilot-sidebar {
-                    width: 320px; background: #080808; border-left: 1px solid rgba(255,255,255,0.1);
-                    display: flex; flex-direction: column; z-index: 30;
-                }
-                @media (max-width: 1024px) {
-                    .copilot-sidebar { position: absolute; right: 0; top: 0; bottom: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
+                .editor-main { flex: 1; display: flex; overflow: hidden; position: relative; }
+                
+                .editor-content { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #1a1a1a; min-width: 0; }
+                .code-area { flex: 1; overflow-y: auto; background: #080808; }
+                
+                .bottom-panel { height: 35%; border-top: 1px solid #1a1a1a; display: flex; flex-direction: column; flex-shrink: 0; }
+                .panel-tabs { display: flex; background: #000; border-bottom: 1px solid #1a1a1a; }
+                .panel-tabs button { padding: 8px 15px; background: transparent; border: none; color: #444; font-size: 0.6rem; font-weight: 800; cursor: pointer; }
+                .panel-tabs button.active { color: #00f0ff; border-bottom: 2px solid #00f0ff; }
+                .panel-content { flex: 1; overflow: hidden; }
+                
+                .preview-area { width: 400px; border-right: 1px solid #1a1a1a; flex-shrink: 0; }
+                .right-panel { width: 300px; background: #080808; flex-shrink: 0; }
+                
+                @media (max-width: 768px) {
+                    .preview-area, .right-panel { width: 100%; position: absolute; inset: 0; z-index: 10; background: #000; }
+                    .hidden-mobile { display: none !important; }
+                    .mobile-only { display: flex !important; }
+                    .bottom-panel { height: 100%; border-top: none; }
                 }
 
-                .zen-exit-btn {
-                    position: fixed; bottom: 30px; right: 30px; width: 44px; height: 44px;
-                    border-radius: 50%; background: rgba(0,240,255,0.1); border: 1px solid rgba(0,240,255,0.3);
-                    color: #00f0ff; display: flex; align-items: center; justify-content: center;
-                    cursor: pointer; backdrop-filter: blur(10px); transition: 0.3s; z-index: 100;
-                }
-                .zen-exit-btn:hover { background: rgba(0,240,255,0.2); box-shadow: 0 0 20px rgba(0,240,255,0.4); transform: scale(1.1); }
+                .mobile-nav { display: none; height: 50px; background: #000; border-top: 1px solid #1a1a1a; justify-content: space-around; align-items: center; z-index: 100; }
+                .mobile-nav button { background: none; border: none; color: #444; font-size: 0.7rem; font-weight: 800; padding: 10px; }
+                .mobile-nav button.active { color: #00f0ff; border-top: 2px solid #00f0ff; }
 
-                .toast-notification {
-                    position: fixed; bottom: 30px; right: 30px;
-                    background: #00f0ff; color: #000; padding: 12px 24px;
-                    border-radius: 8px; font-weight: 600; box-shadow: 0 5px 20px rgba(0,240,255,0.3);
-                    z-index: 100; animation: fadeUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-                }
-                @keyframes fadeUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-                .readme-preview { padding: 40px; overflow-y: auto; height: 100%; color: #ccc; }
-                .readme-preview h1 { color: #fff; border-bottom: 1px solid #333; padding-bottom: 10px; }
-                .readme-content { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; margin-top: 20px; }
+                .sprite-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+                .modal-content { background: #111; padding: 10px; border-radius: 12px; position: relative; width: 95%; height: 95%; }
+                .close-btn { position: absolute; top: 10px; right: 10px; background: #ff4444; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; z-index: 10001; }
             `}</style>
         </div>
     );
 }
 
-export default function MrBuildEditorPage() {
+export default function MREditorPage() {
     return (
-        <Suspense fallback={<Loader text="Initializing Editor..." />}>
+        <Suspense fallback={<Loader text="Initializing Workspace..." />}>
             <EditorContent />
         </Suspense>
     );

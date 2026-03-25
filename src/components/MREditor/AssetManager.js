@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { storage, auth } from '../../../lib/firebase';
+import { storage, auth } from '../../lib/firebase'; // Updated relative path
 import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import { Loader2, Upload, Trash2, Copy, Image as ImageIcon, X, AlertCircle, Sparkles } from 'lucide-react';
 
@@ -238,9 +238,9 @@ export default function AssetManager({ onInsert, onSpriteEditor }) {
                 
                 .asset-card {
                     background: rgba(255,255,255,0.03); border-radius: 6px; overflow: hidden;
-                    border: 1px solid rgba(255,255,255,0.05); position: relative; group;
+                    border: 1px solid rgba(255,255,255,0.05); position: relative;
                 }
-                .img-wrapper { height: 80px; width: 100%; display: data; align-items: center; justify-content: center; background: #000; }
+                .img-wrapper { height: 80px; width: 100%; display: flex; align-items: center; justify-content: center; background: #000; }
                 .img-wrapper img { max-width: 100%; max-height: 100%; object-fit: contain; }
                 
                 .actions {

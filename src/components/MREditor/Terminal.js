@@ -251,6 +251,37 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
             });
         };
 
+        const handleKeyTap = (key) => {
+            if (!xtermRef.current) return;
+            const term = xtermRef.current;
+            if (key === 'Enter') {
+                term.write('\r\n');
+                handleCommand(commandRef.current.trim(), term);
+                commandRef.current = '';
+            } else if (key === 'Tab') {
+                // Simple tab completion simulation
+                const cmd = commandRef.current.trim();
+                const filesList = Object.keys(files || {});
+                const match = filesList.find(f => f.startsWith(cmd));
+                if (match) {
+                    const remaining = match.slice(cmd.length);
+                    commandRef.current += remaining;
+                    term.write(remaining);
+                }
+            } else if (key === 'Clear') {
+                term.clear();
+                commandRef.current = '';
+                prompt(term);
+            } else if (key === 'Up') {
+                 // No history yet, but could be added
+            } else {
+                commandRef.current += key;
+                term.write(key);
+            }
+        };
+
+        window._terminalKeyTap = handleKeyTap;
+
         resizeObserver = new ResizeObserver(() => {
             if (!xtermRef.current) {
                 requestAnimationFrame(initTerminal);
@@ -295,10 +326,41 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
     }, [prompt]);
 
     return (
-        <div 
-            ref={terminalRef} 
-            className="terminal-container"
-            style={{ width: '100%', height: '100%', overflow: 'hidden' }}
-        />
+        <div className="terminal-wrapper" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div 
+                ref={terminalRef} 
+                className="terminal-container"
+                style={{ flex: 1, overflow: 'hidden' }}
+            />
+            <div className="virtual-keys mobile-only">
+                {['Tab', 'Clear', 'ls', 'node ', 'Enter'].map(k => (
+                    <button key={k} onClick={() => window._terminalKeyTap(k)}>{k}</button>
+                ))}
+            </div>
+            <style jsx>{`
+                .virtual-keys {
+                    display: flex;
+                    gap: 5px;
+                    padding: 5px;
+                    background: #000;
+                    border-top: 1px solid #222;
+                    overflow-x: auto;
+                }
+                .virtual-keys button {
+                    background: #1a1a1a;
+                    color: #fff;
+                    border: 1px solid #333;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-size: 10px;
+                    font-family: 'JetBrains Mono', monospace;
+                    white-space: nowrap;
+                }
+                .mobile-only { display: none; }
+                @media (max-width: 768px) {
+                    .mobile-only { display: flex; }
+                }
+            `}</style>
+        </div>
     );
 }

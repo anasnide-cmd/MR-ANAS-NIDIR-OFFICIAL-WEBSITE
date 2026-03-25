@@ -146,16 +146,20 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
     const onMouseDown = (e) => {
         setIsDrawing(true);
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left) / zoom);
-        const y = Math.floor((e.clientY - rect.top) / zoom);
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        const x = Math.floor((clientX - rect.left) / zoom);
+        const y = Math.floor((clientY - rect.top) / zoom);
         handleAction(x, y);
     };
 
     const onMouseMove = (e) => {
         if (!isDrawing || tool === 'bucket') return;
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left) / zoom);
-        const y = Math.floor((e.clientY - rect.top) / zoom);
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        const x = Math.floor((clientX - rect.left) / zoom);
+        const y = Math.floor((clientY - rect.top) / zoom);
         
         if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
             if (tool === 'pencil' && pixels[y][x] === color) return;
@@ -165,6 +169,7 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
             newPixels[y][x] = tool === 'pencil' ? color : null;
             setPixels(newPixels);
         }
+        if (e.touches && e.cancelable) e.preventDefault();
     };
 
     const onMouseUp = () => {
@@ -286,6 +291,9 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
                                 onMouseMove={onMouseMove}
                                 onMouseUp={onMouseUp}
                                 onMouseLeave={onMouseUp}
+                                onTouchStart={onMouseDown}
+                                onTouchMove={onMouseMove}
+                                onTouchEnd={onMouseUp}
                                 style={{
                                     cursor: tool === 'pencil' ? 'crosshair' : 'pointer',
                                     imageRendering: 'pixelated'
@@ -339,10 +347,14 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
                         backdrop-filter: blur(5px);
                     }
                     .sprite-editor-container {
-                        width: 90vw; height: 85vh; background: #111; border-radius: 12px;
+                        width: 95vw; height: 90vh; background: #111; border-radius: 12px;
                         display: flex; flex-direction: column; overflow: hidden;
                         border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
                     }
+                    @media (max-width: 768px) {
+                        .sprite-editor-container { width: 100vw; height: 100vh; border-radius: 0; }
+                    }
+                    
                     .se-header {
                         padding: 12px 20px; background: #1a1a1a; border-bottom: 1px solid rgba(255,255,255,0.05);
                         display: flex; justify-content: space-between; align-items: center;
@@ -358,14 +370,33 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
                     .btn-close:hover { color: #fff; }
 
                     .se-body { flex: 1; display: flex; overflow: hidden; }
+                    @media (max-width: 768px) {
+                        .se-body { flex-direction: column; }
+                    }
                     
                     .se-sidebar {
                         width: 180px; background: #151515; border-right: 1px solid rgba(255,255,255,0.05);
                         padding: 15px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto;
                     }
+                    @media (max-width: 768px) {
+                        .se-sidebar { 
+                            width: 100%; height: auto; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05);
+                            flex-direction: row; align-items: flex-start; gap: 15px; padding: 10px;
+                        }
+                    }
+                    
                     .tool-group label { display: block; font-size: 10px; color: #555; text-transform: uppercase; margin-bottom: 8px; font-weight: 700; }
+                    @media (max-width: 768px) {
+                        .tool-group { min-width: 100px; flex-shrink: 0; }
+                        .tool-group label { font-size: 8px; margin-bottom: 4px; }
+                    }
                     
                     .tool-grid, .view-grid, .history-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+                    @media (max-width: 768px) {
+                        .tool-grid, .view-grid, .history-grid { grid-template-columns: repeat(4, 1fr); display: flex; gap: 4px; }
+                        .se-sidebar button { padding: 6px; }
+                    }
+                    
                     .se-sidebar button {
                         background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
                         color: #888; padding: 8px; border-radius: 4px; cursor: pointer; transition: 0.2s;
@@ -376,14 +407,21 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
                     .se-sidebar button:disabled { opacity: 0.2; cursor: not-allowed; }
 
                     .color-main { width: 100%; height: 36px; border: none; background: transparent; cursor: pointer; padding: 0; }
+                    @media (max-width: 768px) { .color-main { height: 24px; width: 40px; } }
+                    
                     .palette-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
+                    @media (max-width: 768px) { 
+                        .palette-grid { display: flex; margin-top: 0; overflow-x: auto; padding-bottom: 4px; }
+                        .palette-color { min-width: 20px; height: 20px; }
+                    }
+                    
                     .palette-color { height: 24px; border-radius: 2px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
                     .palette-color.active { border-color: #fff; transform: scale(1.1); }
 
                     .size-buttons { display: flex; gap: 4px; }
                     .size-buttons button { flex: 1; font-size: 10px; padding: 4px; }
 
-                    .se-workspace { flex: 1; background: #0a0a0a; display: flex; align-items: center; justify-content: center; position: relative; overflow: auto; }
+                    .se-workspace { flex: 1; background: #0a0a0a; display: flex; align-items: center; justify-content: center; position: relative; overflow: auto; touch-action: none; }
                     .canvas-wrapper { 
                         box-shadow: 0 0 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); 
                         background-image: linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #111 75%), linear-gradient(-45deg, transparent 75%, #111 75%);
@@ -392,6 +430,9 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
                     }
 
                     .se-preview-panel { width: 150px; background: #151515; border-left: 1px solid rgba(255,255,255,0.05); padding: 15px; display: flex; flex-direction: column; gap: 20px; }
+                    @media (max-width: 768px) {
+                        .se-preview-panel { display: none; }
+                    }
                     .preview-box { background: #000; padding: 10px; border-radius: 4px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
                     .preview-box.scaled { height: 120px; }
                 `}</style>
