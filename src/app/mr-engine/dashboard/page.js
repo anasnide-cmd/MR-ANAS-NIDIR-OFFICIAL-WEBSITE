@@ -248,6 +248,15 @@ export default function EngineDashboard() {
                     position: sticky; top: 0; z-index: 50;
                 }
 
+                @media (max-width: 768px) {
+                    .dashboard-header { padding: 15px 20px; }
+                    .brand-text { font-size: 1rem; }
+                    .header-right { gap: 10px; }
+                    .user-pill span { display: none; }
+                    .btn-arcade span { display: none; }
+                    .btn-arcade { padding: 8px; }
+                }
+
                 .brand { display: flex; align-items: center; gap: 15px; }
                 .brand-icon { color: #00f0ff; filter: drop-shadow(0 0 8px #00f0ff); }
                 .brand-text { font-family: 'Orbitron'; font-weight: 800; letter-spacing: 2px; font-size: 1.2rem; }
@@ -274,6 +283,13 @@ export default function EngineDashboard() {
                     display: flex; justify-content: space-between; align-items: center;
                     margin-bottom: 50px; padding-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.05);
                 }
+                @media (max-width: 768px) {
+                    .hero-banner { flex-direction: column; text-align: center; gap: 30px; align-items: center; }
+                    .hero-text h1 { font-size: 1.8rem; }
+                    .quick-stats { justify-content: center; width: 100%; }
+                    .stat-box { text-align: center; }
+                }
+
                 .hero-text h1 { font-family: 'Orbitron'; font-size: 2.5rem; margin-bottom: 10px; }
                 .hero-text p { color: #888; font-size: 1.1rem; }
 
@@ -283,6 +299,11 @@ export default function EngineDashboard() {
                 .stat-label { font-size: 0.7rem; color: #666; letter-spacing: 2px; }
 
                 .action-bar { display: flex; gap: 20px; margin-bottom: 30px; }
+                @media (max-width: 768px) {
+                    .action-bar { flex-direction: column; }
+                    .btn-create { justify-content: center; }
+                }
+
                 .search-box {
                     flex: 1; display: flex; align-items: center; gap: 12px;
                     background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
@@ -343,6 +364,10 @@ export default function EngineDashboard() {
                     display: flex; align-items: center; justify-content: center; z-index: 100;
                 }
                 .modal-content { background: #0a0a0a; border: 1px solid #333; border-radius: 24px; padding: 40px; width: 500px; max-width: 90%; }
+                @media (max-width: 768px) {
+                    .modal-content { padding: 20px; border-radius: 0; width: 100%; height: 100%; max-width: 100%; display: flex; flex-direction: column; justify-content: center; }
+                    .template-card { padding: 15px; gap: 15px; }
+                }
                 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
                 .modal-header h2 { font-family: 'Orbitron'; font-size: 1.2rem; }
                 .modal-header button { background: none; border: none; color: #666; cursor: pointer; }

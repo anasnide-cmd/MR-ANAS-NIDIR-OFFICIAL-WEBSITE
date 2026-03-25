@@ -101,6 +101,7 @@ function EditorContent() {
     const [newFileName, setNewFileName] = useState('');
     const [deletingFile, setDeletingFile] = useState(null);
     const [zenMode, setZenMode] = useState(false);
+    const [mobileTab, setMobileTab] = useState('editor'); // 'files', 'editor', 'preview'
 
     const [debouncedGameData, setDebouncedGameData] = useState(gameData);
 
@@ -206,25 +207,28 @@ function EditorContent() {
                     <button className="btn-icon" onClick={() => router.push('/mr-engine/dashboard')}>
                         <ChevronRight size={20} style={{transform: 'rotate(180deg)'}} />
                     </button>
+                    <button className="btn-icon mobile-only" onClick={() => setShowSidebar(!showSidebar)}>
+                        <Layout size={20} />
+                    </button>
                     <div className="game-info">
                         <input 
                             value={gameData.name || 'Untitled Core'}
                             onChange={(e) => setGameData({...gameData, name: e.target.value})}
                         />
-                        <span className={`status ${gameData.status}`}>{gameData.status.toUpperCase()}</span>
+                        <span className={`status ${gameData.status} hidden-mobile`}>{gameData.status.toUpperCase()}</span>
                     </div>
                 </div>
                 <div className="header-right">
-                    <button className={`btn-icon ${terminalOpen ? 'active' : ''}`} onClick={() => setTerminalOpen(!terminalOpen)}>
+                    <button className={`btn-icon ${terminalOpen ? 'active' : ''} hidden-mobile`} onClick={() => setTerminalOpen(!terminalOpen)}>
                         <TerminalIcon size={18} />
                     </button>
-                    <button className={`btn-icon ${copilotOpen ? 'active' : ''}`} onClick={() => setCopilotOpen(!copilotOpen)}>
+                    <button className={`btn-icon ${copilotOpen ? 'active' : ''} hidden-mobile`} onClick={() => setCopilotOpen(!copilotOpen)}>
                         <Sparkles size={18} />
                     </button>
                     <button className="btn-save" onClick={handleSave} disabled={saving}>
-                        <Save size={16} /> {saving ? 'SYNCING...' : 'SYNC CORE'}
+                        <Save size={16} /> <span className="hidden-mobile">{saving ? 'SYNCING...' : 'SYNC CORE'}</span>
                     </button>
-                    <button className={`btn-icon ${showPreview ? 'active' : ''}`} onClick={() => setShowPreview(!showPreview)}>
+                    <button className={`btn-icon ${showPreview ? 'active' : ''} hidden-mobile`} onClick={() => setShowPreview(!showPreview)}>
                         <Eye size={18} />
                     </button>
                 </div>
@@ -235,7 +239,10 @@ function EditorContent() {
                  <aside className={`sidebar ${showSidebar ? 'visible' : ''}`}>
                     <div className="sidebar-head">
                         <span>FILESYSTEM</span>
-                        <button onClick={() => setIsCreating(true)}><Plus size={16}/></button>
+                        <div className="sidebar-actions">
+                            <button onClick={() => setIsCreating(true)}><Plus size={16}/></button>
+                            <button className="mobile-only" onClick={() => setShowSidebar(false)}><X size={16}/></button>
+                        </div>
                     </div>
                     {isCreating && (
                         <div className="new-file">
@@ -250,7 +257,7 @@ function EditorContent() {
                     )}
                     <div className="file-list">
                         {Object.keys(gameData.files).sort().map(f => (
-                            <div key={f} className={`file-item ${activeFile === f ? 'active' : ''}`} onClick={() => setActiveFile(f)}>
+                            <div key={f} className={`file-item ${activeFile === f ? 'active' : ''}`} onClick={() => { setActiveFile(f); if(window.innerWidth < 768) { setShowSidebar(false); setMobileTab('editor'); } }}>
                                 <FileCode size={14} color={f.endsWith('.js') ? '#f7df1e' : '#00f0ff'} />
                                 <span>{f}</span>
                             </div>
@@ -259,7 +266,12 @@ function EditorContent() {
                 </aside>
 
                 <main className="main-area">
-                    <div className={`editor-box ${showPreview ? 'split' : ''}`}>
+                    <div className="mobile-tabs mobile-only">
+                        <button className={mobileTab === 'editor' ? 'active' : ''} onClick={() => setMobileTab('editor')}>CODE</button>
+                        <button className={mobileTab === 'preview' ? 'active' : ''} onClick={() => setMobileTab('preview')}>PREVIEW</button>
+                    </div>
+
+                    <div className={`editor-box ${(showPreview && mobileTab === 'editor') || (showPreview && window.innerWidth >= 768) ? 'split' : ''} ${mobileTab !== 'editor' && 'hidden-mobile'}`}>
                          <Editor
                             value={currentFile.content}
                             onValueChange={code => updateFileContent(activeFile, code)}
@@ -275,33 +287,31 @@ function EditorContent() {
                         />
                     </div>
 
-                    {showPreview && (
-                        <div className="preview-box">
-                            <div className="preview-tools">
-                                <span>LIVE ENGINE PREVIEW</span>
-                                <button onClick={() => setPreviewKey(k => k + 1)}><Play size={14}/></button>
-                            </div>
-                            <iframe 
-                                key={previewKey}
-                                srcDoc={`
-                                    <html>
-                                        <head>
-                                            <style>
-                                                ${debouncedGameData.files['style.css']?.content || ''}
-                                                @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
-                                            </style>
-                                        </head>
-                                        <body>
-                                            ${debouncedGameData.files['index.html']?.content || ''}
-                                            <script>
-                                                ${debouncedGameData.files['game.js']?.content || ''}
-                                            </script>
-                                        </body>
-                                    </html>
-                                `}
-                            />
+                    <div className={`preview-box ${(!showPreview || (mobileTab !== 'preview' && window.innerWidth < 768)) ? 'hidden' : ''}`}>
+                        <div className="preview-tools">
+                            <span>LIVE ENGINE PREVIEW</span>
+                            <button onClick={() => setPreviewKey(k => k + 1)}><Play size={14}/></button>
                         </div>
-                    )}
+                        <iframe 
+                            key={previewKey}
+                            srcDoc={`
+                                <html>
+                                    <head>
+                                        <style>
+                                            ${debouncedGameData.files['style.css']?.content || ''}
+                                            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+                                        </style>
+                                    </head>
+                                    <body>
+                                        ${debouncedGameData.files['index.html']?.content || ''}
+                                        <script>
+                                            ${debouncedGameData.files['game.js']?.content || ''}
+                                        </script>
+                                    </body>
+                                </html>
+                            `}
+                        />
+                    </div>
                 </main>
             </div>
 
@@ -313,6 +323,17 @@ function EditorContent() {
                 .header-left, .header-right { display: flex; align-items: center; gap: 15px; }
                 .game-info { display: flex; align-items: center; gap: 10px; }
                 .game-info input { background: transparent; border: none; color: #fff; font-family: 'Orbitron'; font-weight: 700; width: 200px; outline: none; }
+                
+                @media (max-width: 768px) {
+                    .editor-header { padding: 0 10px; height: 50px; }
+                    .game-info input { width: 120px; font-size: 0.9rem; }
+                    .header-left, .header-right { gap: 8px; }
+                    .hidden-mobile { display: none !important; }
+                    .mobile-only { display: block !important; }
+                    .btn-save { padding: 6px 10px !important; }
+                }
+                .mobile-only { display: none; }
+
                 .status { font-size: 0.6rem; background: #222; padding: 2px 6px; border-radius: 4px; color: #888; letter-spacing: 1px; }
                 .status.public { background: rgba(0, 240, 255, 0.1); color: #00f0ff; }
 
@@ -322,16 +343,32 @@ function EditorContent() {
 
                 .btn-save { background: #00f0ff; color: #000; border: none; padding: 6px 16px; border-radius: 6px; font-weight: 800; font-family: 'Orbitron'; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
-                .workspace { flex: 1; display: flex; overflow: hidden; }
-                .sidebar { width: 220px; border-right: 1px solid #1a1a1a; background: #080808; display: flex; flex-direction: column; }
+                .workspace { flex: 1; display: flex; overflow: hidden; position: relative; }
+                .sidebar { width: 220px; border-right: 1px solid #1a1a1a; background: #080808; display: flex; flex-direction: column; transition: 0.3s; }
+                
+                @media (max-width: 768px) {
+                    .sidebar { position: absolute; left: -220px; top: 0; bottom: 0; z-index: 100; box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
+                    .sidebar.visible { left: 0; }
+                    .main-area { flex-direction: column; }
+                    .editor-box.split { border-right: none; }
+                    .preview-box { height: 100%; width: 100%; position: absolute; top: 40px; left: 0; right: 0; bottom: 0; }
+                    .preview-box.hidden { display: none; }
+                    .hidden-mobile { display: none !important; }
+                }
+
                 .sidebar-head { padding: 15px; display: flex; justify-content: space-between; font-size: 0.7rem; color: #444; font-weight: 800; letter-spacing: 1px; }
+                .sidebar-actions { display: flex; gap: 10px; }
                 .sidebar-head button { background: none; border: none; color: #444; cursor: pointer; }
                 .file-list { flex: 1; overflow-y: auto; }
                 .file-item { padding: 10px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.85rem; color: #666; transition: 0.2s; }
                 .file-item:hover { background: #111; color: #fff; }
                 .file-item.active { background: rgba(0, 240, 255, 0.05); color: #00f0ff; border-left: 2px solid #00f0ff; }
 
-                .main-area { flex: 1; display: flex; }
+                .main-area { flex: 1; display: flex; position: relative; }
+                .mobile-tabs { display: flex; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; height: 40px; }
+                .mobile-tabs button { flex: 1; background: none; border: none; color: #444; font-size: 0.7rem; font-weight: 800; cursor: pointer; border-bottom: 2px solid transparent; }
+                .mobile-tabs button.active { color: #00f0ff; border-bottom-color: #00f0ff; background: rgba(0,240,255,0.05); }
+
                 .editor-box { flex: 1; overflow-y: auto; background: #050505; }
                 .editor-box.split { border-right: 1px solid #1a1a1a; }
                 

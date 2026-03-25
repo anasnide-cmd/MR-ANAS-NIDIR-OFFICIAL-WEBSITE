@@ -319,6 +319,16 @@ export default function GameSettingsModal({ game, user, onClose, onUpdate, onDel
                     box-shadow: 0 0 50px rgba(0,240,255,0.1);
                     font-family: 'Inter', sans-serif; overflow: hidden;
                 }
+                @media (max-width: 600px) {
+                    .modal-content { width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh; border-radius: 0; border: none; }
+                    .modal-head { padding: 15px 20px; }
+                    .modal-tabs { padding: 0 10px; overflow-x: auto; }
+                    .modal-tabs button { padding: 10px 15px; font-size: 0.75rem; white-space: nowrap; }
+                    .modal-body { padding: 15px; }
+                    .modal-footer { padding: 15px; flex-direction: column; gap: 15px; }
+                    .footer-right { width: 100%; flex-direction: column; gap: 8px; }
+                    .footer-right button, .btn-danger { width: 100%; justify-content: center; }
+                }
                 .modal-head { 
                     display: flex; justify-content: space-between; align-items: center; 
                     padding: 24px; border-bottom: 1px solid rgba(0,240,255,0.1);
@@ -367,6 +377,14 @@ export default function GameSettingsModal({ game, user, onClose, onUpdate, onDel
                 .slug-input { border-radius: 0 12px 12px 0; font-family: monospace; }
 
                 .row-group { flex-direction: row; gap: 24px; }
+                @media (max-width: 600px) {
+                    .row-group { flex-direction: column; gap: 20px; }
+                    .slug-input-wrapper { flex-direction: column; }
+                    .slug-prefix { border-radius: 12px 12px 0 0; border-right: 1px solid rgba(255,255,255,0.1); border-bottom: none; padding: 8px 12px; font-size: 0.8rem; }
+                    .slug-input { border-radius: 0 0 12px 12px; }
+                    .transfer-input-group { flex-direction: column; }
+                    .btn-transfer { padding: 12px; justify-content: center; }
+                }
                 .half-width { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 
                 .alert-box { 
