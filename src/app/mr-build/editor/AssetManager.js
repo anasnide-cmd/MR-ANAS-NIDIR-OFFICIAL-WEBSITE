@@ -4,7 +4,7 @@ import { storage, auth } from '../../../lib/firebase';
 import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import { Loader2, Upload, Trash2, Copy, Image as ImageIcon, X, AlertCircle, Sparkles } from 'lucide-react';
 
-export default function AssetManager({ onInsert }) {
+export default function AssetManager({ onInsert, onSpriteEditor }) {
     const [assets, setAssets] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -15,6 +15,10 @@ export default function AssetManager({ onInsert }) {
 
     useEffect(() => {
         fetchAssets();
+
+        const handleRefresh = () => fetchAssets();
+        window.addEventListener('ASSET_MODIFIED', handleRefresh);
+        return () => window.removeEventListener('ASSET_MODIFIED', handleRefresh);
     }, []);
 
     const fetchAssets = async () => {
@@ -118,6 +122,10 @@ export default function AssetManager({ onInsert }) {
             <div className="am-header">
                 <h3>ASSET DEPOT</h3>
                 <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="sprite-btn" onClick={onSpriteEditor} title="Original Pixel Art">
+                        <ImageIcon size={14}/>
+                        <span>Sprite</span>
+                    </button>
                     <button className="gen-btn" onClick={() => setShowAiPrompt(!showAiPrompt)}>
                         <Sparkles size={14}/>
                         <span>AI Gen</span>
@@ -201,6 +209,13 @@ export default function AssetManager({ onInsert }) {
                     display: flex; align-items: center; gap: 6px; transition: 0.2s;
                 }
                 .gen-btn:hover { background: rgba(208,0,255,0.2); }
+
+                .sprite-btn {
+                    background: rgba(0,255,136,0.1); color: #00ff88; border: 1px solid rgba(0,255,136,0.3);
+                    padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;
+                    display: flex; align-items: center; gap: 6px; transition: 0.2s;
+                }
+                .sprite-btn:hover { background: rgba(0,255,136,0.2); }
 
                 .ai-prompt-box {
                     padding: 12px; background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(255,255,255,0.1);

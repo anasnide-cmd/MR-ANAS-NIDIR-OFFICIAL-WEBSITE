@@ -30,6 +30,7 @@ const Terminal = dynamic(() => import('./Terminal'), {
 });
 const ARPreview = dynamic(() => import('./ARPreview'), { ssr: false });
 const AssetManager = dynamic(() => import('./AssetManager'), { ssr: false });
+const SpriteEditor = dynamic(() => import('./SpriteEditor'), { ssr: false });
 const Auditor = dynamic(() => import('./Auditor'), { ssr: false });
 import 'prismjs/themes/prism-tomorrow.css';  
 import { addSiteLog } from '../../../lib/siteHistory';
@@ -60,6 +61,7 @@ import {
     Minimize,
 
     Plus,
+    FolderPlus,
     Download,
     Image as ImageIcon,
     Smartphone,
@@ -87,6 +89,96 @@ const TEMPLATES = {
             'README.md': { content: '# SaaS Landing Page\nClean, modern, convertible.', language: 'markdown' }
         }
     }
+};
+
+const FileTree = ({ files, activeFile, setActiveFile, expandedFolders, setExpandedFolders, onDelete, deletingFile, confirmDelete }) => {
+    const buildTree = (files) => {
+        const tree = { name: 'root', type: 'folder', children: {}, path: '' };
+        Object.keys(files).sort().forEach(path => {
+            const parts = path.split('/');
+            let current = tree;
+            parts.forEach((part, i) => {
+                if (i === parts.length - 1) {
+                    current.children[part] = { type: 'file', name: part, path };
+                } else {
+                    if (!current.children[part]) {
+                        current.children[part] = { type: 'folder', name: part, children: {}, path: parts.slice(0, i + 1).join('/') };
+                    }
+                    current = current.children[part];
+                }
+            });
+        });
+        return tree;
+    };
+
+    const tree = buildTree(files);
+
+    const toggleFolder = (path) => {
+        setExpandedFolders(prev => 
+            prev.includes(path) ? prev.filter(p => p !== path) : [...prev, path]
+        );
+    };
+
+    const renderNodes = (nodes, depth = 0) => {
+        return Object.values(nodes).sort((a, b) => {
+            if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+            return a.name.localeCompare(b.name);
+        }).map(node => {
+            if (node.name === '.keep') return null; // Hide placeholder files
+
+            const isOpen = expandedFolders.includes(node.path) || node.path === '';
+            const isSelected = activeFile === node.path;
+
+            if (node.type === 'folder') {
+                return (
+                    <div key={node.path} className="tree-node">
+                        <div 
+                            className={`tree-item folder ${isOpen ? 'open' : ''}`} 
+                            style={{ paddingLeft: `${depth * 12 + 16}px` }}
+                            onClick={() => toggleFolder(node.path)}
+                        >
+                            <span className="folder-toggle">
+                                {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                            </span>
+                            <Folder size={14} color="#888" />
+                            <span className="node-name">{node.name}</span>
+                        </div>
+                        {isOpen && <div className="folder-children">{renderNodes(node.children, depth + 1)}</div>}
+                    </div>
+                );
+            }
+
+            return (
+                <div 
+                    key={node.path} 
+                    className={`tree-item file ${isSelected ? 'active' : ''}`}
+                    style={{ paddingLeft: `${depth * 12 + 30}px` }}
+                    onClick={() => setActiveFile(node.path)}
+                >
+                    <span className="file-icon">
+                        {node.name.endsWith('.html') && <Code size={14} color="#e34c26" />}
+                        {node.name.endsWith('.css') && <Code size={14} color="#563d7c" />}
+                        {node.name.endsWith('.js') && <FileCode size={14} color="#f7df1e" />}
+                        {node.name.endsWith('.py') && <FileCode size={14} color="#3776ab" />}
+                        {node.name.endsWith('.json') && <FileCode size={14} color="#fbc02d" />}
+                        {(node.name.endsWith('.ts') || node.name.endsWith('.tsx')) && <FileCode size={14} color="#3178c6" />}
+                        {node.name.endsWith('.md') && <Book size={14} color="#fff" />}
+                    </span>
+                    <span className="node-name">{node.name}</span>
+                    {node.path !== 'index.html' && (
+                        <button 
+                            className="btn-delete"
+                            onClick={(e) => deletingFile === node.path ? confirmDelete(e, node.path) : onDelete(e, node.path)}
+                        >
+                            {deletingFile === node.path ? <span className="confirm-del">Sure?</span> : <X size={12} />}
+                        </button>
+                    )}
+                </div>
+            );
+        });
+    };
+
+    return <div className="tree-root">{renderNodes(tree.children)}</div>;
 };
 
 function EditorContent() {
@@ -122,9 +214,15 @@ function EditorContent() {
     
     // UI States
     const [isCreating, setIsCreating] = useState(false);
+    const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [newFileName, setNewFileName] = useState('');
+    const [expandedFolders, setExpandedFolders] = useState(['/']);
     const [deletingFile, setDeletingFile] = useState(null); // filename
     const [zenMode, setZenMode] = useState(false); // Zen Mode State
+
+    // Sprite Editor state
+    const [spriteEditorOpen, setSpriteEditorOpen] = useState(false);
+    const [spriteEditorData, setSpriteEditorData] = useState(null);
 
     // Debounce state for live preview iframe
     const [debouncedSiteData, setDebouncedSiteData] = useState(siteData);
@@ -262,7 +360,32 @@ function EditorContent() {
 
     const cancelCreate = () => {
         setIsCreating(false);
+        setIsCreatingFolder(false);
         setNewFileName('');
+    };
+
+    const startCreatingFolder = () => {
+        setIsCreatingFolder(true);
+        setIsCreating(true);
+        setNewFileName('');
+    };
+
+    const confirmCreateFolder = () => {
+        if (!newFileName.trim()) { cancelCreate(); return; }
+        // Folders are implicit in paths, but we can add a placeholder to make it "exist"
+        const folderPath = newFileName.endsWith('/') ? newFileName : newFileName + '/';
+        const placeholder = folderPath + '.keep';
+        
+        if (siteData.files[placeholder]) { alert("Folder already exists!"); return; }
+
+        setSiteData(prev => ({
+            ...prev,
+            files: {
+                ...prev.files,
+                [placeholder]: { content: '', language: 'text' }
+            }
+        }));
+        cancelCreate();
     };
 
     const startDelete = (e, fileName) => {
@@ -383,6 +506,31 @@ function EditorContent() {
         setTimeout(() => setSuccessMsg(''), 3000);
     };
 
+    // Sprite Maker Handler
+    const handleSaveSprite = async ({ blob, name }) => {
+        if (!user) return;
+        setSaving(true);
+        try {
+            const { storage } = await import('../../../lib/firebase');
+            const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+            
+            const storageRef = ref(storage, `users/${user.uid}/uploads/${Date.now()}_${name}`);
+            await uploadBytes(storageRef, blob);
+            
+            setSuccessMsg('Sprite saved to Asset Depot.');
+            setSpriteEditorOpen(false);
+            // AssetManager will pick up the new file on next manual/auto refresh
+            // But we can trigger a refresh via custom event if needed
+            window.dispatchEvent(new CustomEvent('ASSET_MODIFIED'));
+        } catch (err) {
+            console.error('Sprite save failed:', err);
+            alert('Failed to save sprite.');
+        } finally {
+            setSaving(false);
+            setTimeout(() => setSuccessMsg(''), 3000);
+        }
+    };
+
     // AI Fix Handler (Self-Healing)
     const handleAiFix = async (errorMsg) => {
         setCopilotOpen(true);
@@ -483,57 +631,49 @@ function EditorContent() {
                 <aside className={`file-explorer ${showSidebar ? 'visible' : ''}`}>
                     <div className="explorer-header">
                         <span>{sidebarMode === 'files' ? 'FILES' : sidebarMode === 'assets' ? 'ASSETS' : 'AUDITOR'}</span>
-                        {sidebarMode === 'files' && <button onClick={startCreating} className="btn-add-file" title="New File"><Plus size={16}/></button>}
+                        {sidebarMode === 'files' && (
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                                <button onClick={startCreatingFolder} className="btn-add-file" title="New Folder"><FolderPlus size={16}/></button>
+                                <button onClick={startCreating} className="btn-add-file" title="New File"><Plus size={16}/></button>
+                            </div>
+                        )}
                         <button onClick={() => setShowSidebar(false)} className="btn-close-sidebar"><X size={14}/></button>
                     </div>
                     
                     {sidebarMode === 'files' ? (
                         <>
-                            {isCreating && (
+                            {(isCreating || isCreatingFolder) && (
                                 <div className="file-creation-row">
                                     <input 
                                         autoFocus
                                         value={newFileName}
                                         onChange={e => setNewFileName(e.target.value)}
-                                        onKeyDown={e => { if(e.key === 'Enter') confirmCreate(); if(e.key === 'Escape') cancelCreate(); }}
+                                        onKeyDown={e => { 
+                                            if(e.key === 'Enter') isCreatingFolder ? confirmCreateFolder() : confirmCreate(); 
+                                            if(e.key === 'Escape') cancelCreate(); 
+                                        }}
                                         onBlur={cancelCreate}
                                         className="new-file-input"
-                                        placeholder="filename.ext"
+                                        placeholder={isCreatingFolder ? "folder/path" : "filename.ext"}
                                     />
                                 </div>
                             )}
 
                             <div className="file-list">
-                                {Object.keys(siteData.files).sort().map(fileName => (
-                                    <div 
-                                        key={fileName}
-                                        className={`file-item ${activeFile === fileName ? 'active' : ''}`} 
-                                        onClick={() => { setActiveFile(fileName); if(window.innerWidth < 768) setShowSidebar(false); }}
-                                    >
-                                        <span className="file-icon">
-                                            {fileName.endsWith('.html') && <Code size={14} color="#e34c26" />}
-                                            {fileName.endsWith('.css') && <Code size={14} color="#563d7c" />}
-                                            {fileName.endsWith('.js') && <FileCode size={14} color="#f7df1e" />}
-                                            {fileName.endsWith('.py') && <FileCode size={14} color="#3776ab" />}
-                                            {fileName.endsWith('.json') && <FileCode size={14} color="#fbc02d" />}
-                                            {(fileName.endsWith('.ts') || fileName.endsWith('.tsx')) && <FileCode size={14} color="#3178c6" />}
-                                            {fileName.endsWith('.md') && <Book size={14} color="#fff" />}
-                                        </span>
-                                        <span className="file-name">{fileName}</span>
-                                        {fileName !== 'index.html' && (
-                                            <button 
-                                                className="btn-delete"
-                                                onClick={(e) => deletingFile === fileName ? confirmDelete(e, fileName) : startDelete(e, fileName)}
-                                            >
-                                                {deletingFile === fileName ? <span className="confirm-del">Sure?</span> : <X size={12} />}
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
+                                <FileTree 
+                                    files={siteData.files} 
+                                    activeFile={activeFile} 
+                                    setActiveFile={setActiveFile}
+                                    expandedFolders={expandedFolders}
+                                    setExpandedFolders={setExpandedFolders}
+                                    onDelete={startDelete}
+                                    deletingFile={deletingFile}
+                                    confirmDelete={confirmDelete}
+                                />
                             </div>
                         </>
                     ) : sidebarMode === 'assets' ? (
-                        <AssetManager />
+                        <AssetManager onSpriteEditor={() => setSpriteEditorOpen(true)} />
                     ) : (
                         <Auditor files={siteData.files} />
                     )}
@@ -716,6 +856,15 @@ function EditorContent() {
 
             {successMsg && <div className="toast-notification">{successMsg}</div>}
 
+            {/* Sprite Editor Modal */}
+            {spriteEditorOpen && (
+                <SpriteEditor 
+                    onClose={() => setSpriteEditorOpen(false)}
+                    onSave={handleSaveSprite}
+                    initialData={spriteEditorData}
+                />
+            )}
+
             <style jsx>{`
                 .nebula-editor {
                     display: flex; flex-direction: column; height: 100vh;
@@ -797,6 +946,21 @@ function EditorContent() {
                 .file-item:hover .btn-delete { opacity: 1; }
                 .btn-delete:hover { color: #ff4444; }
                 .confirm-del { font-size: 10px; color: #ff4444; text-transform: uppercase; }
+
+                /* Tree Styles */
+                .tree-root { display: flex; flex-direction: column; }
+                .tree-item {
+                    display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+                    cursor: pointer; color: #888; font-size: 13px; transition: 0.2s;
+                    border-left: 2px solid transparent;
+                }
+                .tree-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
+                .tree-item.active { background: rgba(0,240,255,0.05); color: #fff; border-left-color: #00f0ff; }
+                .tree-item.folder { font-weight: 500; color: #aaa; }
+                .tree-item.folder:hover { color: #fff; }
+                .folder-toggle { display: flex; align-items: center; color: #666; width: 14px; }
+                .node-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                .tree-item:hover .btn-delete { opacity: 1; }
 
                 .file-creation-row { padding: 10px 16px; background: rgba(255,255,255,0.05); }
                 .new-file-input { width: 100%; background: transparent; border: none; color: #fff; outline: none; font-size: 14px; }
