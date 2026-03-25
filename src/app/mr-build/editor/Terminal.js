@@ -1,8 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { Terminal as XTerminal } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
-import { WebLinksAddon } from 'xterm-addon-web-links';
-import 'xterm/css/xterm.css';
+import { Terminal as XTerminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import { WebLinksAddon } from '@xterm/addon-web-links';
+import '@xterm/xterm/css/xterm.css';
 
 // --- VIRTUAL NPM LOGIC ---
 const CDNS = {
