@@ -20,6 +20,7 @@ node_modules/
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -30,6 +31,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+*.tmp
 /tmp/
 test_*.mjs
 tmp_check_db.mjs
@@ -39,6 +42,16 @@ tmp_check_db.mjs
 cache_cleared_dev.txt
 optimization_build.txt
 capture.js
+build_results*.txt
+lint_log.txt
+lint_results*.txt
+
+# legacy
+_legacy_site/
+temp_app/
+
+# firebase
+.firebase/
 
 # env files (can opt-in for committing if needed)
 .env*
