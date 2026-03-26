@@ -395,6 +395,54 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
       )
   };
 
+  const renderMarkdownChunk = (text, keyPrefix) => {
+      const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+      const subParts = [];
+      let subLastIndex = 0;
+      let subMatch;
+
+      while ((subMatch = codeBlockRegex.exec(text)) !== null) {
+          if (subMatch.index > subLastIndex) {
+              subParts.push({ type: 'text', content: text.slice(subLastIndex, subMatch.index) });
+          }
+          subParts.push({ type: 'code', lang: subMatch[1] || 'text', content: subMatch[2] });
+          subLastIndex = subMatch.index + subMatch[0].length;
+      }
+      if (subLastIndex < text.length) {
+          subParts.push({ type: 'text', content: text.slice(subLastIndex) });
+      }
+
+      return subParts.map((part, i) => {
+          if (part.type === 'code') {
+              return (
+                  <div key={`${keyPrefix}-${i}`} className="code-block-wrapper">
+                      <div className="code-header">
+                          <span>{part.lang}</span>
+                      </div>
+                      <div className="code-container">
+                          <div className="line-numbers">
+                              {part.content.trim().split('\n').map((_, idx) => (
+                                  <div key={idx} className="line-number">{idx + 1}</div>
+                              ))}
+                          </div>
+                          <pre className={`language-${part.lang}`}>
+                              <code>{part.content}</code>
+                          </pre>
+                      </div>
+                  </div>
+              );
+          } else {
+              return <span key={`${keyPrefix}-${i}`} dangerouslySetInnerHTML={{ 
+                  __html: part.content
+                      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                      .replace(/\*(.*?)\*/g, '<i>$1</i>')
+                      .replace(/`(.*?)`/g, '<code class="inline-code">$1</code>')
+                      .replace(/\n/g, '<br/>')
+              }} />;
+          }
+      });
+  };
+
   // specialized renderer for the copilot to handle thinking blocks and code buttons
   const MessageContent = ({ content, role }) => {
       if (role === 'assistant') {
@@ -409,7 +457,7 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
                               <div className="think-content">{data.thought}</div>
                           </details>
                       )}
-                      <div className="text-content">{data.message}</div>
+                      <div className="text-content">{renderMarkdownChunk(data.message, 'msg')}</div>
                       
                       {data.action === 'GENERATE_IMAGE' && data.data?.description && (
                           <ImageGenerator description={data.data.description} />
@@ -425,12 +473,12 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
               );
           } catch (e) {
               // Fallback for old text-based messages or partial streams
-              return <div className="text-content">{content}</div>;
+              return <div className="text-content">{renderMarkdownChunk(content, 'fallback')}</div>;
           }
       }
 
       // User messages
-      return <div className="text-content">{content}</div>;
+      return <div className="text-content">{renderMarkdownChunk(content, 'user')}</div>;
   };
 
   return (
@@ -801,6 +849,29 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
             display: inline-flex;
             gap: 4px;
         }
+        
+        /* Code Blocks */
+        .code-block-wrapper { margin: 15px 0; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; background: #011627; }
+        .code-header { background: rgba(255,255,255,0.05); padding: 5px 15px; display: flex; justify-content: space-between; font-size: 10px; color: #888; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .code-container { display: flex; position: relative; }
+        .code-container .line-numbers { 
+            padding: 15px 0; 
+            text-align: right; 
+            background: rgba(0,0,0,0.3); 
+            border-right: 1px solid rgba(255,255,255,0.05); 
+            color: #444; 
+            font-family: inherit; 
+            font-size: 13px; 
+            line-height: inherit; 
+            user-select: none; 
+            min-width: 40px;
+            padding-right: 10px;
+            flex-shrink: 0;
+        }
+        .code-container .line-number { height: 1.5em; display: flex; align-items: center; justify-content: flex-end; }
+        .code-container pre { flex: 1; margin: 0 !important; border-radius: 0 !important; background: transparent !important; padding: 15px !important; line-height: 1.5; overflow-x: auto; }
+        .code-container pre code { font-family: "Fira Code", monospace !important; font-size: 13px !important; }
+        .inline-code { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-family: monospace; color: #00f0ff; }
         .dot {
             width: 4px;
             height: 4px;

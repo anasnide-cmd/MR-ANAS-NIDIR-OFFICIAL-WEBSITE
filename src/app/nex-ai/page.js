@@ -453,13 +453,20 @@ export default function NexAI() {
             return subParts.map((part, i) => {
                 if (part.type === 'code') {
                     return (
-                        <div key={`${keyPrefix}-${i}`} className="code-block">
+                        <div key={`${keyPrefix}-${i}`} className="code-block-wrapper">
                             <div className="code-header">
                                 <span>{part.lang}</span>
                             </div>
-                            <pre className={`language-${part.lang}`}>
-                                <code>{part.content}</code>
-                            </pre>
+                            <div className="code-container">
+                                <div className="line-numbers">
+                                    {part.content.trim().split('\n').map((_, idx) => (
+                                        <div key={idx} className="line-number">{idx + 1}</div>
+                                    ))}
+                                </div>
+                                <pre className={`language-${part.lang}`}>
+                                    <code>{part.content}</code>
+                                </pre>
+                            </div>
                         </div>
                     );
                 } else {

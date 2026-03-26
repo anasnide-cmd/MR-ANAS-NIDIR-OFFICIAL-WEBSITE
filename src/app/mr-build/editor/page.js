@@ -231,21 +231,22 @@ function EditorContent() {
                                     <div key={i} className="line-number">{i + 1}</div>
                                 ))}
                             </div>
-                            <Editor
-                                value={currentFile.content}
-                                onValueChange={code => updateFileContent(activeFile, code)}
-                                highlight={code => highlight(code, languages[currentFile.language] || languages.javascript)}
-                                padding={20}
-                                className="code-editor"
-                                style={{
-                                    fontFamily: '"Fira Code", monospace',
-                                    fontSize: 13,
-                                    backgroundColor: 'transparent',
-                                    minHeight: '100%',
-                                    color: '#fff',
-                                    flex: 1
-                                }}
-                            />
+                             <Editor
+                                 value={currentFile.content}
+                                 onValueChange={code => updateFileContent(activeFile, code)}
+                                 highlight={code => highlight(code, languages[currentFile.language] || languages.javascript)}
+                                 padding={20}
+                                 className="code-editor"
+                                 style={{
+                                     fontFamily: '"Fira Code", monospace',
+                                     fontSize: 13,
+                                     lineHeight: '1.5',
+                                     backgroundColor: 'transparent',
+                                     minHeight: '100%',
+                                     color: '#fff',
+                                     flex: 1
+                                 }}
+                             />
                         </div>
                     </div>
                     
@@ -348,9 +349,12 @@ function EditorContent() {
                     line-height: 1.5; 
                     user-select: none; 
                     min-width: 45px;
-                    padding-right: 10px;
+                    padding-right: 15px;
+                    flex-shrink: 0;
                 }
                 .line-number { height: 1.5em; padding-right: 5px; }
+                .code-editor :global(textarea) { outline: none !important; white-space: pre !important; }
+                .code-editor :global(pre) { white-space: pre !important; }
                 
                 .bottom-panel { height: 35%; border-top: 1px solid #1a1a1a; display: flex; flex-direction: column; flex-shrink: 0; }
                 .panel-tabs { display: flex; background: #000; border-bottom: 1px solid #1a1a1a; }

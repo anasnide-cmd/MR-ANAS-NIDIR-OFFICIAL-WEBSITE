@@ -177,7 +177,7 @@ function PublicWikiEditorContent() {
                 blockHtml = '<div class="nex-data-scan"><div class="data-header">DATA SCAN</div><div class="data-body">Intelligence payload goes here...</div></div><p></p>';
                 break;
             case 'code':
-                blockHtml = '<pre class="nex-code"><code>// Initializing neural sequence...\nconsole.log("Hello, NEX-AI");</code></pre><p></p>';
+                blockHtml = '<pre class="nex-code"><code><span class="line">// Initializing neural sequence...</span>\n<span class="line">console.log("Hello, NEX-AI");</span></code></pre><p></p>';
                 break;
         }
         setContent(prev => prev + blockHtml);
@@ -467,6 +467,22 @@ function PublicWikiEditorContent() {
                 :global(.nex-code) {
                     background: #111 !important; padding: 15px !important; border-radius: 8px; 
                     margin: 20px 0; border: 1px solid rgba(255,255,255,0.1); color: #00ff88 !important;
+                    counter-reset: line; font-family: 'Fira Code', monospace; font-size: 0.9rem;
+                    line-height: 1.5;
+                }
+                :global(.nex-code code) { display: block; }
+                :global(.nex-code .line) { display: block; position: relative; padding-left: 45px; }
+                :global(.nex-code .line::before) {
+                    counter-increment: line;
+                    content: counter(line);
+                    position: absolute;
+                    left: 0;
+                    width: 35px;
+                    text-align: right;
+                    color: #444;
+                    user-select: none;
+                    border-right: 1px solid rgba(255,255,255,0.05);
+                    padding-right: 10px;
                 }
 
                 .wiki-input {

@@ -42,11 +42,11 @@ export default function LandingClient() {
                             </div>
                             <pre>
                                 <code>
-    <span className="keyword">deploy</span> <span className="string">&quot;my-super-site&quot;</span><br/>
-    <span className="comment">{'// Initializing quantum render...'}</span><br/>
-    <span className="success">✓ Core Loaded (0.2s)</span><br/>
-    <span className="success">✓ Assets Optimized</span><br/>
-    <span className="highlight">&gt;&gt; SITE LIVE AT /s/my-super-site</span>
+                                    <div className="line"><span className="keyword">deploy</span> <span className="string">&quot;my-super-site&quot;</span></div>
+                                    <div className="line"><span className="comment">{'// Initializing quantum render...'}</span></div>
+                                    <div className="line"><span className="success">✓ Core Loaded (0.2s)</span></div>
+                                    <div className="line"><span className="success">✓ Assets Optimized</span></div>
+                                    <div className="line"><span className="highlight">&gt;&gt; SITE LIVE AT /s/my-super-site</span></div>
                                 </code>
                             </pre>
                         </div>
@@ -170,7 +170,19 @@ export default function LandingClient() {
                 .window-bar { display: flex; gap: 10px; margin-bottom: 25px; }
                 .dot { width: 12px; height: 12px; border-radius: 50%; }
                 .red { background: #ff5f56; } .yellow { background: #ffbd2e; } .green { background: #27c93f; }
-                pre { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; line-height: 1.6; color: var(--text-dim); }
+                pre { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; line-height: 1.6; color: var(--text-dim); counter-reset: line; }
+                .line { position: relative; padding-left: 35px; }
+                .line::before {
+                    counter-increment: line;
+                    content: counter(line);
+                    position: absolute;
+                    left: 0;
+                    width: 20px;
+                    text-align: right;
+                    color: rgba(255,255,255,0.1);
+                    font-size: 0.7rem;
+                    user-select: none;
+                }
                 .keyword { color: #c678dd; font-weight: bold; } .string { color: #98c379; } .comment { color: #5c6370; font-style: italic; }
                 .success { color: var(--primary); } .highlight { color: #e5c07b; }
 

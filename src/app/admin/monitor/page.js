@@ -170,7 +170,14 @@ function LogEntry({ log, onResolve }) {
             </div>
             {expanded && (
                 <div className="log-body">
-                    <pre>{JSON.stringify(log, null, 2)}</pre>
+                    <div className="json-container">
+                        <div className="line-numbers">
+                            {JSON.stringify(log, null, 2).split('\n').map((_, i) => (
+                                <div key={i} className="line-number">{i + 1}</div>
+                            ))}
+                        </div>
+                        <pre>{JSON.stringify(log, null, 2)}</pre>
+                    </div>
                     <button className="resolve-btn" onClick={() => onResolve(log.id)}>NEUTRALIZE</button>
                 </div>
             )}
@@ -185,7 +192,10 @@ function LogEntry({ log, onResolve }) {
                 .time { opacity: 0.5; font-size: 0.8rem; }
                 
                 .log-body { padding: 10px; border-top: 1px solid rgba(255,255,255,0.1); background: #000; }
-                pre { color: var(--cia-accent); font-family: monospace; font-size: 0.8rem; overflow-x: auto; max-height: 200px; }
+                .json-container { display: flex; background: #000; border: 1px solid rgba(255,255,255,0.05); }
+                .line-numbers { padding: 10px 0; text-align: right; background: rgba(0,0,0,0.3); border-right: 1px solid rgba(255,255,255,0.05); color: #444; font-family: monospace; font-size: 0.8rem; user-select: none; min-width: 30px; padding-right: 5px; flex-shrink: 0; }
+                .line-number { height: 1.5em; display: flex; align-items: center; justify-content: flex-end; }
+                pre { flex: 1; color: var(--cia-accent); font-family: monospace; font-size: 0.8rem; overflow-x: auto; max-height: 200px; padding: 10px !important; margin: 0; line-height: 1.5; }
                 .resolve-btn { margin-top: 10px; background: var(--cia-alert); color: #000; border: none; padding: 5px 10px; font-weight: bold; cursor: pointer; width: 100%; }
                 .resolve-btn:hover { background: #fff; }
             `}</style>
