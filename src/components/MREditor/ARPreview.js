@@ -44,7 +44,7 @@ function PhoneModel({ children }) {
     );
 }
 
-export default function ARPreview({ url }) {
+export default function ARPreview({ url, srcDoc }) {
     return (
         <div className="ar-container">
             <Canvas camera={{ position: [0, 0, 10], fov: 45 }}>
@@ -57,6 +57,7 @@ export default function ARPreview({ url }) {
                     <PhoneModel>
                         <iframe 
                             src={url} 
+                            srcDoc={srcDoc}
                             style={{width: '100%', height: '100%', border: 'none'}}
                             title="AR Preview"
                         />

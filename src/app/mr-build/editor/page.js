@@ -2,8 +2,9 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, db } from '../../../lib/firebase';
+import { auth, db, storage } from '../../../lib/firebase';
 import { doc, getDoc, setDoc, collection } from 'firebase/firestore';
+import { ref, uploadBytes } from 'firebase/storage';
 import dynamic from 'next/dynamic';
 import Loader from '../../../components/Loader';
 
@@ -36,7 +37,8 @@ import {
     Smartphone,
     Menu,
     Files,
-    Code
+    Code,
+    Layout
 } from 'lucide-react';
 
 function EditorContent() {
@@ -54,6 +56,7 @@ function EditorContent() {
     const [rightPanel, setRightPanel] = useState('copilot'); // 'copilot', 'assets'
     const [showSpriteEditor, setShowSpriteEditor] = useState(false);
     const [activeTab, setActiveTab] = useState('editor'); // 'editor', 'preview', 'ai', 'terminal', 'assets'
+    const [previewDoc, setPreviewDoc] = useState('');
 
     const [projectData, setProjectData] = useState({
         name: 'Untitled Project',
@@ -109,14 +112,68 @@ function EditorContent() {
         }
     };
 
-    const updateFileContent = (fileName, content) => {
-        setProjectData(prev => ({
-            ...prev,
-            files: {
-                ...prev.files,
-                [fileName]: { ...prev.files[fileName], content }
+    const updateFileContent = (fileName, content, language = null) => {
+        setProjectData(prev => {
+            const newFiles = { ...prev.files };
+            if (content === null) {
+                delete newFiles[fileName];
+            } else {
+                newFiles[fileName] = {
+                    ...newFiles[fileName],
+                    content: content,
+                    language: language || newFiles[fileName]?.language || 'javascript'
+                };
             }
-        }));
+            return { ...prev, files: newFiles };
+        });
+    };
+    
+    const handleSaveSprite = async (spriteData) => {
+        if (!user) return;
+        try {
+            const storageRef = ref(storage, `users/${user.uid}/uploads/${spriteData.name}`);
+            await uploadBytes(storageRef, spriteData.blob);
+            // Alert AssetManager to refresh
+            window.dispatchEvent(new CustomEvent('ASSET_MODIFIED'));
+            setShowSpriteEditor(false);
+        } catch (err) {
+            console.error("Failed to save sprite:", err);
+            alert("Syncing failed.");
+        }
+    };
+
+    const handleRun = () => {
+        const html = projectData.files['index.html']?.content || '';
+        const css = (projectData.files['style.css']?.content || '') + (projectData.files['style.css']?.content ? '' : '');
+        const js = projectData.files['script.js']?.content || '';
+        
+        const docText = `
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <style>
+                        ${css}
+                        body { margin: 0; background: transparent; color: white; font-family: sans-serif; }
+                    </style>
+                </head>
+                <body>
+                    ${html}
+                    <script>${js}</script>
+                </body>
+            </html>
+        `;
+        setPreviewDoc(docText);
+        if (window.innerWidth < 768) setActiveTab('preview');
+        else setShowPreview(true);
+    };
+
+    const handleInsertAsset = (url) => {
+        const ext = activeFile.split('.').pop().toLowerCase();
+        let snippet = url;
+        if (ext === 'html') snippet = `<img src="${url}" alt="asset" style="max-width: 100%;" />`;
+        else if (ext === 'css') snippet = `background-image: url("${url}");`;
+        
+        updateFileContent(activeFile, currentFile.content + '\n' + snippet);
     };
 
     if (loading) return <Loader text="Loading Project..." />;
@@ -139,7 +196,7 @@ function EditorContent() {
                     <button className="btn-save" onClick={handleSave} disabled={saving}>
                         <Save size={16} /> <span>{saving ? 'SAVING...' : 'SAVE'}</span>
                     </button>
-                    <button className="btn-run">
+                    <button className="btn-run" onClick={handleRun}>
                         <Play size={16} /> <span>RUN</span>
                     </button>
                 </div>
@@ -160,14 +217,14 @@ function EditorContent() {
                 <FileTree 
                     files={projectData.files || {}}
                     activeFile={activeFile}
-                    onSelectFile={setActiveFile}
+                    onSelectFile={(f) => { setActiveFile(f); if(window.innerWidth < 768) { setSidebarOpen(false); setActiveTab('editor'); } }}
                     onCreateFile={(name) => updateFileContent(name, '')}
                     showSidebar={sidebarOpen}
                     setShowSidebar={setSidebarOpen}
                 />
 
-                <div className={`editor-content ${activeTab !== 'editor' ? 'hidden-mobile' : ''}`}>
-                    <div className="code-area">
+                <div className={`editor-content ${(activeTab !== 'editor' && window.innerWidth < 768) ? 'hidden-mobile' : ''}`}>
+                    <div className={`code-area ${(bottomPanel === 'terminal' || bottomPanel === 'auditor') && window.innerWidth < 768 && activeTab !== 'editor' ? 'hidden-mobile' : ''}`}>
                         <Editor
                             value={currentFile.content}
                             onValueChange={code => updateFileContent(activeFile, code)}
@@ -183,14 +240,19 @@ function EditorContent() {
                         />
                     </div>
                     
-                    <div className="bottom-panel">
-                        <div className="panel-tabs">
+                    <div className={`bottom-panel ${activeTab !== 'terminal' && activeTab !== 'auditor' ? 'hidden-mobile' : ''}`}>
+                        <div className="panel-tabs hidden-mobile">
                             <button onClick={() => setBottomPanel('terminal')} className={bottomPanel === 'terminal' ? 'active' : ''}>TERMINAL</button>
                             <button onClick={() => setBottomPanel('auditor')} className={bottomPanel === 'auditor' ? 'active' : ''}>AUDITOR</button>
                         </div>
-                        <div className={`panel-content ${activeTab !== 'terminal' && activeTab !== 'editor' ? 'hidden-mobile' : ''}`}>
-                            {bottomPanel === 'terminal' ? (
-                                <Terminal files={projectData.files || {}} onUpdateFiles={updateFileContent} />
+                        <div className="panel-content">
+                            {activeTab === 'terminal' || bottomPanel === 'terminal' ? (
+                                <Terminal 
+                                    files={projectData.files || {}} 
+                                    onUpdateFiles={updateFileContent} 
+                                    onRun={handleRun}
+                                    onFixError={(err) => window.dispatchEvent(new CustomEvent('AI_FIX_REQUEST', { detail: { error: err } }))}
+                                />
                             ) : (
                                 <Auditor files={projectData.files || {}} />
                             )}
@@ -200,13 +262,13 @@ function EditorContent() {
 
                 {showPreview && (
                     <div className={`preview-area ${activeTab !== 'preview' ? 'hidden-mobile' : ''}`}>
-                        <ARPreview url="about:blank" />
+                        <ARPreview srcDoc={previewDoc} />
                     </div>
                 )}
 
                 <aside className={`right-panel ${activeTab !== 'ai' && activeTab !== 'assets' ? 'hidden-mobile' : ''}`}>
-                    {activeTab === 'assets' || rightPanel === 'assets' ? (
-                        <AssetManager onSpriteEditor={() => setShowSpriteEditor(true)} />
+                    {activeTab === 'assets' || (rightPanel === 'assets' && activeTab === 'editor') ? (
+                        <AssetManager onInsert={handleInsertAsset} onSpriteEditor={() => setShowSpriteEditor(true)} />
                     ) : (
                         <AICopilot siteData={projectData} onCodeUpdate={updateFileContent} />
                     )}
@@ -217,30 +279,31 @@ function EditorContent() {
                 <button className={activeTab === 'editor' ? 'active' : ''} onClick={() => setActiveTab('editor')}>
                     <Code size={18} /> <span>CODE</span>
                 </button>
-                <button className={activeTab === 'files' ? 'active' : ''} onClick={() => { setSidebarOpen(true); setActiveTab('editor'); }}>
+                <button className={activeTab === 'editor' && sidebarOpen ? 'active' : ''} onClick={() => { setSidebarOpen(!sidebarOpen); if(!sidebarOpen) setActiveTab('editor'); }}>
                     <Files size={18} /> <span>FILES</span>
                 </button>
                 <button className={activeTab === 'preview' ? 'active' : ''} onClick={() => setActiveTab('preview')}>
                     <Eye size={18} /> <span>PREVIEW</span>
                 </button>
-                <button className={activeTab === 'ai' ? 'active' : ''} onClick={() => setActiveTab('ai')}>
-                    <Sparkles size={18} /> <span>AI</span>
-                </button>
-                <button className={activeTab === 'terminal' ? 'active' : ''} onClick={() => setActiveTab('terminal')}>
+                <button className={activeTab === 'terminal' ? 'active' : ''} onClick={() => { setActiveTab(activeTab === 'terminal' ? 'editor' : 'terminal'); setBottomPanel('terminal'); }}>
                     <TerminalIcon size={18} /> <span>TERM</span>
                 </button>
-                <button className={activeTab === 'assets' ? 'active' : ''} onClick={() => setActiveTab('assets')}>
+                <button className={activeTab === 'auditor' ? 'active' : ''} onClick={() => { setActiveTab(activeTab === 'auditor' ? 'editor' : 'auditor'); setBottomPanel('auditor'); }}>
+                    <Layout size={18} /> <span>AUDIT</span>
+                </button>
+                <button className={activeTab === 'ai' ? 'active' : ''} onClick={() => setActiveTab(activeTab === 'ai' ? 'editor' : 'ai')}>
+                    <Sparkles size={18} /> <span>AI</span>
+                </button>
+                <button className={activeTab === 'assets' ? 'active' : ''} onClick={() => setActiveTab(activeTab === 'assets' ? 'editor' : 'assets')}>
                     <Search size={18} /> <span>ASSETS</span>
                 </button>
             </div>
 
             {showSpriteEditor && (
-                <div className="sprite-modal">
-                    <div className="modal-content">
-                        <button className="close-btn" onClick={() => setShowSpriteEditor(false)}>X</button>
-                        <SpriteEditor />
-                    </div>
-                </div>
+                <SpriteEditor 
+                    onSave={handleSaveSprite} 
+                    onClose={() => setShowSpriteEditor(false)} 
+                />
             )}
 
             <style jsx>{`
@@ -275,10 +338,9 @@ function EditorContent() {
                 .right-panel { width: 300px; background: #080808; flex-shrink: 0; }
                 
                 @media (max-width: 768px) {
-                    .preview-area, .right-panel { width: 100%; position: absolute; inset: 0; z-index: 10; background: #000; }
+                    .preview-area, .right-panel, .bottom-panel { width: 100%; position: absolute; inset: 0; z-index: 10; background: #000; }
                     .hidden-mobile { display: none !important; }
                     .mobile-only { display: flex !important; }
-                    .bottom-panel { height: 100%; border-top: none; }
                 }
 
                 .mobile-nav { display: none; height: 60px; background: #000; border-top: 1px solid #1a1a1a; justify-content: space-around; align-items: center; z-index: 100; }

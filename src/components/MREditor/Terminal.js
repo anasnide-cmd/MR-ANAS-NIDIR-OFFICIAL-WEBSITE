@@ -145,6 +145,10 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
                 if (onRun) onRun();
                 break;
 
+            case 'mkdir':
+                term.writeln('mkdir: Directories not supported in this environment yet.');
+                break;
+
             case 'clear':
                 term.clear();
                 break;

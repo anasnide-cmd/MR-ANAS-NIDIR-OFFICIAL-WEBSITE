@@ -180,7 +180,7 @@ export default function AssetManager({ onInsert, onSpriteEditor }) {
                 ) : (
                     assets.map(asset => (
                         <div key={asset.path} className="asset-card">
-                            <div className="img-wrapper">
+                            <div className="img-wrapper" onClick={() => onInsert && onInsert(asset.url)}>
                                 <img src={asset.url} alt={asset.name} />
                             </div>
                             <div className="actions">

@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { auth, db } from '../../../lib/firebase';
+import { auth, db, storage } from '../../../lib/firebase';
 import { doc, setDoc, deleteDoc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
+import { ref, uploadBytes } from 'firebase/storage';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import Link from 'next/link';
@@ -25,6 +26,8 @@ const Terminal = dynamic(() => import('../../../components/MREditor/Terminal'), 
 const AssetManager = dynamic(() => import('../../../components/MREditor/AssetManager'), { ssr: false });
 const AICopilot = dynamic(() => import('../../../components/MREditor/AICopilot'), { ssr: false });
 const FileTree = dynamic(() => import('../../../components/MREditor/FileTree'), { ssr: false });
+const Auditor = dynamic(() => import('../../../components/MREditor/Auditor'), { ssr: false });
+const SpriteEditor = dynamic(() => import('../../../components/MREditor/SpriteEditor'), { ssr: false });
 
 import 'prismjs/themes/prism-tomorrow.css';  
 import { 
@@ -105,6 +108,7 @@ function EditorContent() {
     const [deletingFile, setDeletingFile] = useState(null);
     const [zenMode, setZenMode] = useState(false);
     const [mobileTab, setMobileTab] = useState('editor'); // 'editor', 'preview', 'ai', 'terminal', 'assets'
+    const [showSpriteEditor, setShowSpriteEditor] = useState(false);
 
     const [debouncedGameData, setDebouncedGameData] = useState(gameData);
 
@@ -193,14 +197,42 @@ function EditorContent() {
         setNewFileName('');
     };
 
-    const updateFileContent = (fileName, newContent) => {
-        setGameData(prev => ({
-            ...prev,
-            files: {
-                ...prev.files,
-                [fileName]: { ...prev.files[fileName], content: newContent }
+    const updateFileContent = (fileName, newContent, language = null) => {
+        setGameData(prev => {
+            const newFiles = { ...prev.files };
+            if (newContent === null) {
+                delete newFiles[fileName];
+            } else {
+                newFiles[fileName] = {
+                    ...newFiles[fileName],
+                    content: newContent,
+                    language: language || newFiles[fileName]?.language || 'javascript'
+                };
             }
-        }));
+            return { ...prev, files: newFiles };
+        });
+    };
+
+    const handleSaveSprite = async (spriteData) => {
+        if (!user) return;
+        try {
+            const storageRef = ref(storage, `users/${user.uid}/uploads/${spriteData.name}`);
+            await uploadBytes(storageRef, spriteData.blob);
+            window.dispatchEvent(new CustomEvent('ASSET_MODIFIED'));
+            setShowSpriteEditor(false);
+        } catch (err) {
+            console.error("Failed to save sprite:", err);
+            alert("Sprite sync failed.");
+        }
+    };
+
+    const handleInsertAsset = (url) => {
+        const ext = activeFile.split('.').pop().toLowerCase();
+        let snippet = url;
+        if (ext === 'html') snippet = `<img src="${url}" alt="asset" style="max-width: 100%;" />`;
+        else if (ext === 'css') snippet = `background-image: url("${url}");`;
+        
+        updateFileContent(activeFile, currentFile.content + '\n' + snippet);
     };
 
     if (loading) return <Loader text="Syncing Game State..." />;
@@ -247,16 +279,19 @@ function EditorContent() {
                  <FileTree 
                     files={gameData.files || {}}
                     activeFile={activeFile}
-                    onSelectFile={(f) => { setActiveFile(f); if(window.innerWidth < 768) { setShowSidebar(false); setMobileTab('editor'); } }}
+                    onSelectFile={(f) => { 
+                        setActiveFile(f); 
+                        if(window.innerWidth < 768) { 
+                            setShowSidebar(false); 
+                            setMobileTab('editor'); 
+                        } 
+                    }}
                     onCreateFile={(name) => {
                         const ext = name.split('.').pop().toLowerCase();
                         let lang = 'javascript';
                         if (ext === 'html') lang = 'html';
                         else if (ext === 'css') lang = 'css';
-                        setGameData(prev => ({
-                            ...prev,
-                            files: { ...prev.files, [name]: { content: '', language: lang } }
-                        }));
+                        updateFileContent(name, '', lang);
                         setActiveFile(name);
                     }}
                     showSidebar={showSidebar}
@@ -310,11 +345,20 @@ function EditorContent() {
                     </div>
 
                     <div className={`terminal-box ${mobileTab !== 'terminal' ? 'hidden-mobile' : ''} mobile-panel`}>
-                         <Terminal files={gameData.files} onUpdateFiles={updateFileContent} />
+                <Terminal 
+                    files={gameData?.files || {}} 
+                    onUpdateFiles={updateFileContent}
+                    onRun={() => setPreviewKey(k => k + 1)}
+                    onFixError={(err) => window.dispatchEvent(new CustomEvent('AI_FIX_REQUEST', { detail: { error: err } }))}
+                />
+            </div>
+
+                    <div className={`auditor-box ${mobileTab !== 'auditor' ? 'hidden-mobile' : ''} mobile-panel`}>
+                         <Auditor files={gameData.files} />
                     </div>
 
                     <div className={`assets-box ${mobileTab !== 'assets' ? 'hidden-mobile' : ''} mobile-panel`}>
-                         <AssetManager onSpriteEditor={() => {}} />
+                         <AssetManager onInsert={handleInsertAsset} onSpriteEditor={() => setShowSpriteEditor(true)} />
                     </div>
                 </main>
             </div>
@@ -323,7 +367,7 @@ function EditorContent() {
                 <button className={mobileTab === 'editor' ? 'active' : ''} onClick={() => setMobileTab('editor')}>
                     <Code size={18} /> <span>CODE</span>
                 </button>
-                <button className={mobileTab === 'files' ? 'active' : ''} onClick={() => { setShowSidebar(true); setMobileTab('editor'); }}>
+                <button className={mobileTab === 'editor' && showSidebar ? 'active' : ''} onClick={() => { setShowSidebar(!showSidebar); if(!showSidebar) setMobileTab('editor'); }}>
                     <Files size={18} /> <span>FILES</span>
                 </button>
                 <button className={mobileTab === 'preview' ? 'active' : ''} onClick={() => setMobileTab('preview')}>
@@ -335,10 +379,20 @@ function EditorContent() {
                 <button className={mobileTab === 'terminal' ? 'active' : ''} onClick={() => setMobileTab('terminal')}>
                     <TerminalIcon size={18} /> <span>TERM</span>
                 </button>
+                <button className={mobileTab === 'auditor' ? 'active' : ''} onClick={() => setMobileTab('auditor')}>
+                    <Layout size={18} /> <span>AUDIT</span>
+                </button>
                 <button className={mobileTab === 'assets' ? 'active' : ''} onClick={() => setMobileTab('assets')}>
                     <ImageIcon size={18} /> <span>ASSETS</span>
                 </button>
             </div>
+
+            {showSpriteEditor && (
+                <SpriteEditor 
+                    onSave={handleSaveSprite} 
+                    onClose={() => setShowSpriteEditor(false)} 
+                />
+            )}
 
             {successMsg && <div className="toast">{successMsg}</div>}
 
