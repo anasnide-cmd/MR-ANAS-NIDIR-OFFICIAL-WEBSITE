@@ -7,6 +7,7 @@ import { doc, getDoc, setDoc, collection } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 import dynamic from 'next/dynamic';
 import Loader from '../../../components/Loader';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Shared Components
 const AICopilot = dynamic(() => import('../../../components/MREditor/AICopilot'), { ssr: false });
@@ -16,6 +17,7 @@ const Terminal = dynamic(() => import('../../../components/MREditor/Terminal'), 
 const Auditor = dynamic(() => import('../../../components/MREditor/Auditor'), { ssr: false });
 const FileTree = dynamic(() => import('../../../components/MREditor/FileTree'), { ssr: false });
 const ARPreview = dynamic(() => import('../../../components/MREditor/ARPreview'), { ssr: false });
+const NormalPreview = dynamic(() => import('../../../components/MREditor/NormalPreview'), { ssr: false });
 
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
@@ -56,7 +58,10 @@ function EditorContent() {
     const [rightPanel, setRightPanel] = useState('copilot'); // 'copilot', 'assets'
     const [showSpriteEditor, setShowSpriteEditor] = useState(false);
     const [activeTab, setActiveTab] = useState('editor'); // 'editor', 'preview', 'ai', 'terminal', 'assets'
+    const [previewMode, setPreviewMode] = useState('normal'); // 'normal', 'ar'
     const [previewDoc, setPreviewDoc] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
+    const [localProjectId, setLocalProjectId] = useState(projectId);
 
     const [projectData, setProjectData] = useState({
         name: 'Untitled Project',
@@ -75,6 +80,7 @@ function EditorContent() {
             if (projectId) {
                 const docSnap = await getDoc(doc(db, 'user_sites', projectId));
                 if (docSnap.exists()) {
+                    setLocalProjectId(docSnap.id);
                     const data = docSnap.data();
                     // Handle legacy projects or projects without 'files' structure
                     if (!data.files) {
@@ -98,15 +104,33 @@ function EditorContent() {
     }, [projectId, router]);
 
     const handleSave = async () => {
-        if (!user || !projectId) return;
+        if (!user) return;
         setSaving(true);
         try {
-            await setDoc(doc(db, 'user_sites', projectId), {
-                ...projectData,
-                updatedAt: new Date().toISOString()
-            }, { merge: true });
+            let targetId = localProjectId;
+            if (!targetId) {
+                const newRef = doc(collection(db, 'user_sites'));
+                targetId = newRef.id;
+                await setDoc(newRef, {
+                    ...projectData,
+                    userId: user.uid,
+                    id: targetId,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+                setLocalProjectId(targetId);
+                router.replace(`/mr-build/editor?id=${targetId}`);
+            } else {
+                await setDoc(doc(db, 'user_sites', targetId), {
+                    ...projectData,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+            }
+            setSuccessMsg('Project synchronized.');
+            setTimeout(() => setSuccessMsg(''), 3000);
         } catch (err) {
             console.error(err);
+            alert('Save failed: ' + err.message);
         } finally {
             setSaving(false);
         }
@@ -278,7 +302,39 @@ function EditorContent() {
 
                 {showPreview && (
                     <div className={`preview-area ${activeTab !== 'preview' ? 'hidden-mobile' : ''}`}>
-                        <ARPreview srcDoc={previewDoc} />
+                        <div className="preview-mode-selector">
+                            <div className={`selector-bg ${previewMode}`}></div>
+                            <button 
+                                className={previewMode === 'normal' ? 'active' : ''} 
+                                onClick={() => setPreviewMode('normal')}
+                            >
+                                <Monitor size={14} /> <span>NORMAL</span>
+                            </button>
+                            <button 
+                                className={previewMode === 'ar' ? 'active' : ''} 
+                                onClick={() => setPreviewMode('ar')}
+                            >
+                                <Smartphone size={14} /> <span>AR</span>
+                            </button>
+                        </div>
+                        <div className="preview-window">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={previewMode}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 1.05 }}
+                                    transition={{ duration: 0.3, ease: "easeOut" }}
+                                    style={{ width: '100%', height: '100%' }}
+                                >
+                                    {previewMode === 'ar' ? (
+                                        <ARPreview srcDoc={previewDoc} />
+                                    ) : (
+                                        <NormalPreview srcDoc={previewDoc} />
+                                    )}
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
                     </div>
                 )}
 
@@ -321,6 +377,8 @@ function EditorContent() {
                     onClose={() => setShowSpriteEditor(false)} 
                 />
             )}
+
+            {successMsg && <div className="toast">{successMsg}</div>}
 
             <style jsx>{`
                 .mr-editor { height: 100vh; display: flex; flex-direction: column; background: #050505; color: #fff; overflow: hidden; }
@@ -368,7 +426,28 @@ function EditorContent() {
                 .panel-tabs button.active { color: #00f0ff; border-bottom: 2px solid #00f0ff; }
                 .panel-content { flex: 1; overflow: hidden; }
                 
-                .preview-area { width: 400px; border-right: 1px solid #1a1a1a; flex-shrink: 0; }
+                .preview-area { width: 450px; border-left: 1px solid #1a1a1a; flex-shrink: 0; display: flex; flex-direction: column; background: #000; z-index: 5; }
+                .preview-mode-selector { 
+                    display: flex; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; 
+                    height: 40px; padding: 4px; gap: 4px; position: relative;
+                }
+                .selector-bg {
+                    position: absolute; top: 4px; height: 32px; width: calc(50% - 6px);
+                    background: #1a1a1a; border-radius: 6px; transition: 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                }
+                .selector-bg.normal { left: 4px; }
+                .selector-bg.ar { left: calc(50% + 2px); }
+
+                .preview-mode-selector button { 
+                    flex: 1; background: transparent; border: none; color: #555; 
+                    font-size: 0.65rem; font-weight: 800; cursor: pointer; 
+                    display: flex; align-items: center; justify-content: center; 
+                    gap: 8px; z-index: 2; transition: color 0.3s;
+                    letter-spacing: 1px;
+                }
+                .preview-mode-selector button.active { color: #00f0ff; }
+                .preview-window { flex: 1; overflow: hidden; position: relative; background: #000; }
                 .right-panel { width: 300px; background: #080808; flex-shrink: 0; }
                 
                 @media (max-width: 768px) {
@@ -385,6 +464,9 @@ function EditorContent() {
                 .sprite-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
                 .modal-content { background: #111; padding: 10px; border-radius: 12px; position: relative; width: 95%; height: 95%; }
                 .close-btn { position: absolute; top: 10px; right: 10px; background: #ff4444; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; z-index: 10001; }
+
+                .toast { position: fixed; bottom: 70px; right: 20px; background: #00f0ff; color: #000; padding: 10px 20px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; animation: slideUp 0.3s; z-index: 1000; }
+                @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
             `}</style>
         </div>
     );
