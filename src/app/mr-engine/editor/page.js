@@ -300,19 +300,27 @@ function EditorContent() {
 
                 <main className="main-area">
                     <div className={`editor-box ${(showPreview && (mobileTab === 'editor' || window.innerWidth >= 768)) ? 'split' : ''} ${mobileTab !== 'editor' && 'hidden-mobile'}`}>
-                         <Editor
-                            value={currentFile.content}
-                            onValueChange={code => updateFileContent(activeFile, code)}
-                            highlight={code => highlight(code, languages[currentFile.language || 'javascript'] || languages.markup)}
-                            padding={20}
-                            className="code-editor"
-                            style={{
-                                fontFamily: '"Fira Code", monospace',
-                                fontSize: 13,
-                                backgroundColor: 'transparent',
-                                minHeight: '100%',
-                            }}
-                        />
+                        <div className="editor-container-with-lines">
+                            <div className="line-numbers">
+                                {currentFile.content.split('\n').map((_, i) => (
+                                    <div key={i} className="line-number">{i + 1}</div>
+                                ))}
+                            </div>
+                            <Editor
+                                value={currentFile.content}
+                                onValueChange={code => updateFileContent(activeFile, code)}
+                                highlight={code => highlight(code, languages[currentFile.language || 'javascript'] || languages.markup)}
+                                padding={20}
+                                className="code-editor"
+                                style={{
+                                    fontFamily: '"Fira Code", monospace',
+                                    fontSize: 13,
+                                    backgroundColor: 'transparent',
+                                    minHeight: '100%',
+                                    flex: 1
+                                }}
+                            />
+                        </div>
                     </div>
 
                     <div className={`preview-box ${(!showPreview || (mobileTab !== 'preview' && window.innerWidth < 768)) ? 'hidden' : ''}`}>
@@ -446,7 +454,21 @@ function EditorContent() {
                 .main-area { flex: 1; display: flex; position: relative; }
                 
                 .editor-box { flex: 1; overflow-y: auto; background: #050505; }
-                .editor-box.split { border-right: 1px solid #1a1a1a; }
+                .editor-container-with-lines { display: flex; position: relative; min-height: 100%; }
+                .line-numbers { 
+                    padding: 20px 0; 
+                    text-align: right; 
+                    background: rgba(0,0,0,0.3); 
+                    border-right: 1px solid rgba(255,255,255,0.05); 
+                    color: #444; 
+                    font-family: "Fira Code", monospace; 
+                    font-size: 13px; 
+                    line-height: 1.5; 
+                    user-select: none; 
+                    min-width: 45px;
+                    padding-right: 10px;
+                }
+                .line-number { height: 1.5em; padding-right: 5px; }
                 
                 .preview-box { flex: 1; display: flex; flex-direction: column; background: #000; }
                 .preview-tools { padding: 10px 15px; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: #444; font-weight: 800; }

@@ -225,19 +225,28 @@ function EditorContent() {
 
                 <div className={`editor-content ${(activeTab !== 'editor' && window.innerWidth < 768) ? 'hidden-mobile' : ''}`}>
                     <div className={`code-area ${(bottomPanel === 'terminal' || bottomPanel === 'auditor') && window.innerWidth < 768 && activeTab !== 'editor' ? 'hidden-mobile' : ''}`}>
-                        <Editor
-                            value={currentFile.content}
-                            onValueChange={code => updateFileContent(activeFile, code)}
-                            highlight={code => highlight(code, languages[currentFile.language] || languages.javascript)}
-                            padding={20}
-                            style={{
-                                fontFamily: '"Fira Code", monospace',
-                                fontSize: 13,
-                                backgroundColor: 'transparent',
-                                minHeight: '100%',
-                                color: '#fff'
-                            }}
-                        />
+                        <div className="editor-container-with-lines">
+                            <div className="line-numbers">
+                                {currentFile.content.split('\n').map((_, i) => (
+                                    <div key={i} className="line-number">{i + 1}</div>
+                                ))}
+                            </div>
+                            <Editor
+                                value={currentFile.content}
+                                onValueChange={code => updateFileContent(activeFile, code)}
+                                highlight={code => highlight(code, languages[currentFile.language] || languages.javascript)}
+                                padding={20}
+                                className="code-editor"
+                                style={{
+                                    fontFamily: '"Fira Code", monospace',
+                                    fontSize: 13,
+                                    backgroundColor: 'transparent',
+                                    minHeight: '100%',
+                                    color: '#fff',
+                                    flex: 1
+                                }}
+                            />
+                        </div>
                     </div>
                     
                     <div className={`bottom-panel ${activeTab !== 'terminal' && activeTab !== 'auditor' ? 'hidden-mobile' : ''}`}>
@@ -327,6 +336,21 @@ function EditorContent() {
                 
                 .editor-content { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #1a1a1a; min-width: 0; }
                 .code-area { flex: 1; overflow-y: auto; background: #080808; }
+                .editor-container-with-lines { display: flex; position: relative; min-height: 100%; }
+                .line-numbers { 
+                    padding: 20px 0; 
+                    text-align: right; 
+                    background: rgba(0,0,0,0.3); 
+                    border-right: 1px solid rgba(255,255,255,0.05); 
+                    color: #444; 
+                    font-family: "Fira Code", monospace; 
+                    font-size: 13px; 
+                    line-height: 1.5; 
+                    user-select: none; 
+                    min-width: 45px;
+                    padding-right: 10px;
+                }
+                .line-number { height: 1.5em; padding-right: 5px; }
                 
                 .bottom-panel { height: 35%; border-top: 1px solid #1a1a1a; display: flex; flex-direction: column; flex-shrink: 0; }
                 .panel-tabs { display: flex; background: #000; border-bottom: 1px solid #1a1a1a; }
