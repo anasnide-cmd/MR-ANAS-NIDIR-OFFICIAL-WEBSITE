@@ -130,15 +130,21 @@ function EditorContent() {
     
     const handleSaveSprite = async (spriteData) => {
         if (!user) return;
+        console.log("Saving sprite to storage...", spriteData.name);
         try {
             const storageRef = ref(storage, `users/${user.uid}/uploads/${spriteData.name}`);
-            await uploadBytes(storageRef, spriteData.blob);
+            const result = await uploadBytes(storageRef, spriteData.blob);
+            console.log("Sprite uploaded successfully:", result.fullPath);
+
+            // Force a small delay to ensure Firebase Storage propagation
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             // Alert AssetManager to refresh
             window.dispatchEvent(new CustomEvent('ASSET_MODIFIED'));
             setShowSpriteEditor(false);
         } catch (err) {
             console.error("Failed to save sprite:", err);
-            alert("Syncing failed.");
+            alert(`Syncing failed: ${err.message}`);
         }
     };
 

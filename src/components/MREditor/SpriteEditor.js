@@ -14,7 +14,8 @@ import {
     X, 
     Download,
     Eye,
-    Maximize2
+    Maximize2,
+    Loader2
 } from 'lucide-react';
 
 export default function SpriteEditor({ onSave, onClose, initialData = null }) {
@@ -25,6 +26,7 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
     const [zoom, setZoom] = useState(20);
     const [showGrid, setShowGrid] = useState(true);
     const [isDrawing, setIsDrawing] = useState(false);
+    const [saving, setSaving] = useState(false);
     
     // Pixel Data: 2D array [y][x] = hex color or null (transparent)
     const [pixels, setPixels] = useState(() => {
@@ -179,7 +181,11 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
         setIsDrawing(false);
     };
 
-    const handleSaveLocal = () => {
+    const handleSaveLocal = async () => {
+        if (saving) return;
+        setSaving(true);
+        setIsDrawing(false); // Ensure we stop drawing
+        
         // Create a hidden canvas to export the real size image
         const outCanvas = document.createElement('canvas');
         outCanvas.width = gridSize;
@@ -195,14 +201,33 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
             });
         });
 
-        outCanvas.toBlob((blob) => {
-            onSave({
-                blob,
-                pixels,
-                gridSize,
-                name: `sprite_${Date.now()}.png`
-            });
-        }, 'image/png');
+        const name = `sprite_${Date.now()}.png`;
+
+        try {
+            outCanvas.toBlob(async (blob) => {
+                if (!blob) {
+                    alert("Export failed: Could not generate image blob.");
+                    setSaving(false);
+                    return;
+                }
+                try {
+                    await onSave({
+                        blob,
+                        pixels,
+                        gridSize,
+                        name
+                    });
+                } catch (e) {
+                    console.error("onSave failed:", e);
+                } finally {
+                    setSaving(false);
+                }
+            }, 'image/png');
+        } catch (err) {
+            console.error("toBlob failed:", err);
+            alert("Export failed: Canvas error.");
+            setSaving(false);
+        }
     };
 
     const changeGridSize = (newSize) => {
@@ -222,8 +247,11 @@ export default function SpriteEditor({ onSave, onClose, initialData = null }) {
                         <span>SPRITE MAKER</span>
                     </div>
                     <div className="header-actions">
-                        <button onClick={handleSaveLocal} className="btn-primary"><Save size={14}/> <span>Save to Assets</span></button>
-                        <button onClick={onClose} className="btn-close"><X size={18}/></button>
+                        <button onClick={handleSaveLocal} className={`btn-primary ${saving ? 'disabled' : ''}`} disabled={saving}>
+                            {saving ? <Loader2 className="spin" size={14} /> : <Save size={14}/>}
+                            <span>{saving ? 'Syncing...' : 'Save to Assets'}</span>
+                        </button>
+                        <button onClick={onClose} className="btn-close" disabled={saving}><X size={18}/></button>
                     </div>
                 </header>
 

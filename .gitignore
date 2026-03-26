@@ -1,7 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
+**/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -29,6 +30,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+/tmp/
+test_*.mjs
+tmp_check_db.mjs
+*_results*.txt
+*_results*.json
+*_log.txt
+cache_cleared_dev.txt
+optimization_build.txt
+capture.js
 
 # env files (can opt-in for committing if needed)
 .env*
