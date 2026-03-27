@@ -9,7 +9,7 @@ export default function ClientLayout({ children, navItems }) {
     const isSearchPage = pathname?.startsWith('/mr-search') || pathname?.startsWith('/nex-ai') || pathname?.startsWith('/web-store');
 
     // Conditionally render based on '/mr-build', '/mr-engine', shared site '/s/', or '/celco' path
-    if (pathname?.startsWith('/mr-build') || pathname?.startsWith('/mr-engine') || pathname?.startsWith('/s/') || pathname?.startsWith('/celco')) {
+    if (pathname?.startsWith('/mr-build') || pathname?.startsWith('/mr-engine') || pathname?.startsWith('/s/') || pathname?.startsWith('/celco') || pathname?.startsWith('/lab')) {
         return (
             <>
                 <PresenceTracker />

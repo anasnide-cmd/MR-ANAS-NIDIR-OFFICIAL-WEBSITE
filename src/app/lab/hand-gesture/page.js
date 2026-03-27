@@ -23,11 +23,25 @@ export default function HandGesturePage() {
     const canvasRef = useRef(null);
     const [handLandmarker, setHandLandmarker] = useState(null);
     const [status, setStatus] = useState('Initializing Vision Core...');
+    const [cameraStarted, setCameraStarted] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeGesture, setActiveGesture] = useState('NONE');
     const [confidence, setConfidence] = useState(0);
     const [landmarksVisible, setLandmarksVisible] = useState(true);
     const [error, setError] = useState(null);
+    const [permissionStatus, setPermissionStatus] = useState('prompt');
+
+    // Check permissions on mount
+    useEffect(() => {
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'camera' }).then((result) => {
+                setPermissionStatus(result.state);
+                result.onchange = () => setPermissionStatus(result.state);
+            }).catch(() => {
+                setPermissionStatus('unsupported');
+            });
+        }
+    }, []);
 
     // Initialize MediaPipe HandLandmarker
     useEffect(() => {
@@ -46,11 +60,11 @@ export default function HandGesturePage() {
                     numHands: 2
                 });
                 setHandLandmarker(landmarker);
-                setStatus('Neural Models Ready.');
-                startWebcam();
+                setStatus('Neural Models Ready. Awaiting Sensor Activation...');
+                setLoading(false);
             } catch (err) {
                 console.error("MP Init Error:", err);
-                setError("Failed to initialize Vision Core.");
+                setError("Failed to initialize Vision Core: " + err.message);
                 setLoading(false);
             }
         }
@@ -58,22 +72,64 @@ export default function HandGesturePage() {
     }, []);
 
     const startWebcam = async () => {
+        setError(null);
+        setLoading(true);
+        setStatus('Initializing Optical Link...');
+
+        // 1. Check for Secure Context
+        if (!window.isSecureContext) {
+            setError("NON-SECURE CONTEXT: Camera access is restricted. Use 'localhost' or HTTPS. [SecureContextError]");
+            setLoading(false);
+            return;
+        }
+
         try {
-            setStatus('Connecting to Camera...');
+            // 2. Try to enumerate devices first (helps wake up the permissions logic in some browsers)
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const hasVideo = devices.some(device => device.kind === 'videoinput');
+            
+            if (!hasVideo) {
+                setError("NO HARDWARE DETECTED: System was unable to locate a vision sensor. [NotFoundError]");
+                setLoading(false);
+                return;
+            }
+
+            // 3. Request Access with Universal Constraints
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 1280, height: 720, frameRate: { ideal: 30 } }
+                video: {
+                    facingMode: "user",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            }).catch(async (e) => {
+                // 3b. Permissive Fallback
+                console.warn("Retrying with minimal constraints...");
+                return await navigator.mediaDevices.getUserMedia({ video: true });
             });
+
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
-                videoRef.current.addEventListener("loadeddata", () => {
-                    setLoading(false);
-                    setStatus('Uplink Synchronized.');
-                });
+                // Ensure video plays
+                await videoRef.current.play();
+                setLoading(false);
+                setCameraStarted(true);
+                setStatus('Uplink Synchronized.');
             }
         } catch (err) {
-            console.error("Webcam Error:", err);
-            setError("Camera Access Denied.");
+            console.error("Critical Webcam Error:", err.name, err.message);
+            
+            let msg = "Camera Access Denied.";
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                msg = "PERMISSION_BLOCKED: Browser sensors are manually disabled. [NotAllowedError]";
+            } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                msg = "SENSOR_IN_USE: Another application is currently using the vision hardware. [NotReadableError]";
+            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                msg = "SENSOR_DISCONNECTED: Vision hardware not found. [NotFoundError]";
+            }
+            
+            setError(`${msg} -- Code: ${err.name}`);
             setLoading(false);
+            setCameraStarted(false);
         }
     };
 
@@ -195,10 +251,73 @@ export default function HandGesturePage() {
         }
     };
 
+    const [consented, setConsented] = useState(false);
+
     return (
         <div className="gesture-container">
             <AnimatePresence>
-                {loading && (
+                {/* Protocol Consent UI */}
+                {!consented && (
+                    <motion.div 
+                        className="vision-loader"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div 
+                            className="panel"
+                            style={{ maxWidth: '500px', textAlign: 'center', border: '1px solid rgba(255,0,255,0.3)' }}
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                        >
+                            <Scan size={60} color="#ff00ff" style={{ marginBottom: '25px' }} />
+                            <h1 style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', letterSpacing: '4px', marginBottom: '15px' }}>NEURAL_HANDSHAKE</h1>
+                            <p style={{ fontSize: '0.85rem', opacity: 0.6, lineHeight: 1.8, marginBottom: '30px' }}>
+                                This protocol requires active vision sensing for hand gesture detection. 
+                                No biometric data is stored or transmitted. All processing occurs locally 
+                                within your browser's neural lattice.
+                            </p>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '35px', textAlign: 'left' }}>
+                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+                                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: permissionStatus === 'granted' ? '#00ff88' : permissionStatus === 'denied' ? '#ff5050' : '#ffa500' }}></div>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: 800 }}>PERMISSION_STATE: <span style={{ color: '#ff00ff' }}>{permissionStatus.toUpperCase()}</span></div>
+                                </div>
+                                <div style={{ fontSize: '0.7rem', opacity: 0.5, padding: '0 10px', textAlign: 'center' }}>
+                                    By establishing uplink, you authorize the system to access your vision sensor for real-time gesture processing.
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <Link href="/lab" style={{ flex: 1 }}>
+                                    <button style={{ width: '100%', padding: '14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 900 }}>ABORT</button>
+                                </Link>
+                                <button 
+                                    onClick={() => {
+                                        setConsented(true);
+                                        startWebcam();
+                                    }}
+                                    style={{ 
+                                        flex: 2, 
+                                        padding: '14px', 
+                                        background: '#ff00ff', 
+                                        color: '#fff', 
+                                        border: 'none', 
+                                        borderRadius: '8px', 
+                                        cursor: 'pointer', 
+                                        fontSize: '0.7rem', 
+                                        fontWeight: 900,
+                                        boxShadow: '0 0 30px rgba(255,0,255,0.3)'
+                                    }}
+                                >
+                                    ESTABLISH UPLINK
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+
+                {loading && consented && (
                     <motion.div 
                         className="vision-loader"
                         exit={{ opacity: 0 }}
@@ -216,6 +335,31 @@ export default function HandGesturePage() {
                 animate={{ opacity: 1, scale: 1 }}
             >
                 <div className="scanner-line" />
+                
+                {/* Manual Start Button Fallback */}
+                {!cameraStarted && !loading && !error && consented && (
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 110, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyCenter: 'center', textAlign: 'center' }}>
+                        <motion.div 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            className="panel" 
+                            style={{ background: 'rgba(255,255,255,0.02)', padding: '40px', border: '1px solid rgba(255,0,255,0.2)' }}
+                        >
+                            <Hand size={48} color="#ff00ff" style={{ marginBottom: '20px' }} />
+                            <h2 style={{ fontFamily: 'Orbitron', letterSpacing: '2px', marginBottom: '10px' }}>CONNECTION_LOST</h2>
+                            <p style={{ opacity: 0.5, fontSize: '0.85rem', maxWidth: '300px', marginBottom: '30px' }}>
+                                Neural handshake interrupted. Manual uplink required.
+                            </p>
+                            <button 
+                                onClick={startWebcam}
+                                style={{ padding: '15px 40px', background: '#ff00ff', color: '#fff', border: 'none', borderRadius: '30px', fontWeight: 900, letterSpacing: '3px', cursor: 'pointer', boxShadow: '0 0 40px rgba(255,0,255,0.4)', fontSize: '0.75rem' }}
+                            >
+                                RETRY UPLINK
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+
                 <video 
                     ref={videoRef} 
                     className="video-feed" 
