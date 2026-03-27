@@ -15,6 +15,7 @@
     "@ai-sdk/openai": "^3.0.12",
     "@ai-sdk/react": "^3.0.41",
     "@heroui/user": "^2.2.24",
+    "@mediapipe/tasks-vision": "^0.10.34",
     "@paypal/react-paypal-js": "^8.9.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",

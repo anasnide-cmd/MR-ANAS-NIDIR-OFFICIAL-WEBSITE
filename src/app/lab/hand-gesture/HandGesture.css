@@ -1,0 +1,152 @@
+/* Hand Gesture Protocol Styles */
+
+.gesture-container {
+    min-height: 100vh;
+    background: #030308;
+    color: #fff;
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+}
+
+/* Vision Feed Area */
+.vision-zone {
+    background: #000;
+    border: 1px solid rgba(255, 0, 255, 0.2);
+    border-radius: 24px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 50px rgba(255, 0, 255, 0.1);
+}
+
+.video-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: rotateY(180deg);
+}
+
+.vision-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    transform: rotateY(180deg);
+}
+
+/* Neural Skeleton Overlays */
+.scanner-line {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #ff00ff, transparent);
+    z-index: 5;
+    animation: scan 3s linear infinite;
+    opacity: 0.3;
+}
+
+@keyframes scan {
+    0% { top: 0; }
+    100% { top: 100%; }
+}
+
+/* Telemetry Sidebar */
+.telemetry-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.panel {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 25px;
+}
+
+.panel-header {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #ff00ff;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Gesture Item List */
+.gesture-list {
+    list-style: none;
+    padding: 0;
+}
+
+.gesture-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    transition: all 0.3s;
+}
+
+.gesture-item.active {
+    background: rgba(255, 0, 255, 0.1);
+    border-color: #ff00ff;
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.2);
+}
+
+.gesture-name { font-weight: 700; font-size: 0.85rem; }
+.status-pill { 
+    font-size: 0.65rem; 
+    font-weight: 950; 
+    padding: 4px 10px; 
+    border-radius: 20px; 
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Loading State */
+.vision-loader {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    color: #ff00ff;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+}
+
+.loader-glow {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #ff00ff;
+    border-radius: 50%;
+    box-shadow: 0 0 20px #ff00ff;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.5; }
+}
+
+@media (max-width: 1024px) {
+    .gesture-container { grid-template-columns: 1fr; }
+    .telemetry-aside { order: 2; }
+}

@@ -61,7 +61,8 @@ export default function HomeClient() {
         { label: 'Home', href: '/', ariaLabel: 'Go to Home' },
         { label: 'Mr Build', href: '/mr-build', ariaLabel: 'Launch Mr Build' },
         { label: 'Celco', href: '/celco', ariaLabel: 'Open Celco Spreadsheet' },
-        { label: 'Nex AI', href: '/nex-ai', ariaLabel: 'Interact with Nex AI' }
+        { label: 'Nex AI', href: '/nex-ai', ariaLabel: 'Interact with Nex AI' },
+        { label: 'Lab', href: '/lab', ariaLabel: 'Enter Researcher Lab' }
       ]
     },
     {

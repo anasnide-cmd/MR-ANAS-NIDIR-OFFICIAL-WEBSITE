@@ -1,0 +1,208 @@
+/* Lab Application Styles - Quantum Blue Aesthetic */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  --lab-bg: #030308;
+  --lab-accent: #00f0ff;
+  --lab-blue: #0070ff;
+  --lab-deep: #050510;
+  --lab-glass: rgba(255, 255, 255, 0.02);
+  --lab-border: rgba(0, 240, 255, 0.1);
+  --lab-glow: 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+.lab-container {
+  min-height: 100vh;
+  background: var(--lab-bg);
+  color: #fff;
+  padding: 40px;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Ambient Particles / Background Glows */
+.ambient-quantum {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 20% 30%, rgba(0, 112, 255, 0.05) 0%, transparent 40%),
+              radial-gradient(circle at 80% 70%, rgba(0, 240, 255, 0.05) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Header */
+.lab-header {
+  margin-bottom: 60px;
+  position: relative;
+  z-index: 10;
+}
+
+.lab-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid var(--lab-accent);
+  border-radius: 20px;
+  font-size: 0.7rem;
+  color: var(--lab-accent);
+  font-weight: 800;
+  letter-spacing: 3px;
+  margin-bottom: 15px;
+  background: rgba(0, 240, 255, 0.05);
+  box-shadow: var(--lab-glow);
+}
+
+.lab-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 3.5rem;
+  margin: 0;
+  background: linear-gradient(90deg, #fff, #888);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -1px;
+}
+
+.lab-title span {
+  color: var(--lab-accent);
+  -webkit-text-fill-color: var(--lab-accent);
+  text-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
+}
+
+/* Grid Layout */
+.lab-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+  position: relative;
+  z-index: 10;
+}
+
+/* Experiment Cards */
+.experiment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.experiment-card {
+  background: var(--lab-glass);
+  border: 1px solid var(--lab-border);
+  border-radius: 24px;
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+}
+
+.experiment-card:hover {
+  transform: translateY(-10px);
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 20px 60px rgba(0, 0, 10, 0.5), 0 0 40px rgba(0, 240, 255, 0.1);
+}
+
+.experiment-card .card-icon {
+  width: 50px;
+  height: 50px;
+  background: rgba(0, 240, 255, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lab-accent);
+  margin-bottom: 25px;
+  filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.3));
+}
+
+.experiment-card h3 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+}
+
+.experiment-card p {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Side Panel (Neural Status) */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.status-panel {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--lab-border);
+  border-radius: 24px;
+  padding: 30px;
+}
+
+.status-title {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 2px;
+  font-weight: 800;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.status-row .label { font-size: 0.85rem; color: #888; }
+.status-row .value { font-weight: 700; color: var(--lab-accent); font-family: 'JetBrains Mono', monospace; }
+
+/* Workbench (Mock Tool) */
+.workbench {
+  background: #000;
+  border: 1px solid var(--lab-border);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-top: 50px;
+}
+
+.workbench-bar {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 0.7rem;
+  color: #666;
+  border-bottom: 1px solid var(--lab-border);
+}
+
+.workbench-dots { display: flex; gap: 6px; }
+.workbench-dots span { width: 8px; height: 8px; border-radius: 50%; background: #333; }
+
+.workbench-content {
+  padding: 30px;
+  min-height: 300px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.code-line { display: flex; gap: 20px; }
+.line-num { color: #333; user-select: none; }
+.line-text { color: #fff; }
+
+.type-green { color: #00ff88; }
+.type-blue { color: #00f0ff; }
+.type-gold { color: #ffd700; }
+
+@media (max-width: 1024px) {
+  .lab-grid { grid-template-columns: 1fr; }
+  .lab-title { font-size: 2.5rem; }
+}
