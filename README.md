@@ -1,51 +1,83 @@
 # MR ANAS NIDIR OFFICIAL WEBSITE
 
-The digital ecosystem for ANAS NIDIR, featuring advanced site-building tools, semantic search, and e-commerce capabilities.
+The digital ecosystem for ANAS NIDIR, featuring advanced site-building tools, semantic search, e-commerce capabilities, and AI-driven experiences.
+
+![Ecosystem Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=for-the-badge&logo=next.js)
+![Firebase](https://img.shields.io/badge/Firebase-Backend-FFCA28?style=for-the-badge&logo=firebase)
+![React Three Fiber](https://img.shields.io/badge/Three.js-3D_Visuals-black?style=for-the-badge&logo=three.js)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-Styling-38B2AC?style=for-the-badge&logo=tailwind-css)
+
+## 🌌 Core Architecture
+
+This project is built as a high-performance, AI-first platform utilizing modern web technologies:
+
+- **Framework**: Next.js 16.1 (App Router)
+- **Styling & Animation**: Tailwind CSS v4, Framer Motion, GSAP, and HeroUI 
+- **3D Experiences**: Three.js, React Three Fiber, React Three Drei
+- **Backend/DB**: Firebase Ecosystem (Authentication, Firestore, Storage, Hosting)
+- **AI Integration**: Vercel AI SDK, OpenAI integration for conversational and generative capabilities
+- **Payment & Data**: PayPal JS SDK, Chart.js, HTML5-Qrcode
+
+## 🚀 The Ecosystem
+
+Discover the comprehensive suite of applications within the MR ANAS NIDIR platform:
+
+- **🏗️ [MR BUILD](./docs/mr-build.md)**: An advanced, browser-based website builder featuring drag-and-drop templates, an advanced code editor, and Nexus AI Magic Build.
+- **🔍 [MR SEARCH](./docs/mr-search.md)**: "Super Engine" search platform delivering global indexing, Conversational AI mode, and semantic retrieval.
+- **🛍️ [MR SHOP](./docs/mr-shop.md)**: E-commerce platform sporting a Dark Nebula aesthetic, robust product management, and a secure checkout simulation.
+- **📚 [SAVOIRPEDIA](./docs/savoirpedia.md)**: The ultimate knowledge base and technical deep-dive hub, optimizing dynamic content for SEO.
+- **🎮 [MR GAMES](./docs/mr-games.md)**: Interactive gaming portal for engaging user experiences.
+- **🔐 [ADMIN & ACCOUNT](./docs/admin-account.md)**: A centralized control center for user profiles and site administration.
 
 ## 📚 Documentation
 
-Comprehensive documentation and **[User Tutorials](./docs/tutorial.md)** are available in the [docs/](./docs/index.md) directory.
+Comprehensive documentation and guides are available in the [`docs/`](./docs/index.md) directory:
 
 - [Tutorial: Getting Started](./docs/tutorial.md)
 - [Global Architecture](./docs/global-architecture.md)
 - [MR BUILD Guide](./docs/mr-build.md)
 - [MR SEARCH Guide](./docs/mr-search.md)
 
----
+## 🛠️ Getting Started
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+### Prerequisites
 
-## Getting Started
+- Node.js > 18.x
+- npm or yarn
+- Firebase CLI (for deployment)
 
-First, run the development server:
+### Installation
 
+1. Clone the repository and install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Start the development server:
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+3. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Deployment
 
-## Learn More
+Deploying the application and its configurations to Firebase:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Build the application
+npm run build
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Deploy Hosting
+npm run deploy:hosting
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Deploy Firestore Rules
+npm run deploy:rules
+```
 
-## Deploy on Vercel
+## 🤝 Contributing & Maintenance
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+To ensure a smooth development lifecycle, please adhere to standard code formatting rules and run linting before commits:
+```bash
+npm run lint
+```
