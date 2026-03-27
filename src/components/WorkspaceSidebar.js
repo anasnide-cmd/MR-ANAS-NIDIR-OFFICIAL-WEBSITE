@@ -3,27 +3,41 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
+import { motion } from 'framer-motion';
+import { 
+    LayoutDashboard, 
+    MessageSquare, 
+    ListTodo, 
+    Users, 
+    LogOut,
+    ChevronLeft,
+    ChevronRight,
+    Briefcase
+} from 'lucide-react';
 
 export default function WorkspaceSidebar({ isOpen, close, isMinimized, toggleMinimize }) {
     const pathname = usePathname();
 
     const menuItems = [
-        { name: 'Mission Control', path: '/workspace/', icon: '🚀' },
-        { name: 'Comms', path: '/workspace/chat/', icon: '💬' },
-        { name: 'Tasks', path: '/workspace/tasks/', icon: '📋' },
-        { name: 'Team', path: '/workspace/team/', icon: '👥' }, // Access control on page level
+        { name: 'Mission Control', path: '/workspace/', icon: <LayoutDashboard size={20} /> },
+        { name: 'Comms', path: '/workspace/chat/', icon: <MessageSquare size={20} /> },
+        { name: 'Tasks', path: '/workspace/tasks/', icon: <ListTodo size={20} /> },
+        { name: 'Team', path: '/workspace/team/', icon: <Users size={20} /> },
     ];
 
     return (
         <aside className={`workspace-sidebar ${isOpen ? 'open' : ''} ${isMinimized ? 'minimized' : ''}`}>
             <div className="sidebar-header">
                 <Link href="/" className="logo-link">
-                    <span className="logo-text">{isMinimized ? 'W' : 'WORKSPACE'}</span>
+                    <div className="logo-wrapper">
+                        <Briefcase size={24} className="logo-icon" />
+                        {!isMinimized && <span className="logo-text">MISSION <span className="blue-glow">OS</span></span>}
+                    </div>
                 </Link>
-                {!isMinimized && <div className="status-badge">STAFF ONLY</div>}
+                {!isMinimized && <div className="status-badge">STAFF NODE v2.4</div>}
 
                 <button className="minimize-toggle" onClick={toggleMinimize}>
-                    {isMinimized ? '➜' : '⬅'}
+                    {isMinimized ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
                 </button>
             </div>
 
@@ -38,16 +52,19 @@ export default function WorkspaceSidebar({ isOpen, close, isMinimized, toggleMin
                     >
                         <span className="nav-icon">{item.icon}</span>
                         {!isMinimized && <span className="nav-name">{item.name}</span>}
+                        {pathname === item.path && <div className="active-indicator" />}
                     </Link>
                 ))}
             </nav>
 
             <div className="sidebar-footer">
-                <div className="user-profile">
-                     {!isMinimized && <span className="user-role">STAFF MEMBER</span>}
-                </div>
+                {!isMinimized && (
+                    <div className="user-profile">
+                         <span className="user-role">STAFF MEMBER</span>
+                    </div>
+                )}
                 <button onClick={() => signOut(auth)} className="logout-btn" title={isMinimized ? 'Logout' : ''}>
-                    <span>🚪</span> {!isMinimized && 'Sign Out'}
+                    <LogOut size={18} /> {!isMinimized && 'Terminate Session'}
                 </button>
             </div>
 
@@ -55,45 +72,47 @@ export default function WorkspaceSidebar({ isOpen, close, isMinimized, toggleMin
                 .workspace-sidebar {
                     width: 260px;
                     height: 100vh;
-                    background: #0f1014;
-                    border-right: 1px solid rgba(255, 255, 255, 0.05);
+                    background: #050505;
+                    border-right: 1px solid rgba(80, 80, 255, 0.1);
                     display: flex;
                     flex-direction: column;
                     position: fixed;
                     left: 0;
                     top: 0;
                     z-index: 1000;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                 }
                 .workspace-sidebar.minimized {
                     width: 80px;
                 }
                 .sidebar-header {
                     padding: 30px 20px;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
                     position: relative;
-                    text-align: center;
                 }
+                .logo-wrapper { display: flex; align-items: center; gap: 12px; justify-content: center; }
+                .logo-icon { color: #5050ff; filter: drop-shadow(0 0 8px rgba(80, 80, 255, 0.6)); }
+                
                 .logo-text {
                     font-family: var(--font-orbitron);
-                    font-size: 1.2rem;
+                    font-size: 1rem;
                     font-weight: 900;
-                    letter-spacing: 2px;
+                    letter-spacing: 1px;
                     color: #fff;
-                    background: linear-gradient(to right, #fff, #a0a0ff);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
                 }
+                .blue-glow { color: #5050ff; }
+                
                 .status-badge {
                     font-size: 0.6rem;
-                    background: rgba(100, 100, 255, 0.1);
-                    color: #a0a0ff;
+                    background: rgba(80, 80, 255, 0.05);
+                    color: #5050ff;
                     padding: 3px 8px;
                     border-radius: 4px;
                     display: inline-block;
-                    margin-top: 8px;
-                    font-weight: 700;
-                    letter-spacing: 1px;
+                    margin: 12px auto 0;
+                    font-weight: 800;
+                    letter-spacing: 2px;
+                    border: 1px solid rgba(80, 80, 255, 0.1);
                 }
 
                 .minimize-toggle {
@@ -103,79 +122,90 @@ export default function WorkspaceSidebar({ isOpen, close, isMinimized, toggleMin
                     transform: translateY(-50%);
                     width: 24px;
                     height: 24px;
-                    background: #2a2b30;
-                    color: #fff;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    background: #5050ff;
+                    color: #000;
+                    border: none;
                     border-radius: 50%;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 0.8rem;
                     z-index: 100;
-                    transition: all 0.2s;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 0 15px rgba(80, 80, 255, 0.4);
                 }
-                .minimize-toggle:hover { background: #fff; color: #000; }
+                .minimize-toggle:hover { transform: translateY(-50%) scale(1.1); box-shadow: 0 0 25px rgba(80, 80, 255, 0.6); }
 
                 .sidebar-nav {
                     flex: 1;
-                    padding: 20px 10px;
+                    padding: 20px 12px;
                     display: flex;
                     flex-direction: column;
-                    gap: 5px;
+                    gap: 8px;
                 }
                 .nav-item {
                     display: flex;
                     align-items: center;
                     gap: 15px;
-                    padding: 12px 15px;
-                    color: rgba(255, 255, 255, 0.6);
+                    padding: 14px 18px;
+                    color: rgba(255, 255, 255, 0.4);
                     text-decoration: none;
-                    border-radius: 8px;
+                    border-radius: 12px;
                     transition: all 0.2s;
+                    position: relative;
                 }
-                .workspace-sidebar.minimized .nav-item { justify-content: center; padding: 12px 0; }
-                .nav-item:hover, .nav-item.active {
-                    background: rgba(255, 255, 255, 0.05);
+                .workspace-sidebar.minimized .nav-item { justify-content: center; padding: 14px 0; }
+                .nav-item:hover {
+                    background: rgba(255, 255, 255, 0.03);
                     color: #fff;
                 }
                 .nav-item.active {
-                    background: rgba(160, 160, 255, 0.1);
-                    color: #a0a0ff;
+                    background: rgba(80, 80, 255, 0.08);
+                    color: #fff;
+                    border: 1px solid rgba(80, 80, 255, 0.1);
                 }
-                .nav-icon { font-size: 1.2rem; }
-                .nav-name { font-size: 0.9rem; font-weight: 500; }
+                .active-indicator {
+                    position: absolute; left: 0; top: 10px; bottom: 10px; width: 4px; border-radius: 0 4px 4px 0;
+                    background: #5050ff; box-shadow: 0 0 10px #5050ff;
+                }
+                
+                .nav-icon { display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+                .nav-item.active .nav-icon { color: #5050ff; filter: drop-shadow(0 0 5px rgba(80, 80, 255, 0.5)); }
+                .nav-name { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; }
 
                 .sidebar-footer {
-                    padding: 20px;
-                    border-top: 1px solid rgba(255, 255, 255, 0.05);
+                    padding: 20px 12px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.03);
                 }
                 .user-role {
                     display: block;
-                    font-size: 0.7rem;
-                    color: #555;
-                    margin-bottom: 10px;
+                    font-size: 0.65rem;
+                    color: #444;
+                    margin-bottom: 15px;
                     text-align: center;
-                    letter-spacing: 1px;
+                    letter-spacing: 2px;
+                    font-weight: 800;
                 }
                 .logout-btn {
                     width: 100%;
-                    padding: 10px;
-                    background: rgba(255, 50, 50, 0.05);
-                    color: #ff5050;
-                    border: 1px solid rgba(255, 50, 50, 0.1);
-                    border-radius: 8px;
+                    padding: 12px;
+                    background: rgba(255, 255, 255, 0.02);
+                    color: #ff4444;
+                    border: 1px solid rgba(255, 68, 68, 0.1);
+                    border-radius: 12px;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 8px;
+                    gap: 10px;
                     transition: all 0.2s;
-                    font-weight: 600;
-                    font-size: 0.9rem;
+                    font-weight: 700;
+                    font-size: 0.8rem;
+                    letter-spacing: 1px;
                 }
                 .logout-btn:hover {
-                    background: rgba(255, 50, 50, 0.1);
+                    background: rgba(255, 68, 68, 0.05);
+                    border-color: rgba(255, 68, 68, 0.3);
                 }
                 
                 @media (max-width: 1024px) {
