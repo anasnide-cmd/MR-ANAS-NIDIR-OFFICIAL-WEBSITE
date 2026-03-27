@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import WorkspaceSidebar from '../../components/WorkspaceSidebar';
 
@@ -15,22 +15,45 @@ export default function WorkspaceLayout({ children }) {
     const router = useRouter();
 
     useEffect(() => {
+        const adminEmail = 'anasnide@gmail.com';
         const unsub = onAuthStateChanged(auth, async (u) => {
             if (u) {
                 // Check Role in Firestore
                 try {
                     const docRef = doc(db, 'users', u.uid);
                     const snap = await getDoc(docRef);
+                    
+                    const isOwner = u.email === adminEmail;
+
                     if (snap.exists() && ['admin', 'owner', 'staff'].includes(snap.data().role)) {
                         setRole(snap.data().role);
                         setUser(u);
+                    } else if (isOwner) {
+                        // Owner Bypass & Auto-Initialization
+                        setRole('owner');
+                        setUser(u);
+                        // Ensure owner doc exists in DB
+                        if (!snap.exists()) {
+                            await setDoc(docRef, {
+                                role: 'owner',
+                                email: u.email,
+                                displayName: u.displayName || 'Mr Anas Nidir',
+                                createdAt: new Date().toISOString()
+                            });
+                        }
                     } else {
                         setRole('unauthorized');
                         setUser(u);
                     }
                 } catch (err) {
                     console.error("Workspace Auth Error:", err);
-                    setRole('error');
+                    // Critical Bypass for Owner in case of DB Error
+                    if (u.email === adminEmail) {
+                        setRole('owner');
+                        setUser(u);
+                    } else {
+                        setRole('error');
+                    }
                 }
             } else {
                 setUser(null);

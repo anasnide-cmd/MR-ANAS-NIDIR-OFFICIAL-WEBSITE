@@ -5,11 +5,13 @@ import { collection, query, where, getDocs, orderBy, limit } from 'firebase/fire
 import Link from 'next/link';
 import { onAuthStateChanged } from 'firebase/auth';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 export default function WorkspaceDashboard() {
     const [user, setUser] = useState(null);
     const [stats, setStats] = useState({ tasks: 0, members: 0 });
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (u) => {
@@ -17,11 +19,13 @@ export default function WorkspaceDashboard() {
                 setUser(u);
                 // Simulate fetching tasks/members or replace with actual Firestore calls if rules allow
                 setStats({ tasks: 5, members: 3 }); 
+            } else {
+                router.push('/login');
             }
             setLoading(false);
         });
         return () => unsub();
-    }, []);
+    }, [router]);
 
     if (loading) return <div className="loading">Initializing Mission Control...</div>;
 
@@ -64,20 +68,20 @@ export default function WorkspaceDashboard() {
             </motion.div>
 
             <motion.div className="modules-grid" variants={containerVariants}>
-                <Link href="/workspace/chat" passHref legacyBehavior>
-                    <motion.a className="module-card chat" variants={itemVariants} whileHover={{ y: -5, boxShadow: '0 10px 40px rgba(80, 80, 255, 0.2)' }}>
+                <Link href="/workspace/chat">
+                    <motion.div className="module-card chat" variants={itemVariants} whileHover={{ y: -5, boxShadow: '0 10px 40px rgba(80, 80, 255, 0.2)' }}>
                         <h2>COMMUNICATION HUB</h2>
                         <p>Real-time team collaboration and announcements.</p>
                         <span className="module-arrow">ACCESS CHANNEL ➜</span>
-                    </motion.a>
+                    </motion.div>
                 </Link>
 
-                <Link href="/workspace/tasks" passHref legacyBehavior>
-                    <motion.a className="module-card tasks" variants={itemVariants} whileHover={{ y: -5, boxShadow: '0 10px 40px rgba(0, 255, 136, 0.1)' }}>
+                <Link href="/workspace/tasks">
+                    <motion.div className="module-card tasks" variants={itemVariants} whileHover={{ y: -5, boxShadow: '0 10px 40px rgba(0, 255, 136, 0.1)' }}>
                         <h2>TASK ENGINE</h2>
                         <p>Manage assignments, track progress, and execute workflows.</p>
                         <span className="module-arrow">VIEW BOARDS ➜</span>
-                    </motion.a>
+                    </motion.div>
                 </Link>
             </motion.div>
 
