@@ -110,7 +110,8 @@ export default function HomeClient() {
   useEffect(() => {
       const handleMouseMove = (e) => {
         // Disable parallax on mobile/tablet to prevent jitters
-        if (window.innerWidth < 1024) return;
+        // Disable parallax on smaller touch devices or performance-sensitive environments
+        if (window.innerWidth < 1024 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
         setMousePos({
           x: (e.clientX / window.innerWidth - 0.5) * 20,
@@ -597,12 +598,11 @@ export default function HomeClient() {
         /* LIQUID FROST GLASS SYSTEM */
         .glass {
           background: rgba(255, 255, 255, 0.015);
-          backdrop-filter: blur(40px) saturate(150%);
-          -webkit-backdrop-filter: blur(40px) saturate(150%);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.9),
-                      inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-          transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+          backdrop-filter: var(--refraction);
+          -webkit-backdrop-filter: var(--refraction);
+          border: 1px solid var(--surface-border);
+          box-shadow: var(--glass-shadow);
+          transition: var(--transition-ultra);
           position: relative;
           overflow: hidden;
         }
@@ -792,7 +792,7 @@ export default function HomeClient() {
 
         .hero-title {
           font-family: 'Orbitron', sans-serif;
-          font-size: clamp(3.5rem, 12vw, 7.5rem);
+          font-size: var(--text-fluid-h1);
           line-height: 0.9;
           margin-bottom: 15px;
         }
@@ -910,7 +910,7 @@ export default function HomeClient() {
         }
 
         .hero-title {
-          font-size: clamp(2rem, 10vw, 6rem);
+          font-size: var(--text-fluid-h1);
           font-weight: 950;
           letter-spacing: -3px;
           margin-bottom: 10px;
@@ -998,11 +998,11 @@ export default function HomeClient() {
         }
 
         /* Section Styling */
-        .section { padding: 150px 40px; max-width: 1400px; margin: 0 auto; }
+        .section { padding: var(--spacing-fluid) 40px; max-width: 1400px; margin: 0 auto; }
         .section-header { text-align: left; margin-bottom: 80px; position: relative; }
         .section-tag { color: #00f0ff; letter-spacing: 5px; font-weight: 900; font-size: 0.75rem; display: block; margin-bottom: 15px; }
         .section-title { 
-          font-size: 3rem; 
+          font-size: var(--text-fluid-h2); 
           font-weight: 900; 
           letter-spacing: -1px;
           position: relative;

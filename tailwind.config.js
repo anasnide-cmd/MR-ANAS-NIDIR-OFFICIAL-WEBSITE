@@ -6,7 +6,21 @@ const config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    screens: {
+      'xs': '375px',
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1536px',
+      'tv': '1920px',
+      '4k': '3840px',
+    },
     extend: {
+      spacing: {
+        'fluid-margin': 'clamp(1rem, 5vw, 4rem)',
+        'fluid-padding': 'clamp(2rem, 8vw, 6rem)',
+      },
       colors: {
         primary: "#00f0ff",
         secondary: "#a000ff",

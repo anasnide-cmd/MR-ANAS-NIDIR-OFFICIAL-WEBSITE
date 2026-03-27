@@ -14,20 +14,28 @@
   --text: #ffffff;
   --text-dim: rgba(255, 255, 255, 0.6);
   
+  /* Fluid Spacing & Typography */
+  --text-fluid-h1: clamp(2.5rem, 10vw, 8rem);
+  --text-fluid-h2: clamp(2rem, 8vw, 5rem);
+  --text-fluid-h3: clamp(1.5rem, 5vw, 3rem);
+  --text-fluid-body: clamp(0.9rem, 1.2vw, 1.25rem);
+  --spacing-fluid: clamp(2rem, 8vw, 8rem);
+
+  /* Device Specifics */
+  --tv-scale: 1.5; /* Scale factor for UI on TV */
+  
   /* Cinematic Bloom & Hyper-refraction */
   --bloom: 0 0 15px var(--primary-glow), 0 0 30px var(--primary-glow);
   --refraction: blur(40px) saturate(180%);
   --surface: rgba(255, 255, 255, 0.015);
   --surface-border: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.82);
   
   /* Animation Tokens */
   --ease-in-out-expo: cubic-bezier(1, 0, 0, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --transition-ultra: all 0.8s var(--ease-out-expo);
   --transition-smooth: all 0.4s var(--ease-out-expo);
-  
-  /* Responsive Defaults */
-  --section-padding: 100px;
   
   /* Project: OPTIC-ZERO (CIA Theme) */
   --cia-bg: #050505;
@@ -47,6 +55,16 @@
   --celco-surface: rgba(255, 255, 255, 0.02);
   --celco-grid: rgba(16, 185, 129, 0.08);
   --celco-header: rgba(16, 185, 129, 0.05);
+}
+
+/* TV Focus Management */
+:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 @keyframes scanline {
@@ -279,6 +297,7 @@ h1, h2, h3, .orbitron {
   height: 4px;
   background: var(--primary);
   margin-top: 20px;
+  box-shadow: var(--bloom);
 }
 
 /* Utilities */
@@ -299,8 +318,26 @@ h1, h2, h3, .orbitron {
 .center .section-line { margin-left: auto; margin-right: auto; }
 
 /* Responsive Adjustments */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   :root {
-    --section-padding: 60px;
+    --spacing-fluid: clamp(2rem, 5vw, 4rem);
   }
+}
+
+@media (max-width: 768px) {
+  body { font-size: 15px; }
+  .section { padding: 40px 20px; }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    font-size: 20px; /* Base font increase for TV Displays */
+  }
+  .section { max-width: 1800px; }
+  .btn-premium { padding: 20px 48px; font-size: 1.1rem; }
+}
+
+@media (min-width: 3840px) {
+  :root { font-size: 32px; }
+  .section { max-width: 3000px; }
 }

@@ -260,20 +260,24 @@ const CardNav = ({
         }
         .logo-text {
             font-weight: 800;
-            letter-spacing: 1.5px;
-            font-size: 1rem;
+            letter-spacing: 0.1em;
+            font-size: clamp(0.9rem, 1.2vw, 1.25rem);
             color: #fff;
         }
 
         .card-nav-cta-button {
-            padding: 10px 24px;
+            padding: 10px clamp(15px, 2vw, 24px);
             border-radius: 30px;
             font-weight: 700;
             text-decoration: none;
-            font-size: 0.85rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: clamp(0.75rem, 0.9vw, 0.9rem);
+            transition: var(--transition-smooth);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.1em;
+        }
+        .card-nav-cta-button:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: 4px;
         }
         .card-nav-cta-button:hover { 
             opacity: 1;
@@ -284,21 +288,25 @@ const CardNav = ({
         .card-nav-content {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            padding: 10px 10px 20px;
-            /* Hidden initially by logic, but layout needs structure */
+            gap: 12px;
+            padding: 12px 12px 24px;
         }
 
         .nav-card {
             border-radius: 20px;
-            padding: 24px;
+            padding: clamp(16px, 2.5vw, 32px);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            min-height: 200px;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            min-height: clamp(180px, 15vw, 240px);
+            transition: var(--transition-ultra);
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .nav-card:focus-visible {
+             outline: 3px solid var(--primary);
+             outline-offset: 4px;
         }
         .nav-card::after {
             content: '';
@@ -310,56 +318,70 @@ const CardNav = ({
         }
         .nav-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border-color: rgba(255,255,255,0.2);
         }
         .nav-card:hover::after {
             transform: translateX(100%);
         }
 
         .nav-card-label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 700;
-            opacity: 0.7;
+            letter-spacing: 0.2em;
+            font-weight: 800;
+            opacity: 0.6;
         }
 
         .nav-card-links {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: clamp(8px, 1vw, 14px);
         }
 
         .nav-card-link {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             color: inherit;
             text-decoration: none;
-            font-size: 1.1rem;
-            font-weight: 600;
-            opacity: 0.9;
-            transition: opacity 0.2s;
+            font-size: clamp(0.95rem, 1.1vw, 1.25rem);
+            font-weight: 700;
+            opacity: 0.85;
+            transition: var(--transition-smooth);
         }
-        .nav-card-link:hover { opacity: 1; }
+        .nav-card-link:focus-visible {
+             text-decoration: underline;
+             opacity: 1;
+        }
+        .nav-card-link:hover { opacity: 1; transform: translateX(5px); }
 
         .nav-card-link-icon {
-            font-size: 0.9rem;
+            font-size: 0.9em;
             transform: rotate(45deg);
-            transition: transform 0.3s;
+            transition: transform 0.4s var(--ease-out-expo);
         }
         .nav-card-link:hover .nav-card-link-icon {
             transform: rotate(0deg);
         }
 
         @media (max-width: 768px) {
+            .card-nav-container { width: 94%; top: 15px; }
             .card-nav-content {
                 grid-template-columns: 1fr;
+                gap: 8px;
             }
             .nav-card {
-                min-height: 120px;
-                padding: 20px;
+                min-height: 100px;
+                padding: 16px;
             }
+            .logo-text { display: none; }
+        }
+
+        @media (min-width: 1920px) {
+            .card-nav-container { max-width: 1200px; top: 40px; }
+            .card-nav-top { height: 90px; padding: 0 30px; }
+            .logo { width: 64px; height: 64px; }
         }
       `}</style>
     </div>

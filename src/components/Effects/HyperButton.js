@@ -52,22 +52,29 @@ export default function HyperButton({ children, href, className = "", gold = fal
           position: relative;
           display: inline-block;
           z-index: 5;
+          touch-action: manipulation; /* Optimizes for touch devices */
         }
         .hyper-btn {
           position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 18px 45px;
+          /* Fluid padding: scales with screen size */
+          padding: clamp(12px, 2vw, 20px) clamp(30px, 4vw, 55px);
           background: #fff;
           color: #000;
           text-decoration: none;
           font-weight: 950;
-          font-size: 0.85rem;
-          letter-spacing: 3px;
+          font-size: clamp(0.75rem, 1vw, 1rem); /* Fluid font size */
+          letter-spacing: 0.2em;
           border-radius: 4px;
           overflow: hidden;
-          transition: background 0.3s;
+          transition: var(--transition-smooth);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .hyper-btn:focus-visible {
+          outline: 3px solid var(--primary);
+          outline-offset: 4px;
         }
         .gold .hyper-btn {
           background: #ffd700;
@@ -77,22 +84,37 @@ export default function HyperButton({ children, href, className = "", gold = fal
           position: relative;
           z-index: 2;
           display: block;
+          white-space: nowrap;
         }
         .liquid-glow {
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at center, rgba(0, 240, 255, 0.4), transparent 70%);
+          background: radial-gradient(circle at center, rgba(0, 240, 255, 0.5), transparent 70%);
           transform: scale(0);
-          transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s;
+          transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s;
           opacity: 0;
           pointer-events: none;
         }
         .gold .liquid-glow {
-          background: radial-gradient(circle at center, rgba(255, 255, 255, 0.6), transparent 70%);
+          background: radial-gradient(circle at center, rgba(255, 255, 255, 0.8), transparent 70%);
         }
         .liquid-glow.active {
-          transform: scale(3);
+          transform: scale(4);
           opacity: 1;
+        }
+        
+        @media (max-width: 768px) {
+          .hyper-btn {
+            width: 100%; /* Full width on mobile for easier tapping */
+            padding: 18px 30px; 
+          }
+        }
+
+        @media (min-width: 1920px) {
+          .hyper-btn {
+            padding: 24px 60px;
+            font-size: 1.1rem;
+          }
         }
       `}</style>
     </motion.div>
