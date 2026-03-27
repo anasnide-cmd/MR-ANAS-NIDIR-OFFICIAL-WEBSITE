@@ -35,12 +35,12 @@ function PhoneModel({ children }) {
                     <meshBasicMaterial color="#000" />
                 </mesh>
 
-                {/* IFRAME TEXTURE - Razor Sharp scaling */}
+                {/* IFRAME TEXTURE - Razor Sharp scaling (3.4 units / 375px = ~0.009) */}
                 <Html
                     transform
                     position={[0, 0, 0.201]}
                     occlude
-                    distanceFactor={8}
+                    scale={0.009}
                     style={{
                         width: '375px',
                         height: '812px',
@@ -51,19 +51,20 @@ function PhoneModel({ children }) {
                         pointerEvents: 'auto'
                     }}
                 >
-                    <div style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}>
+                    <div className="inner-viewport">
                         {children}
+                        <div className="hologram-scanline"></div>
                     </div>
                 </Html>
                 
                 {/* Glass Screen Overlay - Premium Reflection */}
                 <mesh position={[0, 0, 0.202]}>
-                    <planeGeometry args={[3.1, 6.4]} />
+                    <planeGeometry args={[3.3, 6.6]} />
                     <meshPhysicalMaterial 
                         transparent 
-                        opacity={0.15} 
+                        opacity={0.12} 
                         roughness={0} 
-                        metalness={0.2} 
+                        metalness={0.5} 
                         ior={1.5}
                         color="#fff" 
                     />
@@ -83,10 +84,10 @@ function PhoneModel({ children }) {
 export default function ARPreview({ url, srcDoc }) {
     return (
         <div className="ar-container">
-            <Canvas camera={{ position: [0, 2, 12], fov: 40 }} dpr={[1, 2]}>
-                <ambientLight intensity={0.4} />
-                <spotLight position={[10, 20, 10]} angle={0.2} penumbra={1} intensity={3} />
-                <pointLight position={[-10, -10, -10]} color="#00f0ff" intensity={1.5} />
+            <Canvas camera={{ position: [0, 0, 10], fov: 45 }} dpr={[1, 2]}>
+                <ambientLight intensity={1} />
+                <spotLight position={[10, 20, 10]} angle={0.2} penumbra={1} intensity={5} />
+                <pointLight position={[-10, -10, -10]} color="#00f0ff" intensity={3} />
                 
                 <Suspense fallback={null}>
                     <Environment preset="night" />
@@ -149,6 +150,18 @@ export default function ARPreview({ url, srcDoc }) {
                     width: 100%; height: 100%; position: relative;
                     background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
                     overflow: hidden;
+                }
+                .inner-viewport {
+                    width: 100%; height: 100%; position: relative;
+                    pointer-events: auto;
+                }
+                .hologram-scanline {
+                    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                                linear-gradient(90deg, rgba(255, 12, 12, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+                    background-size: 100% 2px, 3px 100%;
+                    pointer-events: none; z-index: 10;
+                    opacity: 0.2;
                 }
                 .ar-overlay {
                     position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
