@@ -1,54 +1,79 @@
 'use client';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Html, Environment, ContactShadows, Float } from '@react-three/drei';
+import { 
+    OrbitControls, 
+    Html, 
+    Environment, 
+    ContactShadows, 
+    Float, 
+    RoundedBox, 
+    MeshTransmissionMaterial,
+    Grid
+} from '@react-three/drei';
 import { Suspense } from 'react';
 
 function PhoneModel({ children }) {
     return (
         <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-            <group rotation={[0.1, 0, 0]}>
-                {/* Phone Body - Metallic Frame */}
-                <mesh position={[0, 0, 0]}>
-                    <boxGeometry args={[3.4, 6.7, 0.4]} />
+            <group rotation={[0, 0, 0]}>
+                {/* Phone Chassis - Premium Rounded Frame */}
+                <RoundedBox args={[3.4, 6.7, 0.4]} radius={0.3} smoothness={4}>
                     <meshPhysicalMaterial 
-                        color="#222" 
+                        color="#111" 
                         metalness={1} 
-                        roughness={0.1} 
+                        roughness={0.05} 
                         clearcoat={1} 
                         reflectivity={1}
+                        emissive="#00f0ff"
+                        emissiveIntensity={0.02}
                     />
-                </mesh>
+                </RoundedBox>
                 
-                {/* Screen Area (Inset) - Glossy Black */}
-                <mesh position={[0, 0, 0.21]}>
-                    <planeGeometry args={[3.2, 6.5]} />
+                {/* Screen Area (Inset) */}
+                <mesh position={[0, 0, 0.2]}>
+                    <planeGeometry args={[3.1, 6.4]} />
                     <meshBasicMaterial color="#000" />
                 </mesh>
 
-                {/* IFRAME TEXTURE */}
+                {/* IFRAME TEXTURE - Razor Sharp scaling */}
                 <Html
                     transform
-                    position={[0, 0, 0.22]}
+                    position={[0, 0, 0.201]}
                     occlude
+                    distanceFactor={8}
                     style={{
                         width: '375px',
                         height: '812px',
                         backgroundColor: 'white',
                         borderRadius: '32px',
                         overflow: 'hidden',
-                        boxShadow: '0 0 20px rgba(0, 240, 255, 0.2)'
+                        boxShadow: '0 0 40px rgba(0, 240, 255, 0.3)',
+                        pointerEvents: 'auto'
                     }}
-                    scale={0.0085}
                 >
                     <div style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}>
                         {children}
                     </div>
                 </Html>
                 
-                {/* Glow Effect around the phone */}
-                <mesh position={[0, 0, -0.1]}>
-                    <planeGeometry args={[4, 7.5]} />
-                    <meshBasicMaterial color="#00f0ff" transparent opacity={0.03} />
+                {/* Glass Screen Overlay - Premium Reflection */}
+                <mesh position={[0, 0, 0.202]}>
+                    <planeGeometry args={[3.1, 6.4]} />
+                    <meshPhysicalMaterial 
+                        transparent 
+                        opacity={0.15} 
+                        roughness={0} 
+                        metalness={0.2} 
+                        ior={1.5}
+                        color="#fff" 
+                    />
+                </mesh>
+                
+                {/* Holographic Rim Glow */}
+                <mesh position={[0, 0, -0.1]} scale={1.05}>
+                    <RoundedBox args={[3.45, 6.75, 0.4]} radius={0.35} smoothness={4}>
+                        <meshBasicMaterial color="#00f0ff" transparent opacity={0.02} side={2} />
+                    </RoundedBox>
                 </mesh>
             </group>
         </Float>
@@ -58,13 +83,14 @@ function PhoneModel({ children }) {
 export default function ARPreview({ url, srcDoc }) {
     return (
         <div className="ar-container">
-            <Canvas camera={{ position: [0, 0, 12], fov: 40 }}>
-                <ambientLight intensity={0.2} />
-                <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} />
-                <pointLight position={[-10, -10, -10]} color="#00f0ff" intensity={1} />
+            <Canvas camera={{ position: [0, 2, 12], fov: 40 }} dpr={[1, 2]}>
+                <ambientLight intensity={0.4} />
+                <spotLight position={[10, 20, 10]} angle={0.2} penumbra={1} intensity={3} />
+                <pointLight position={[-10, -10, -10]} color="#00f0ff" intensity={1.5} />
                 
                 <Suspense fallback={null}>
                     <Environment preset="night" />
+                    
                     <PhoneModel>
                         <iframe 
                             src={url} 
@@ -73,21 +99,37 @@ export default function ARPreview({ url, srcDoc }) {
                             title="AR Preview"
                         />
                     </PhoneModel>
+
+                    {/* Spatial Floor Grid */}
+                    <Grid 
+                        position={[0, -5, 0]} 
+                        args={[40, 40]} 
+                        cellColor="#00f0ff" 
+                        sectionColor="#ffffff" 
+                        fadeDistance={25} 
+                        fadeStrength={1}
+                        infiniteGrid
+                        opacity={0.1}
+                    />
+
                     <ContactShadows 
-                        position={[0, -4.5, 0]} 
-                        opacity={0.6} 
-                        scale={15} 
-                        blur={2} 
-                        far={5} 
+                        position={[0, -4.9, 0]} 
+                        opacity={0.8} 
+                        scale={20} 
+                        blur={2.5} 
+                        far={10} 
                         color="#00f0ff"
                     />
+
                     <OrbitControls 
-                        minPolarAngle={Math.PI / 4} 
+                        enableDamping={true}
+                        dampingFactor={0.05}
+                        minPolarAngle={Math.PI / 6} 
                         maxPolarAngle={Math.PI / 1.5} 
                         enableZoom={true} 
                         enablePan={false}
                         autoRotate={true}
-                        autoRotateSpeed={0.5}
+                        autoRotateSpeed={0.8}
                     />
                 </Suspense>
             </Canvas>
