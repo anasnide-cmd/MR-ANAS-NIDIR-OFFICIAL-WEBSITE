@@ -8,6 +8,8 @@ import { ref, uploadBytes } from 'firebase/storage';
 import dynamic from 'next/dynamic';
 import Loader from '../../../components/Loader';
 import { motion, AnimatePresence } from 'framer-motion';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 // Shared Components
 const AICopilot = dynamic(() => import('../../../components/MREditor/AICopilot'), { ssr: false });
@@ -18,6 +20,7 @@ const Auditor = dynamic(() => import('../../../components/MREditor/Auditor'), { 
 const FileTree = dynamic(() => import('../../../components/MREditor/FileTree'), { ssr: false });
 const ARPreview = dynamic(() => import('../../../components/MREditor/ARPreview'), { ssr: false });
 const NormalPreview = dynamic(() => import('../../../components/MREditor/NormalPreview'), { ssr: false });
+const LibraryManager = dynamic(() => import('../../../components/MREditor/LibraryManager'), { ssr: false });
 
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
@@ -40,7 +43,10 @@ import {
     Menu,
     Files,
     Code,
-    Layout
+    Layout,
+    Download,
+    Maximize,
+    Box
 } from 'lucide-react';
 
 function EditorContent() {
@@ -62,6 +68,7 @@ function EditorContent() {
     const [previewDoc, setPreviewDoc] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
     const [localProjectId, setLocalProjectId] = useState(projectId);
+    const [zenMode, setZenMode] = useState(false);
 
     const [projectData, setProjectData] = useState({
         name: 'Untitled Project',
@@ -131,6 +138,28 @@ function EditorContent() {
         } catch (err) {
             console.error(err);
             alert('Save failed: ' + err.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleExport = async () => {
+        setSaving(true);
+        try {
+            const zip = new JSZip();
+            const files = projectData.files || {};
+            
+            Object.keys(files).forEach(name => {
+                zip.file(name, files[name].content);
+            });
+            
+            const blob = await zip.generateAsync({ type: 'blob' });
+            saveAs(blob, `${projectData.name.replace(/\s+/g, '_')}_bundle.zip`);
+            setSuccessMsg('Project bundled and exported.');
+            setTimeout(() => setSuccessMsg(''), 3000);
+        } catch (err) {
+            console.error(err);
+            alert('Export failed: ' + err.message);
         } finally {
             setSaving(false);
         }
@@ -237,8 +266,17 @@ function EditorContent() {
                     <button onClick={() => setRightPanel('assets')} className={rightPanel === 'assets' ? 'active' : ''}>
                         <Search size={18} />
                     </button>
+                    <button onClick={() => setRightPanel('library')} className={rightPanel === 'library' ? 'active' : ''} title="Library Injector">
+                        <Box size={18} />
+                    </button>
                     <button onClick={() => setShowPreview(!showPreview)} className={showPreview ? 'active' : ''}>
                         <Eye size={18} />
+                    </button>
+                    <button onClick={handleExport} className="btn-export" title="Export ZIP">
+                        <Download size={18} />
+                    </button>
+                    <button onClick={() => setZenMode(!zenMode)} className={zenMode ? 'active' : ''} title="Zen Mode">
+                        <Maximize size={18} />
                     </button>
                 </div>
             </header>
@@ -249,7 +287,8 @@ function EditorContent() {
                     activeFile={activeFile}
                     onSelectFile={(f) => { setActiveFile(f); if(window.innerWidth < 768) { setSidebarOpen(false); setActiveTab('editor'); } }}
                     onCreateFile={(name) => updateFileContent(name, '')}
-                    showSidebar={sidebarOpen}
+                    onDeleteFile={(name) => updateFileContent(name, null)}
+                    showSidebar={sidebarOpen && !zenMode}
                     setShowSidebar={setSidebarOpen}
                 />
 
@@ -338,9 +377,11 @@ function EditorContent() {
                     </div>
                 )}
 
-                <aside className={`right-panel ${activeTab !== 'ai' && activeTab !== 'assets' ? 'hidden-mobile' : ''}`}>
+                <aside className={`right-panel ${(activeTab !== 'ai' && activeTab !== 'assets') || zenMode ? 'hidden-mobile hidden-desktop' : ''}`}>
                     {activeTab === 'assets' || (rightPanel === 'assets' && activeTab === 'editor') ? (
                         <AssetManager onInsert={handleInsertAsset} onSpriteEditor={() => setShowSpriteEditor(true)} />
+                    ) : (rightPanel === 'library') ? (
+                        <LibraryManager projectData={projectData} onUpdateFile={updateFileContent} />
                     ) : (
                         <AICopilot siteData={projectData} onCodeUpdate={updateFileContent} />
                     )}
@@ -391,8 +432,10 @@ function EditorContent() {
                     .nav-left h1 { font-size: 0.7rem; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
                 }
 
-                .btn-save, .btn-run { background: #00f0ff; color: #000; border: none; padding: 5px 12px; border-radius: 4px; font-weight: 800; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+                .btn-save, .btn-run, .btn-export { background: #00f0ff; color: #000; border: none; padding: 5px 12px; border-radius: 4px; font-weight: 800; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
                 .btn-run { background: #00ff88; }
+                .btn-export { background: transparent; color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3); }
+                .btn-export:hover { background: rgba(0, 240, 255, 0.1); }
                 
                 .nav-right button { background: transparent; border: none; color: #444; cursor: pointer; transition: 0.2s; }
                 .nav-right button.active { color: #00f0ff; }
@@ -420,7 +463,15 @@ function EditorContent() {
                 .code-editor :global(textarea) { outline: none !important; white-space: pre !important; }
                 .code-editor :global(pre) { white-space: pre !important; }
                 
-                .bottom-panel { height: 35%; border-top: 1px solid #1a1a1a; display: flex; flex-direction: column; flex-shrink: 0; }
+                .bottom-panel { 
+                    height: ${zenMode ? '0%' : '35%'}; 
+                    border-top: ${zenMode ? 'none' : '1px solid #1a1a1a'}; 
+                    display: flex; 
+                    flex-direction: column; 
+                    flex-shrink: 0; 
+                    overflow: hidden;
+                    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
                 .panel-tabs { display: flex; background: #000; border-bottom: 1px solid #1a1a1a; }
                 .panel-tabs button { padding: 8px 15px; background: transparent; border: none; color: #444; font-size: 0.6rem; font-weight: 800; cursor: pointer; }
                 .panel-tabs button.active { color: #00f0ff; border-bottom: 2px solid #00f0ff; }
@@ -455,6 +506,7 @@ function EditorContent() {
                     .hidden-mobile { display: none !important; }
                     .mobile-only { display: flex !important; }
                 }
+                .hidden-desktop { display: none !important; }
 
                 .mobile-nav { display: none; height: 60px; background: #000; border-top: 1px solid #1a1a1a; justify-content: space-around; align-items: center; z-index: 100; }
                 .mobile-nav button { background: none; border: none; color: #444; font-size: 0.6rem; font-weight: 800; padding: 5px; display: flex; flex-direction: column; align-items: center; gap: 4px; }

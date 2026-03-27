@@ -43,16 +43,39 @@ export default function FileTree({
                 </div>
             )}
             <div className="file-list">
-                {Object.keys(files).sort().map(f => (
-                    <div 
-                        key={f} 
-                        className={`file-item ${activeFile === f ? 'active' : ''}`} 
-                        onClick={() => onSelectFile(f)}
-                    >
-                        <FileCode size={14} color={f.endsWith('.js') ? '#f7df1e' : '#00f0ff'} />
-                        <span>{f}</span>
-                    </div>
-                ))}
+                {Object.keys(files).sort().map(f => {
+                    const isHtml = f.endsWith('.html');
+                    const isCss = f.endsWith('.css');
+                    const isJs = f.endsWith('.js');
+                    const isJson = f.endsWith('.json');
+                    
+                    let iconColor = '#888';
+                    if (isHtml) iconColor = '#ff4400';
+                    else if (isCss) iconColor = '#00aaff';
+                    else if (isJs) iconColor = '#f7df1e';
+                    else if (isJson) iconColor = '#00ff88';
+
+                    return (
+                        <div 
+                            key={f} 
+                            className={`file-item ${activeFile === f ? 'active' : ''}`} 
+                            onClick={() => onSelectFile(f)}
+                        >
+                            <div className="file-main">
+                                <FileCode size={14} color={iconColor} />
+                                <span>{f}</span>
+                            </div>
+                            {f !== 'index.html' && (
+                                <button 
+                                    className="delete-file-btn" 
+                                    onClick={(e) => { e.stopPropagation(); if(confirm(`Delete ${f}?`)) onDeleteFile(f); }}
+                                >
+                                    <X size={12} />
+                                </button>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
             <style jsx>{`
                 .sidebar { 
@@ -82,13 +105,15 @@ export default function FileTree({
                     padding: 15px; 
                     display: flex; 
                     justify-content: space-between; 
+                    align-items: center;
                     font-size: 0.7rem; 
                     color: #444; 
                     font-weight: 800; 
                     letter-spacing: 1px; 
                 }
-                .sidebar-actions { display: flex; gap: 10px; }
-                .sidebar-head button { background: none; border: none; color: #888; cursor: pointer; padding: 10px; }
+                .sidebar-actions { display: flex; gap: 5px; }
+                .sidebar-head button { background: none; border: none; color: #888; cursor: pointer; padding: 5px; border-radius: 4px; transition: 0.2s; }
+                .sidebar-head button:hover { background: rgba(255,255,255,0.05); color: #fff; }
                 
                 .new-file { padding: 10px 15px; }
                 .new-file input {
@@ -104,26 +129,37 @@ export default function FileTree({
 
                 .file-list { flex: 1; overflow-y: auto; }
                 .file-item { 
-                    padding: 14px 20px; 
+                    padding: 10px 15px; 
                     display: flex; 
                     align-items: center; 
+                    justify-content: space-between;
                     gap: 12px; 
                     cursor: pointer; 
-                    font-size: 0.9rem; 
+                    font-size: 0.85rem; 
                     color: #666; 
                     transition: 0.2s; 
+                    position: relative;
                 }
-                .file-item:hover { background: #111; color: #fff; }
+                .file-main { display: flex; align-items: center; gap: 10px; }
+                .file-item:hover { background: #111; color: #aaa; }
+                .file-item:hover .delete-file-btn { opacity: 1; }
                 .file-item.active { 
                     background: rgba(0, 240, 255, 0.05); 
                     color: #00f0ff; 
                     border-left: 2px solid #00f0ff; 
                 }
                 
-                .mobile-only { display: none; }
-                @media (max-width: 768px) {
-                    .mobile-only { display: block; }
+                .delete-file-btn { 
+                    opacity: 0; 
+                    background: transparent; 
+                    border: none; 
+                    color: #444; 
+                    cursor: pointer; 
+                    padding: 4px; 
+                    border-radius: 4px;
+                    transition: 0.2s;
                 }
+                .delete-file-btn:hover { background: rgba(255,0,0,0.1); color: #ff4444; }
             `}</style>
         </aside>
     );
