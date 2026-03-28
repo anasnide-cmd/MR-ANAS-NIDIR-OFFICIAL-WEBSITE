@@ -23,6 +23,7 @@ const NormalPreview = dynamic(() => import('../../../components/MREditor/NormalP
 const LibraryManager = dynamic(() => import('../../../components/MREditor/LibraryManager'), { ssr: false });
 
 import Editor from 'react-simple-code-editor';
+import TabBar from '../../../components/MREditor/TabBar';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
@@ -62,6 +63,7 @@ function EditorContent() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [bottomPanel, setBottomPanel] = useState('terminal'); // 'terminal', 'auditor'
     const [rightPanel, setRightPanel] = useState('copilot'); // 'copilot', 'assets'
+    const [openFiles, setOpenFiles] = useState(['index.html']);
     const [showSpriteEditor, setShowSpriteEditor] = useState(false);
     const [activeTab, setActiveTab] = useState('editor'); // 'editor', 'preview', 'ai', 'terminal', 'assets'
     const [previewMode, setPreviewMode] = useState('normal'); // 'normal', 'ar'
@@ -78,6 +80,29 @@ function EditorContent() {
             'script.js': { content: 'console.log("MR Build Initialized");', language: 'javascript' }
         }
     });
+
+    useEffect(() => {
+        const handleMessage = (e) => {
+            if (e.data && e.data.type === 'preview-logs') {
+                const { logType, content } = e.data;
+                let prefix = '';
+                let color = '';
+                
+                switch(logType) {
+                    case 'info': prefix = '\x1b[36m[INFO]\x1b[0m '; color = '\x1b[36m'; break;
+                    case 'warn': prefix = '\x1b[33m[WARN]\x1b[0m '; color = '\x1b[33m'; break;
+                    case 'error': prefix = '\x1b[31m[ERR]\x1b[0m '; color = '\x1b[31m'; break;
+                    default: prefix = '\x1b[32m[LOG]\x1b[0m '; color = '\x1b[32m'; break;
+                }
+                
+                if (window.terminalWrite) {
+                    window.terminalWrite(`${prefix}${content}`);
+                }
+            }
+        };
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (u) => {
@@ -170,12 +195,17 @@ function EditorContent() {
             const newFiles = { ...prev.files };
             if (content === null) {
                 delete newFiles[fileName];
+                setOpenFiles(prevOpen => prevOpen.filter(f => f !== fileName));
+                if (activeFile === fileName) setActiveFile('index.html');
             } else {
                 newFiles[fileName] = {
                     ...newFiles[fileName],
                     content: content,
                     language: language || newFiles[fileName]?.language || 'javascript'
                 };
+                if (!openFiles.includes(fileName)) {
+                    setOpenFiles(prevOpen => [...prevOpen, fileName]);
+                }
             }
             return { ...prev, files: newFiles };
         });
@@ -210,6 +240,26 @@ function EditorContent() {
             <!DOCTYPE html>
             <html>
                 <head>
+                    <script>
+                        (function() {
+                            const sendToParent = (type, args) => {
+                                window.parent.postMessage({
+                                    type: 'preview-logs',
+                                    logType: type,
+                                    content: Array.from(args).map(arg => {
+                                        try { return typeof arg === 'object' ? JSON.stringify(arg) : String(arg); }
+                                        catch(e) { return String(arg); }
+                                    }).join(' ')
+                                }, '*');
+                            };
+                            const original = { log: console.log, info: console.info, warn: console.warn, error: console.error };
+                            console.log = (...args) => { sendToParent('log', args); original.log.apply(console, args); };
+                            console.info = (...args) => { sendToParent('info', args); original.info.apply(console, args); };
+                            console.warn = (...args) => { sendToParent('warn', args); original.warn.apply(console, args); };
+                            console.error = (...args) => { sendToParent('error', args); original.error.apply(console, args); };
+                            window.onerror = (m, u, l, c, e) => { sendToParent('error', [\`Uncaught Error: \${m} at \${l}:\${c}\`]); return false; };
+                        })();
+                    </script>
                     <style>
                         ${css}
                         body { margin: 0; background: transparent; color: white; font-family: sans-serif; }
@@ -285,7 +335,11 @@ function EditorContent() {
                 <FileTree 
                     files={projectData.files || {}}
                     activeFile={activeFile}
-                    onSelectFile={(f) => { setActiveFile(f); if(window.innerWidth < 768) { setSidebarOpen(false); setActiveTab('editor'); } }}
+                    onSelectFile={(f) => { 
+                        setActiveFile(f); 
+                        if (!openFiles.includes(f)) setOpenFiles(prev => [...prev, f]);
+                        if(window.innerWidth < 768) { setSidebarOpen(false); setActiveTab('editor'); } 
+                    }}
                     onCreateFile={(name) => updateFileContent(name, '')}
                     onDeleteFile={(name) => updateFileContent(name, null)}
                     showSidebar={sidebarOpen && !zenMode}
@@ -293,6 +347,18 @@ function EditorContent() {
                 />
 
                 <div className={`editor-content ${(activeTab !== 'editor' && window.innerWidth < 768) ? 'hidden-mobile' : ''}`}>
+                    <TabBar 
+                        openFiles={openFiles}
+                        activeFile={activeFile}
+                        onSelectFile={(f) => setActiveFile(f)}
+                        onCloseFile={(f) => {
+                            const newOpenFiles = openFiles.filter(file => file !== f);
+                            setOpenFiles(newOpenFiles);
+                            if (activeFile === f) {
+                                setActiveFile(newOpenFiles[newOpenFiles.length - 1] || 'index.html');
+                            }
+                        }}
+                    />
                     <div className={`code-area ${(bottomPanel === 'terminal' || bottomPanel === 'auditor') && window.innerWidth < 768 && activeTab !== 'editor' ? 'hidden-mobile' : ''}`}>
                         <div className="editor-container-with-lines">
                             <div className="line-numbers">
