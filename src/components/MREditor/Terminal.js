@@ -168,6 +168,10 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
                 xtermRef.current?.writeln(`\r\n\x1b[35m[AI] Analyzing error: ${errorMsg}...\x1b[0m`);
                 onFixError(errorMsg);
             }
+        } else if (uri.startsWith('explain://')) {
+            const errorMsg = decodeURIComponent(uri.replace('explain://', ''));
+            xtermRef.current?.writeln(`\r\n\x1b[34m[AI] Explaining error: ${errorMsg}...\x1b[0m`);
+            window.dispatchEvent(new CustomEvent('AI_EXPLAIN_REQUEST', { detail: { error: errorMsg } }));
         }
     }, [onFixError]);
 
@@ -317,7 +321,7 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
                     const cleanMsg = text.replace(/\x1b\[[0-9;]*m/g, '').replace('[ERR]', '').trim();
                     const encoded = encodeURIComponent(cleanMsg);
                     term.write(`\r\n${text}`);
-                    term.writeln(`\r\n\x1b[33m ⚡ [AI] Issue Detected. \x1b[0m\x1b[4m\x1b[36mfix://${encoded}\x1b[0m \x1b[36m(Tap to Auto-Fix)\x1b[0m`);
+                    term.writeln(`\r\n\x1b[33m ⚡ [AI] Issue Detected. \x1b[0m\x1b[4m\x1b[36mfix://${encoded}\x1b[0m \x1b[36m(Auto-Fix)\x1b[0m \x1b[90m| \x1b[0m\x1b[4m\x1b[35mexplain://${encoded}\x1b[0m \x1b[35m(Explain)\x1b[0m`);
                     prompt(term);
                 } else {
                     term.write(`\r\n${text}`);
@@ -352,15 +356,21 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
                     -webkit-overflow-scrolling: touch;
                 }
                 .virtual-keys button {
-                    background: #1a1a1a;
-                    color: #fff;
-                    border: 1px solid #333;
-                    padding: 10px 16px;
-                    border-radius: 6px;
-                    font-size: 11px;
+                    background: #111;
+                    color: #00f0ff;
+                    border: 1px solid rgba(0, 240, 255, 0.2);
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    font-size: 12px;
                     font-family: 'JetBrains Mono', monospace;
                     white-space: nowrap;
-                    font-weight: 700;
+                    font-weight: 800;
+                    transition: 0.2s;
+                }
+                .virtual-keys button:active {
+                    background: #00f0ff;
+                    color: #000;
+                    transform: scale(0.95);
                 }
                 .mobile-only { display: none; }
                 @media (max-width: 768px) {

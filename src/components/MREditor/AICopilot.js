@@ -8,7 +8,7 @@ import { db, auth } from '../../lib/firebase'; // Updated relative path
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'; 
 import { onAuthStateChanged } from 'firebase/auth'; 
 
-export default function AICopilot({ siteData, onCodeUpdate }) {
+export default function AICopilot({ siteData, onCodeUpdate, selectionContext }) {
   const [messages, setMessages] = useState([
     {
       id: 'welcome',
@@ -100,19 +100,47 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
     }
   }, [messages]);
 
-  // Self-Healing Trigger
+  // Self-Healing & Contextual Triggers
   useEffect(() => {
     const handleAiFixRequest = (e) => {
         const error = e.detail?.error;
         if (error) {
-            setInput(`Fix this error: ${error}`);
-            // Optional: Auto-send after a delay?
-            // handleSend(null, `Fix this error: ${error}`);
+            handleSend(null, `Fix this error in ${selectionContext?.activeFile || 'the current file'}:\n${error}`);
         }
     };
+
+    const handleAiExplainRequest = (e) => {
+        const error = e.detail?.error;
+        if (error) {
+            handleSend(null, `Explain this error occurring in ${selectionContext?.activeFile || 'the current file'}. Why did it happen and how can I prevent it in the future?\n\nError: ${error}`);
+        }
+    };
+
+    const handleExternalCommand = (e) => {
+        const cmd = e.detail?.command;
+        const context = e.detail?.context || selectionContext;
+        
+        if (cmd) {
+            let fullPrompt = cmd;
+            if (context?.selectedText) {
+                fullPrompt = `I have selected this code:\n\`\`\`\n${context.selectedText}\n\`\`\`\n\nTask: ${cmd}`;
+            } else if (context?.activeFile) {
+                fullPrompt = `I am currently working on ${context.activeFile}.\n\nTask: ${cmd}`;
+            }
+            
+            handleSend(null, fullPrompt);
+        }
+    };
+
     window.addEventListener('AI_FIX_REQUEST', handleAiFixRequest);
-    return () => window.removeEventListener('AI_FIX_REQUEST', handleAiFixRequest);
-  }, []);
+    window.addEventListener('AI_EXPLAIN_REQUEST', handleAiExplainRequest);
+    window.addEventListener('AI_COMMAND_PALETTE_TRIGGER', handleExternalCommand);
+    return () => {
+        window.removeEventListener('AI_FIX_REQUEST', handleAiFixRequest);
+        window.removeEventListener('AI_EXPLAIN_REQUEST', handleAiExplainRequest);
+        window.removeEventListener('AI_COMMAND_PALETTE_TRIGGER', handleExternalCommand);
+    };
+  }, [selectionContext]);
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -216,9 +244,35 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
   };
 
   // Chat Handler
-  const handleSend = async (e) => {
+  const handleSend = async (e, overrideInput) => {
     e?.preventDefault();
-    if ((!input.trim() && attachments.length === 0) || loading) return;
+    let finalInput = overrideInput || input;
+    
+    // Slash Commands Handling
+    if (finalInput.startsWith('/')) {
+        const cmd = finalInput.split(' ')[0].toLowerCase();
+        const args = finalInput.slice(cmd.length).trim();
+        const contextHeader = selectionContext?.selectedText 
+            ? `Regarding this code:\n\`\`\`\n${selectionContext.selectedText}\n\`\`\`\n\n`
+            : (selectionContext?.activeFile ? `Regarding ${selectionContext.activeFile}:\n\n` : '');
+
+        switch(cmd) {
+            case '/fix': 
+                finalInput = `${contextHeader}Analyze the current code and fix any bugs, logical errors, or anti-patterns. ${args}`;
+                break;
+            case '/docs':
+                finalInput = `${contextHeader}Add comprehensive JSDoc/inline comments to this code. ${args}`;
+                break;
+            case '/refactor':
+                finalInput = `${contextHeader}Refactor this code for better readability, performance, and modern syntax. ${args}`;
+                break;
+            case '/test':
+                finalInput = `${contextHeader}Write a set of unit tests for this functionality. ${args}`;
+                break;
+        }
+    }
+
+    if ((!finalInput.trim() && attachments.length === 0) || loading) return;
 
     cancelSpeech();
 
@@ -231,7 +285,7 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
     // For display, we might just show text, or show an indicator
     const userMsg = { 
         role: 'user', 
-        content: input || (attachments.length > 0 ? `[Sent ${attachments.length} files]` : ''), 
+        content: finalInput || (attachments.length > 0 ? `[Sent ${attachments.length} files]` : ''), 
         id: Date.now().toString(),
         attachments: attachments // Store for rendering if needed
     };
@@ -996,14 +1050,43 @@ export default function AICopilot({ siteData, onCodeUpdate }) {
             background: transparent;
         }
 
-        /* Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { 
-            background: rgba(255,255,255,0.1); 
-            border-radius: 10px; 
-        }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            .header-controls {
+                gap: 5px;
+            }
+            .title {
+                font-size: 9px;
+            }
+            .messages-area {
+                padding: 12px;
+                gap: 16px;
+            }
+            .message-bubble {
+                max-width: 95%;
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+            .input-area {
+                padding: 12px 15px 25px 15px;
+            }
+            .chat-input {
+                padding: 12px 14px;
+                padding-right: 80px;
+                font-size: 14px;
+            }
+            .fuel-gauge {
+                padding: 2px 6px;
+            }
+            .model-select {
+                max-width: 100px;
+                font-size: 10px;
+            }
+        }
       `}</style>
     </div>
   );

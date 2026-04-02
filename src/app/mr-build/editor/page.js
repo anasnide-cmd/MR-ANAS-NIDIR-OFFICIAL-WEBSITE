@@ -21,6 +21,7 @@ const FileTree = dynamic(() => import('../../../components/MREditor/FileTree'), 
 const ARPreview = dynamic(() => import('../../../components/MREditor/ARPreview'), { ssr: false });
 const NormalPreview = dynamic(() => import('../../../components/MREditor/NormalPreview'), { ssr: false });
 const LibraryManager = dynamic(() => import('../../../components/MREditor/LibraryManager'), { ssr: false });
+const AICommandPalette = dynamic(() => import('../../../components/MREditor/AICommandPalette'), { ssr: false });
 
 import Editor from 'react-simple-code-editor';
 import TabBar from '../../../components/MREditor/TabBar';
@@ -71,6 +72,8 @@ function EditorContent() {
     const [successMsg, setSuccessMsg] = useState('');
     const [localProjectId, setLocalProjectId] = useState(projectId);
     const [zenMode, setZenMode] = useState(false);
+    const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+    const [selectionContext, setSelectionContext] = useState({ activeFile: 'index.html', selectedText: '' });
 
     const [projectData, setProjectData] = useState({
         name: 'Untitled Project',
@@ -101,7 +104,19 @@ function EditorContent() {
             }
         };
         window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
+
+        const handleKeyDown = (e) => {
+            if (e.altKey && e.key.toLowerCase() === 'a') {
+                e.preventDefault();
+                setIsPaletteOpen(prev => !prev);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('message', handleMessage);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
     }, []);
 
     useEffect(() => {
@@ -337,6 +352,7 @@ function EditorContent() {
                     activeFile={activeFile}
                     onSelectFile={(f) => { 
                         setActiveFile(f); 
+                        setSelectionContext(prev => ({ ...prev, activeFile: f }));
                         if (!openFiles.includes(f)) setOpenFiles(prev => [...prev, f]);
                         if(window.innerWidth < 768) { setSidebarOpen(false); setActiveTab('editor'); } 
                     }}
@@ -347,6 +363,17 @@ function EditorContent() {
                 />
 
                 <div className={`editor-content ${(activeTab !== 'editor' && window.innerWidth < 768) ? 'hidden-mobile' : ''}`}>
+                    <div className="ai-quick-actions">
+                        <button onClick={() => window.dispatchEvent(new CustomEvent('AI_COMMAND_PALETTE_TRIGGER', { detail: { command: '/suggest', context: selectionContext } }))}>
+                            <Sparkles size={12} /> SUGGEST
+                        </button>
+                        <button onClick={() => window.dispatchEvent(new CustomEvent('AI_COMMAND_PALETTE_TRIGGER', { detail: { command: '/docs', context: selectionContext } }))}>
+                            <Code size={12} /> DOCUMENT
+                        </button>
+                        <button onClick={() => window.dispatchEvent(new CustomEvent('AI_COMMAND_PALETTE_TRIGGER', { detail: { command: '/refactor', context: selectionContext } }))}>
+                            <Layout size={12} /> REFACTOR
+                        </button>
+                    </div>
                     <TabBar 
                         openFiles={openFiles}
                         activeFile={activeFile}
@@ -372,6 +399,23 @@ function EditorContent() {
                                  highlight={code => highlight(code, languages[currentFile.language] || languages.javascript)}
                                  padding={20}
                                  className="code-editor"
+                                 onKeyDown={(e) => {
+                                     // Capture selection on key up/down with a small delay
+                                     setTimeout(() => {
+                                         const selection = window.getSelection().toString();
+                                         if (selection) {
+                                             setSelectionContext({ activeFile, selectedText: selection });
+                                         }
+                                     }, 0);
+                                 }}
+                                 onMouseUp={() => {
+                                     const selection = window.getSelection().toString();
+                                     if (selection) {
+                                         setSelectionContext({ activeFile, selectedText: selection });
+                                     } else {
+                                         setSelectionContext(prev => ({ ...prev, selectedText: '' }));
+                                     }
+                                 }}
                                  style={{
                                      fontFamily: '"Fira Code", monospace',
                                      fontSize: 13,
@@ -449,7 +493,11 @@ function EditorContent() {
                     ) : (rightPanel === 'library') ? (
                         <LibraryManager projectData={projectData} onUpdateFile={updateFileContent} />
                     ) : (
-                        <AICopilot siteData={projectData} onCodeUpdate={updateFileContent} />
+                        <AICopilot 
+                            siteData={projectData} 
+                            onCodeUpdate={updateFileContent} 
+                            selectionContext={selectionContext}
+                        />
                     )}
                 </aside>
             </div>
@@ -487,11 +535,59 @@ function EditorContent() {
 
             {successMsg && <div className="toast">{successMsg}</div>}
 
+            <AICommandPalette 
+                isOpen={isPaletteOpen} 
+                onClose={() => setIsPaletteOpen(false)}
+                onCommand={(cmd) => {
+                    window.dispatchEvent(new CustomEvent('AI_COMMAND_PALETTE_TRIGGER', { 
+                        detail: { command: cmd, context: selectionContext } 
+                    }));
+                    if(window.innerWidth > 768) setRightPanel('copilot');
+                    else setActiveTab('ai');
+                }}
+            />
+
             <style jsx>{`
-                .mr-editor { height: 100vh; display: flex; flex-direction: column; background: #050505; color: #fff; overflow: hidden; }
+                .mr-editor { height: 100dvh; display: flex; flex-direction: column; background: #050505; color: #fff; overflow: hidden; }
                 .editor-nav { height: 50px; background: #000; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; flex-shrink: 0; }
-                .nav-left, .nav-center, .nav-right { display: flex; align-items: center; gap: 15px; }
-                .nav-left h1 { font-size: 0.9rem; font-family: 'Orbitron'; margin: 0; color: #00f0ff; }
+                .nav-left, .nav-center, .nav-right { display: flex; align-items: center; gap: 12px; }
+                .nav-left h1 { font-size: 0.8rem; font-family: 'Orbitron'; margin: 0; color: #00f0ff; letter-spacing: 1px; }
+                
+                .ai-quick-actions {
+                    display: flex;
+                    gap: 8px;
+                    padding: 6px 15px;
+                    background: rgba(10, 10, 15, 0.8);
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                    overflow-x: auto;
+                    white-space: nowrap;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none;
+                }
+                .ai-quick-actions::-webkit-scrollbar { display: none; }
+
+                .ai-quick-actions button {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(0, 240, 255, 0.15);
+                    color: rgba(255, 255, 255, 0.7);
+                    font-size: 9px;
+                    font-weight: 900;
+                    padding: 5px 12px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    transition: 0.2s;
+                    letter-spacing: 0.5px;
+                    flex-shrink: 0;
+                }
+                .ai-quick-actions button:hover {
+                    background: rgba(0, 240, 255, 0.1);
+                    color: #00f0ff;
+                    border-color: rgba(0, 240, 255, 0.5);
+                    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+                }
                 
                 @media (max-width: 768px) {
                     .nav-center span { display: none; }
@@ -574,9 +670,41 @@ function EditorContent() {
                 }
                 .hidden-desktop { display: none !important; }
 
-                .mobile-nav { display: none; height: 60px; background: #000; border-top: 1px solid #1a1a1a; justify-content: space-around; align-items: center; z-index: 100; }
-                .mobile-nav button { background: none; border: none; color: #444; font-size: 0.6rem; font-weight: 800; padding: 5px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-                .mobile-nav button.active { color: #00f0ff; }
+                .mobile-nav { 
+                    display: none; 
+                    height: 65px; 
+                    background: #000; 
+                    border-top: 1px solid #1a1a1a; 
+                    padding: 0 10px;
+                    gap: 5px;
+                    overflow-x: auto;
+                    white-space: nowrap;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none;
+                    z-index: 100; 
+                }
+                .mobile-nav::-webkit-scrollbar { display: none; }
+
+                .mobile-nav button { 
+                    background: none; 
+                    border: none; 
+                    color: #555; 
+                    font-size: 0.55rem; 
+                    font-weight: 800; 
+                    padding: 8px 12px; 
+                    display: flex; 
+                    flex-direction: column; 
+                    align-items: center; 
+                    gap: 6px;
+                    flex-shrink: 0;
+                    min-width: 65px;
+                    transition: 0.2s;
+                }
+                .mobile-nav button.active { 
+                    color: #00f0ff; 
+                    background: rgba(0, 240, 255, 0.05);
+                    border-radius: 8px;
+                }
                 .mobile-nav button.active :global(svg) { color: #00f0ff; }
 
                 .sprite-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
