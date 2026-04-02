@@ -16,6 +16,7 @@ export default function BuildLogin() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const router = useRouter();
 
     // Redirect if already logged in
@@ -34,26 +35,39 @@ export default function BuildLogin() {
     const handleAuth = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setError(null);
+        
+        const cleanEmail = email.trim();
+        const cleanPassword = password; // Passwords shouldn't be trimmed as spaces might be intentional
+
         try {
             console.log('Attempting authentication:', isRegister ? 'register' : 'login');
             if (isRegister) {
-                await createUserWithEmailAndPassword(auth, email, password);
+                await createUserWithEmailAndPassword(auth, cleanEmail, cleanPassword);
                 console.log('User registered successfully');
             } else {
-                await signInWithEmailAndPassword(auth, email, password);
+                await signInWithEmailAndPassword(auth, cleanEmail, cleanPassword);
                 console.log('User logged in successfully');
             }
             router.push('/mr-build/dashboard');
         } catch (err) {
             console.error('Authentication error:', err);
-            alert(err.message);
+            let msg = 'Authentication failed. Please try again.';
+            if (err.code === 'auth/invalid-credential') {
+                msg = 'Access Denied: Invalid credentials. Check your email/password or "Initialize New Node" if you haven\'t registered.';
+            }
+            if (err.code === 'auth/email-already-in-use') msg = 'Error: This email is already registered. Try connecting as an existing node.';
+            if (err.code === 'auth/weak-password') msg = 'Security Alert: Password must be at least 6 characters.';
+            setError(msg);
         } finally {
             setLoading(false);
         }
     };
 
     const handleGoogle = async () => {
+        if (loading) return;
         setLoading(true);
+        setError(null);
         try {
             console.log('Attempting Google authentication');
             const provider = new GoogleAuthProvider();
@@ -62,7 +76,10 @@ export default function BuildLogin() {
             router.push('/mr-build/dashboard');
         } catch (err) {
             console.error('Google auth error:', err);
-            alert('Authentication failed: ' + err.message);
+            // Don't show a message if the user cancels
+            if (err.code !== 'auth/cancelled-popup-request' && err.code !== 'auth/popup-closed-by-user') {
+                setError('Google Authentication Failed: ' + err.message);
+            }
         } finally {
             setLoading(false);
         }
@@ -70,26 +87,33 @@ export default function BuildLogin() {
 
     return (
         <div className="login-wrapper">
-            <div className="login-card glass">
+            <div className={`login-card glass ${error ? 'shake' : ''}`}>
                 <div className="login-header">
                     <div className="shield-icon">🛡️</div>
                     <h1>{isRegister ? 'Create Identity' : 'Secure Access'}</h1>
                     <p>{isRegister ? 'Join the network of digital visionaries.' : 'Verify credentials to access the builder.'}</p>
                 </div>
 
+                {error && (
+                    <div className="error-banner">
+                        <span className="error-icon">⚠️</span>
+                        {error}
+                    </div>
+                )}
+
                 <form onSubmit={handleAuth} className="auth-form">
                     <input
                         type="email"
                         placeholder="Neural Email"
                         value={email}
-                        onChange={e => setEmail(e.target.value)}
+                        onChange={e => { setEmail(e.target.value); setError(null); }}
                         required
                     />
                     <input
                         type="password"
                         placeholder="Security Key"
                         value={password}
-                        onChange={e => setPassword(e.target.value)}
+                        onChange={e => { setPassword(e.target.value); setError(null); }}
                         required
                     />
                     <button type="submit" className="btn-primary" disabled={loading}>
@@ -99,7 +123,7 @@ export default function BuildLogin() {
 
                 <div className="divider"><span>OR</span></div>
 
-                <button onClick={handleGoogle} className="btn-google">
+                <button onClick={handleGoogle} className="btn-google" disabled={loading}>
                     <Image src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" width={18} height={18} />
                     Sync Google Identity
                 </button>
@@ -132,6 +156,33 @@ export default function BuildLogin() {
                 .shield-icon { font-size: 3rem; margin-bottom: 20px; text-shadow: 0 0 20px rgba(0, 240, 255, 0.5); }
                 .login-header h1 { font-family: var(--font-orbitron); font-size: 1.8rem; margin-bottom: 10px; }
                 .login-header p { font-size: 0.9rem; opacity: 0.5; margin-bottom: 30px; }
+
+                .error-banner {
+                    background: rgba(255, 0, 43, 0.1);
+                    border: 1px solid rgba(255, 0, 43, 0.3);
+                    color: #ff002b;
+                    padding: 12px;
+                    border-radius: 12px;
+                    margin-bottom: 20px;
+                    font-size: 0.85rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    animation: fadeIn 0.3s ease;
+                }
+                .error-icon { font-size: 1.1rem; }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-5px); }
+                    75% { transform: translateX(5px); }
+                }
+                .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
 
                 .auth-form { display: flex; flex-direction: column; gap: 15px; }
                 .auth-form input {
