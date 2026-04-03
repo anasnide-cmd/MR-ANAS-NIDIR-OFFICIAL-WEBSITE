@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
-import { auth, db } from '../../../lib/firebase';
+import { auth, db } from '../../@mr/core/firebase';
 import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -15,7 +15,7 @@ import 'primeicons/primeicons.css';
 import { Sparkles, X, Minimize2, Maximize2 } from 'lucide-react';
 
 // Import SavoirCopilot (Dynamic to avoid SSR)
-const SavoirCopilot = dynamic(() => import('../../../components/Savoirpedia/SavoirCopilot'), { ssr: false });
+const SavoirCopilot = dynamic(() => import('../../@mr/ui/Savoirpedia/SavoirCopilot'), { ssr: false });
 
 const ALLOWED_ADMINS = ['anasnide@gmail.com', 'ceo@anasnidir.com'];
 

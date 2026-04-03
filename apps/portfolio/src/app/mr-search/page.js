@@ -1,4 +1,4 @@
-import LandingClient from '../../components/MrSearch/LandingClient';
+import LandingClient from '@mr/ui/MrSearch/LandingClient';
 
 export const metadata = {
   title: 'Mr Search | The Super Engine',

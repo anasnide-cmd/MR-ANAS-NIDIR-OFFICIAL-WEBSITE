@@ -1,4 +1,4 @@
-import PortfolioClient from '../../components/Portfolio/PortfolioClient';
+import PortfolioClient from '@mr/ui/Portfolio/PortfolioClient';
 
 export const metadata = {
   title: 'Portfolio | MR ANAS NIDIR',

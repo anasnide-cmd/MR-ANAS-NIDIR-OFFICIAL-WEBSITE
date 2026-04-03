@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { auth, db } from '../../lib/firebase';
+import { auth, db } from '@mr/core/firebase';
 import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { updateProfile, onAuthStateChanged, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import Loader from '../../components/Loader';
-import PayPalButton from '../../components/PayPalButton';
+import Loader from '@mr/ui/Loader';
+import PayPalButton from '@mr/ui/PayPalButton';
 
 export default function AccountClient() {
     const router = useRouter();

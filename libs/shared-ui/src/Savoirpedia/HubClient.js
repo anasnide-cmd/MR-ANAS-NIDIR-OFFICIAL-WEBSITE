@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import MagneticWrapper from '../Effects/MagneticWrapper';
-import { db } from '../../lib/firebase';
+import { db } from '@mr/core/firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
 import Image from 'next/image';

@@ -1,7 +1,7 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
-import { db } from '@/lib/firebase'; // Adjust path if needed
+import { db } from '@mr/core/firebase'; // Adjust path if needed
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 
 // Allow streaming responses up to 30 seconds

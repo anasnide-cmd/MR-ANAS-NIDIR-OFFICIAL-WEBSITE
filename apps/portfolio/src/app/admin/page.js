@@ -1,12 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { auth, db } from '../../lib/firebase';
-import Loader from '../../components/Loader';
+import { auth, db } from '@mr/core/firebase';
+import Loader from '@mr/ui/Loader';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, orderBy, getDocs, limit, where, getCountFromServer } from 'firebase/firestore';
 import Link from 'next/link';
-import CommandGrid, { GridItem } from '../../components/Admin/CommandGrid';
-import SystemTerminal from '../../components/Admin/SystemTerminal';
+import CommandGrid, { GridItem } from '@mr/ui/Admin/CommandGrid';
+import SystemTerminal from '@mr/ui/Admin/SystemTerminal';
 import { Shield } from 'lucide-react';
 import {
   Chart as ChartJS,

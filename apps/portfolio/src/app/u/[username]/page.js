@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { db, auth } from '../../../lib/firebase';
+import { db, auth } from '@mr/core/firebase';
 import { collection, query, where, getDocs, limit, addDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Loader from '../../../components/Loader';
+import Loader from '@mr/ui/Loader';
 import { Eye, GitBranch, Box, Code, Star, Heart, Share2, MapPin, Calendar } from 'lucide-react';
 
 export default function UserProfile() {

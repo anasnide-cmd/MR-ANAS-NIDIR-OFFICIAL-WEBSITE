@@ -15,7 +15,7 @@ export default function AdminAgent() {
                 // We need to import db app instance or use getFirestore() if not exported globally here
                 // Assumes db is available or we import it. 
                 // Since this component is inside the app, better to import db from lib
-                const { db } = await import('../../lib/firebase');
+                const { db } = await import('@mr/core/firebase');
                 
                 const configRef = doc(db, 'system_config', 'nex_ai');
                 const configSnap = await getDoc(configRef);

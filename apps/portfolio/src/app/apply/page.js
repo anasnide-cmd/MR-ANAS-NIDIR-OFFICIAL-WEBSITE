@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import styles from './apply.module.css';
-import { db } from '@/lib/firebase';
+import { db } from '@mr/core/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function ApplyPage() {

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { auth } from '../../lib/firebase';
+import { auth } from '@mr/core/firebase';
 import {
     onAuthStateChanged,
     signOut,
@@ -10,9 +10,9 @@ import {
 } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import AdminSidebar from '../../components/AdminSidebar';
-import CommandPalette from '../../components/Admin/CommandPalette';
-import AdminAgent from '../../components/Admin/AdminAgent';
+import AdminSidebar from '@mr/ui/AdminSidebar';
+import CommandPalette from '@mr/ui/Admin/CommandPalette';
+import AdminAgent from '@mr/ui/Admin/AdminAgent';
 
 const ALLOWED_ADMINS = [
     'anasnide@gmail.com',

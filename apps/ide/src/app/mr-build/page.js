@@ -1,4 +1,4 @@
-import LandingClient from '../../components/MrBuild/LandingClient';
+import LandingClient from '@mr/ui/MrBuild/LandingClient';
 
 export const metadata = {
   title: 'Mr Build | AI Website Builder',

@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { reportError } from '../lib/logger';
+import { reportError } from '@mr/core/logger';
 
 class GlobalErrorBoundary extends React.Component {
   constructor(props) {

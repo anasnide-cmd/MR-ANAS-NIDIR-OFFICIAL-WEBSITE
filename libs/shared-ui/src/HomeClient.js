@@ -8,7 +8,7 @@ import ShinyText from './ReactBits/ShinyText';
 import RetroGrid from './ReactBits/RetroGrid';
 import CardNav from './ReactBits/CardNav';
 import TiltedCard from './ReactBits/TiltedCard';
-import { db } from '../lib/firebase';
+import { db } from '@mr/core/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import ActivityFeed from './ActivityFeed';
 import SystemStatus from './SystemStatus';

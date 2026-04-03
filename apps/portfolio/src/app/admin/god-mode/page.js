@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { auth, db } from '../../../lib/firebase';
+import { auth, db } from '../../@mr/core/firebase';
 import { collection, getDocs, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import Loader from '../../../components/Loader';
+import Loader from '../../@mr/ui/Loader';
 import { Shield, Users, Globe, Trash2, Key, Search, Ban, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 

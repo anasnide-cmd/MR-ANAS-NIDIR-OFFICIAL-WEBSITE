@@ -1,6 +1,6 @@
-import { db } from '@/lib/firebase';
+import { db } from '@mr/core/firebase';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { addSiteLog } from '@/lib/siteHistory';
+import { addSiteLog } from '@mr/core/siteHistory';
 import { NextResponse } from 'next/server';
 
 export async function POST(req) {

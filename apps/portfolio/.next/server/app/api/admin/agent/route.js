@@ -1,0 +1,11 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/admin/agent/route.js")
+R.c("server/chunks/[root-of-the-server]__5554e3f0._.js")
+R.c("server/chunks/[root-of-the-server]__8893af36._.js")
+R.c("server/chunks/[root-of-the-server]__7c87e5d6._.js")
+R.c("server/chunks/node_modules_@ai-sdk_openai_dist_index_mjs_19cd50d6._.js")
+R.c("server/chunks/libs_core_src_firebase_456c79b7.js")
+R.c("server/chunks/node_modules_5cf12a84._.js")
+R.c("server/chunks/node_modules_e0eb4235._.js")
+R.c("server/chunks/apps_portfolio__next-internal_server_app_api_admin_agent_route_actions_cd237982.js")
+R.m(88953)
+module.exports=R.m(88953).exports

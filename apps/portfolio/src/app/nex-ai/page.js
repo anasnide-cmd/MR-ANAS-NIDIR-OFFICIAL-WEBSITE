@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
-import { db, auth } from '@/lib/firebase';
+import { db, auth } from '@mr/core/firebase';
 import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { 
     collection, addDoc, query, where, orderBy, onSnapshot, 

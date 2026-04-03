@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { db } from '../../../lib/firebase';
+import { db } from '@mr/core/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, increment } from 'firebase/firestore';
 
-import Loader from '../../../components/Loader';
+import Loader from '@mr/ui/Loader';
 
 export default function UserSiteClient() {
     const params = useParams();

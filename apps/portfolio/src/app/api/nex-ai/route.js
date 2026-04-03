@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase'; // Client SDK (No Service Account needed)
+import { db } from '@mr/core/firebase'; // Client SDK (No Service Account needed)
 import { doc, getDoc } from 'firebase/firestore'; 
 
 // Fallback Key from Environment

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { auth } from '../../lib/firebase';
+import { auth } from '@mr/core/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { motion } from 'framer-motion';
 import { X, ShieldCheck, ArrowRight, ShoppingBag as StoreIcon } from 'lucide-react';

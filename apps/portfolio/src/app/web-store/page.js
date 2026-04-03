@@ -8,9 +8,9 @@ import {
   Zap, Star, MoreVertical, Menu, X, ArrowRight, Sparkles,
   ShoppingBag
 } from 'lucide-react';
-import { db } from '../../lib/firebase';
+import { db } from '@mr/core/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import BuySiteModal from '../../components/MrShop/BuySiteModal';
+import BuySiteModal from '@mr/ui/MrShop/BuySiteModal';
 import styles from './webstore.module.css';
 
 // --- MOCK DATA ---

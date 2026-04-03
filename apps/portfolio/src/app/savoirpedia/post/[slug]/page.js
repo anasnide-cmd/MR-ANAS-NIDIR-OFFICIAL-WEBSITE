@@ -1,6 +1,6 @@
-import { db } from '../../../../lib/firebase';
+import { db } from '@mr/core/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import WikiArticle from '../../../../components/Savoirpedia/WikiArticle';
+import WikiArticle from '@mr/ui/Savoirpedia/WikiArticle';
 
 // Helper function to fetch article by slug
 async function getArticle(slug) {

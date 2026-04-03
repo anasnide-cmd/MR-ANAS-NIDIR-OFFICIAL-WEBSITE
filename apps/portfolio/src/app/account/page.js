@@ -1,4 +1,4 @@
-import AccountClient from '../../components/MyAccount/AccountClient';
+import AccountClient from '@mr/ui/MyAccount/AccountClient';
 
 export const metadata = {
     title: 'My Account | Mr Build',

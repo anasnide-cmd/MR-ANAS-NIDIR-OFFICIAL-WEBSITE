@@ -2,12 +2,12 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { db, auth } from '@/lib/firebase';
+import { db, auth } from '@mr/core/firebase';
 import { collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 
-import TopBar from '../../components/Creovate/TopBar';
-import Toolbar from '../../components/Creovate/Toolbar';
-import CanvasWorkspace from '../../components/Creovate/CanvasWorkspace';
+import TopBar from '@mr/ui/Creovate/TopBar';
+import Toolbar from '@mr/ui/Creovate/Toolbar';
+import CanvasWorkspace from '@mr/ui/Creovate/CanvasWorkspace';
 
 function CreovateContent() {
     const [elements, setElements] = useState([]);

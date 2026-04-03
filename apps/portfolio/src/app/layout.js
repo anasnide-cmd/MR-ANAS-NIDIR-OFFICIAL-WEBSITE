@@ -1,7 +1,7 @@
 import { Orbitron, Exo_2 } from 'next/font/google';
 import './globals.css';
-import ClientLayout from '../components/ClientLayout';
-import GlobalErrorBoundary from '../components/GlobalErrorBoundary';
+import ClientLayout from '@mr/ui/ClientLayout';
+import GlobalErrorBoundary from '@mr/ui/GlobalErrorBoundary';
 
 const orbitron = Orbitron({
   subsets: ['latin'],
@@ -83,7 +83,11 @@ export default function RootLayout({ children }) {
       textColor: '#00f0ff',
       links: [
         { label: 'SavoirPedia', href: '/savoirpedia', ariaLabel: 'Read SavoirPedia' },
-        { label: 'Mr Build', href: '/mr-build', ariaLabel: 'Mr Build Dashboard' },
+        { 
+          label: 'Mr Build', 
+          href: process.env.NODE_ENV === 'development' ? 'http://localhost:4201/mr-build' : '/mr-build', 
+          ariaLabel: 'Mr Build Dashboard' 
+        },
         { label: 'Games', href: '/mr-games', ariaLabel: 'Mr Arcade Games' },
         { label: 'Celco', href: '/celco' }
       ]

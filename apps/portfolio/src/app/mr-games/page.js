@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Orbitron } from 'next/font/google';
-import { db } from '../../lib/firebase';
+import { db } from '@mr/core/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const orbitron = Orbitron({ subsets: ['latin'] });

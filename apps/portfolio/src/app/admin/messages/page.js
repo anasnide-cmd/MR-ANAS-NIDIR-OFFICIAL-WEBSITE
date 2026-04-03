@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
-import { auth, db } from '../../../lib/firebase';
+import { auth, db } from '../../@mr/core/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';

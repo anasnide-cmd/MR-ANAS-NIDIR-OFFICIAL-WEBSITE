@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { auth, db } from '../../lib/firebase';
+import { auth, db } from '@mr/core/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import NotificationCenter from '../../components/NotificationCenter';
+import NotificationCenter from '@mr/ui/NotificationCenter';
 
 export default function BuildLayout({ children }) {
     const [user, setUser] = useState(null);

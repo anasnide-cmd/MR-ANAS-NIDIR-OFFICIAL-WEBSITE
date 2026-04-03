@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { auth, db } from '../../lib/firebase';
+import { auth, db } from '@mr/core/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { updateProfile, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import Loader from '../../components/Loader';
+import Loader from '@mr/ui/Loader';
 
 export default function ProfileClient() {
     const router = useRouter();

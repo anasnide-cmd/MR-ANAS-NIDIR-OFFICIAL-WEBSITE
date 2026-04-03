@@ -1,4 +1,4 @@
-import ShopClient from '../../components/MrShop/ShopClient';
+import ShopClient from '@mr/ui/MrShop/ShopClient';
 
 export const metadata = {
     title: 'Mr Shop | Future Commerce',

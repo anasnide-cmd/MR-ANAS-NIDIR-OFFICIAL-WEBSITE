@@ -1,4 +1,4 @@
-import CelcoClient from '@/components/Celco/CelcoClient';
+import CelcoClient from '@mr/ui/Celco/CelcoClient';
 
 export const metadata = {
   title: 'Celco | Premium Spreadsheet',

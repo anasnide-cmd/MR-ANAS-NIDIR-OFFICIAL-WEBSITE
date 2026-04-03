@@ -1,4 +1,4 @@
-import HomeClient from '../components/HomeClient';
+import HomeClient from '@mr/ui/HomeClient';
 
 export const metadata = {
   title: 'Home | MR ANAS NIDIR',

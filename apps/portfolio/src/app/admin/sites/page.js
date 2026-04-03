@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { auth, db } from '../../../lib/firebase';
-import Loader from '../../../components/Loader';
+import { auth, db } from '../../@mr/core/firebase';
+import Loader from '../../@mr/ui/Loader';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, orderBy, getDocs, doc, updateDoc, setDoc } from 'firebase/firestore';
 import Link from 'next/link';
-import CommandGrid, { GridItem } from '../../../components/Admin/CommandGrid';
+import CommandGrid, { GridItem } from '../../@mr/ui/Admin/CommandGrid';
 
 export default function SitesPage() {
     const [user, setUser] = useState(null);

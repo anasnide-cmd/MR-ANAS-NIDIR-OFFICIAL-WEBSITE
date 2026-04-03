@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import UserSiteClient from './UserSiteClient';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../../lib/firebase';
+import { db } from '@mr/core/firebase';
 
 // For static export, we need to provide generateStaticParams
 // Since Firebase might not work during build, we'll provide some default slugs

@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { collection, query, getDocs, limit, where } from 'firebase/firestore';
-import { db } from '../../lib/firebase'; // Adjust path as needed
+import { db } from '@mr/core/firebase'; // Adjust path as needed
 import Link from 'next/link';
 
 export default function CommandPalette() {

@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { db, auth } from '../../../lib/firebase';
+import { db, auth } from '../../@mr/core/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import Loader from '../../../components/Loader';
+import Loader from '../../@mr/ui/Loader';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,

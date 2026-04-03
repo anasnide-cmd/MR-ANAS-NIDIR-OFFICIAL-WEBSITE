@@ -17,7 +17,7 @@ import {
     ScrollShadow,
     Progress
 } from "@heroui/react";
-import { db, auth } from '../../lib/firebase'; // Updated relative path
+import { db, auth } from '@mr/core/firebase'; // Updated relative path
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'; 
 import { onAuthStateChanged } from 'firebase/auth'; 
 
@@ -433,7 +433,7 @@ const AICopilot = memo(({ siteData, onCodeUpdate, selectionContext }) => {
           if (!imgUrl) return;
           try {
               const { ref, uploadBytes } = await import('firebase/storage');
-              const { storage } = await import('../../lib/firebase'); // Updated path
+              const { storage } = await import('@mr/core/firebase'); // Updated path
               const res = await fetch(imgUrl);
               const blob = await res.blob();
               const sRef = ref(storage, `users/${user.uid}/uploads/ai_${Date.now()}.png`);

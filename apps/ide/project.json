@@ -6,12 +6,18 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
-        "command": "cross-env NODE_OPTIONS='--max-old-space-size=4096' next build",
-        "cwd": "apps/ide",
+        "root": "apps/ide",
         "outputPath": "dist/apps/ide"
+      },
+      "configurations": {
+        "production": {},
+        "development": {
+           "outputPath": "dist/apps/ide"
+        }
       }
     },
     "serve": {
@@ -19,7 +25,20 @@
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "ide:build",
-        "dev": true
+        "dev": true,
+        "port": 4210
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "ide:build:development",
+          "dev": true,
+          "port": 4210
+        },
+        "production": {
+          "buildTarget": "ide:build:production",
+          "dev": false,
+          "port": 4210
+        }
       }
     }
   }

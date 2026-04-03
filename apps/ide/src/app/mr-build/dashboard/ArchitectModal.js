@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Send, X, Mic, Volume2, VolumeX, Globe, Cpu, Paperclip, MicOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { doc, collection, setDoc, getDoc, updateDoc, increment } from 'firebase/firestore';
-import { db } from '../../../lib/firebase';
+import { db } from '../../@mr/core/firebase';
 import 'regenerator-runtime/runtime';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 

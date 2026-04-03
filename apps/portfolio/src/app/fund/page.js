@@ -1,4 +1,4 @@
-import FundClient from '../../components/Fund/FundClient';
+import FundClient from '@mr/ui/Fund/FundClient';
 
 export const metadata = {
     title: 'Support Us | Mr Build',

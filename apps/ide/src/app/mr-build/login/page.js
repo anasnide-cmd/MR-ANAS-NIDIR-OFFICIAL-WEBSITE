@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { auth } from '../../../lib/firebase';
+import { auth } from '../../@mr/core/firebase';
 import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,

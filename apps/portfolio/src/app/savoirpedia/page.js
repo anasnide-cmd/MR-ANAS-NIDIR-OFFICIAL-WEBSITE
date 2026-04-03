@@ -1,4 +1,4 @@
-import HubClient from '../../components/Savoirpedia/HubClient';
+import HubClient from '@mr/ui/Savoirpedia/HubClient';
 
 export const metadata = {
   title: 'Savoirpedia | Knowledge Base',

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Sparkles, Send, Bot, User, Mic, Volume2, VolumeX, Edit3, Image as ImageIcon, X } from 'lucide-react';
-import { db } from '../../lib/firebase';
+import { db } from '@mr/core/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 export default function SavoirCopilot({ currentTitle, currentContent, onUpdate, initialMessage }) {

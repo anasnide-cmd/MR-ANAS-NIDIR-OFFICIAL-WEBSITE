@@ -3,7 +3,18 @@
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "bundler",
-    "target": "es2015"
+    "target": "es2015",
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "jsx": "preserve",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "baseUrl": ".",
+    "paths": {
+      "@mr/core/*": ["../../libs/core/src/*"],
+      "@mr/ui/*": ["../../libs/shared-ui/src/*"]
+    }
   },
-  "include": ["**/*.js", "**/*.jsx", "../../next-env.d.ts"]
+  "include": ["**/*.js", "**/*.jsx", "../../next-env.d.ts", "src/**/*"],
+  "exclude": ["node_modules"]
 }

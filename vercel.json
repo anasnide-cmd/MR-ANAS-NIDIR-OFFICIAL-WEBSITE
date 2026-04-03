@@ -1,4 +1,20 @@
 {
+  "version": 2,
   "regions": ["sng1"],
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "rewrites": [
+    { "source": "/mr-build/:path*", "destination": "apps/ide/:path*" },
+    { "source": "/mr-engine/:path*", "destination": "apps/ide/:path*" },
+    { "source": "/:path*", "destination": "apps/portfolio/:path*" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
 }

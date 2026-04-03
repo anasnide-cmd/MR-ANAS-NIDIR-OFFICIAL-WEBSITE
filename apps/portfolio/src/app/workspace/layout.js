@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { auth, db } from '../../lib/firebase';
+import { auth, db } from '@mr/core/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import WorkspaceSidebar from '../../components/WorkspaceSidebar';
+import WorkspaceSidebar from '@mr/ui/WorkspaceSidebar';
 
 export default function WorkspaceLayout({ children }) {
     const [user, setUser] = useState(null);

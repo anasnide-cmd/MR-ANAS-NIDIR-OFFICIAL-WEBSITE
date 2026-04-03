@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { auth } from '../lib/firebase';
+import { auth } from '@mr/core/firebase';
 import { signOut } from 'firebase/auth';
 import { motion } from 'framer-motion';
 import { 

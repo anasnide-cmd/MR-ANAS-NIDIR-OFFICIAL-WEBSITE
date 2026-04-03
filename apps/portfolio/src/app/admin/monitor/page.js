@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getSystemLogs, resolveLog } from '../../../lib/logger';
-import { auth } from '../../../lib/firebase';
-import CommandGrid, { GridItem } from '../../../components/Admin/CommandGrid';
-import SystemTerminal from '../../../components/Admin/SystemTerminal';
+import { getSystemLogs, resolveLog } from '../../@mr/core/logger';
+import { auth } from '../../@mr/core/firebase';
+import CommandGrid, { GridItem } from '../../@mr/ui/Admin/CommandGrid';
+import SystemTerminal from '../../@mr/ui/Admin/SystemTerminal';
 
 export default function SystemMonitorPage() {
     const [logs, setLogs] = useState([]);

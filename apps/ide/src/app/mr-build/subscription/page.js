@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth, db } from '../../../lib/firebase';
+import { auth, db } from '../../@mr/core/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import PayPalButton from '../../../components/PayPalButton';
-import Loader from '../../../components/Loader';
+import PayPalButton from '../../@mr/ui/PayPalButton';
+import Loader from '../../@mr/ui/Loader';
 import Link from 'next/link';
 
 export default function SubscriptionPage() {

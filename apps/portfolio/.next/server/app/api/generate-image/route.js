@@ -1,0 +1,10 @@
+var R=require("../../../chunks/[turbopack]_runtime.js")("server/app/api/generate-image/route.js")
+R.c("server/chunks/[root-of-the-server]__6c60cd0e._.js")
+R.c("server/chunks/node_modules_next_1402a1da._.js")
+R.c("server/chunks/[root-of-the-server]__7c87e5d6._.js")
+R.c("server/chunks/libs_core_src_firebase_456c79b7.js")
+R.c("server/chunks/node_modules_5cf12a84._.js")
+R.c("server/chunks/[root-of-the-server]__8893af36._.js")
+R.c("server/chunks/0da96_portfolio__next-internal_server_app_api_generate-image_route_actions_ab841ccc.js")
+R.m(19866)
+module.exports=R.m(19866).exports

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase'; // Client SDK
+import { db } from '@mr/core/firebase'; // Client SDK
 import { doc, getDoc } from 'firebase/firestore';
 
 const DEFAULT_MODELS = [

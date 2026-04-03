@@ -1,0 +1,3 @@
+{
+  "/api/generate-image/route": "app/api/generate-image/route.js"
+}

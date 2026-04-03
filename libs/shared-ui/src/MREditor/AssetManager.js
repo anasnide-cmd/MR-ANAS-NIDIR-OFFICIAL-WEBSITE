@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { storage, auth } from '../../lib/firebase'; // Updated relative path
+import { storage, auth } from '@mr/core/firebase'; // Updated relative path
 import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import { Loader2, Upload, Trash2, Copy, Image as ImageIcon, X, AlertCircle, Sparkles } from 'lucide-react';
 

@@ -1,4 +1,4 @@
-import { db } from '../../lib/firebase';
+import { db } from '@mr/core/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export const dynamic = 'force-dynamic'; // Ensure it's not cached statically at build time if we want real-time updates
