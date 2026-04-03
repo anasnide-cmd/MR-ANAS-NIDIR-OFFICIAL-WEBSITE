@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2015"
+  },
+  "include": ["**/*.js", "**/*.jsx", "../../next-env.d.ts"]
+}

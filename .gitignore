@@ -62,3 +62,8 @@ temp_app/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+
+.nx/cache
+.nx/workspace-data

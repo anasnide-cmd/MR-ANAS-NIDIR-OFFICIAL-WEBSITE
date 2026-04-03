@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "buildCommand": "cd ../.. && npx nx build portfolio",
+  "installCommand": "cd ../.. && npm install",
+  "outputDirectory": "dist/apps/portfolio/.next",
+  "regions": ["sng1"],
+  "framework": "nextjs"
+}

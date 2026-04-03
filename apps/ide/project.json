@@ -1,0 +1,26 @@
+{
+  "name": "ide",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/ide/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "command": "cross-env NODE_OPTIONS='--max-old-space-size=4096' next build",
+        "cwd": "apps/ide",
+        "outputPath": "dist/apps/ide"
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "ide:build",
+        "dev": true
+      }
+    }
+  }
+}

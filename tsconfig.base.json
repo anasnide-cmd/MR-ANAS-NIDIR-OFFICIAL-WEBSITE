@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@mr/core/*": ["libs/core/src/*"],
+      "@mr/ui/*": ["libs/shared-ui/src/*"]
+    }
+  }
+}
