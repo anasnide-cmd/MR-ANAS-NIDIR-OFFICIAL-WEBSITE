@@ -1,14 +1,27 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, Bot, User, ChevronRight, Mic, Volume2, VolumeX, Paperclip, X } from 'lucide-react';
-import Prism from 'prismjs';
-import 'prismjs/themes/prism-tomorrow.css';
+import { Sparkles, Send, Bot, User, ChevronRight, Mic, Volume2, VolumeX, Paperclip, X, ChevronDown, Rocket, Copy, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    Card,
+    Avatar,
+    Button,
+    ButtonGroup,
+    Badge,
+    Chip,
+    Input,
+    TextArea,
+    Dropdown,
+    Tooltip,
+    ScrollShadow,
+    Progress
+} from "@heroui/react";
 import { db, auth } from '../../lib/firebase'; // Updated relative path
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'; 
 import { onAuthStateChanged } from 'firebase/auth'; 
 
-export default function AICopilot({ siteData, onCodeUpdate, selectionContext }) {
+const AICopilot = memo(({ siteData, onCodeUpdate, selectionContext }) => {
   const [messages, setMessages] = useState([
     {
       id: 'welcome',
@@ -469,21 +482,32 @@ export default function AICopilot({ siteData, onCodeUpdate, selectionContext }) 
       return subParts.map((part, i) => {
           if (part.type === 'code') {
               return (
-                  <div key={`${keyPrefix}-${i}`} className="code-block-wrapper">
-                      <div className="code-header">
-                          <span>{part.lang}</span>
-                      </div>
-                      <div className="code-container">
-                          <div className="line-numbers">
-                              {part.content.trim().split('\n').map((_, idx) => (
-                                  <div key={idx} className="line-number">{idx + 1}</div>
-                              ))}
-                          </div>
-                          <pre className={`language-${part.lang}`}>
-                              <code>{part.content}</code>
-                          </pre>
-                      </div>
-                  </div>
+                <motion.div 
+                    key={`${keyPrefix}-${i}`} 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="code-block-wrapper group/code relative"
+                >
+                    <div className="code-header flex items-center justify-between px-3 py-2 bg-white/5 border-b border-white/10 rounded-t-lg">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{part.lang}</span>
+                        <Button 
+                            isIconOnly 
+                            size="sm" 
+                            variant="light" 
+                            className="h-6 w-6 text-white/20 hover:text-[#00f0ff] opacity-0 group-hover/code:opacity-100 transition-opacity"
+                            onClick={() => {
+                                navigator.clipboard.writeText(part.content);
+                            }}
+                        >
+                            <Copy size={12} />
+                        </Button>
+                    </div>
+                    <div className="code-container bg-[#050505] p-3 rounded-b-lg overflow-x-auto border-x border-b border-white/5">
+                        <pre className={`language-${part.lang} text-xs font-mono leading-relaxed`}>
+                            <code className="text-[#00f0ff]/80">{part.content}</code>
+                        </pre>
+                    </div>
+                </motion.div>
               );
           } else {
               return <span key={`${keyPrefix}-${i}`} dangerouslySetInnerHTML={{ 
@@ -538,92 +562,189 @@ export default function AICopilot({ siteData, onCodeUpdate, selectionContext }) 
   return (
     <div className="copilot-container">
       {/* Header */}
-      <div className="header">
-        <div className="brand">
-          <Sparkles className="icon-sparkles" size={16} />
-          <h2 className="title">NEX AI ARCT</h2>
+      <div className="flex items-center justify-between p-3 border-b border-white/5 bg-black/40 backdrop-blur-md">
+        <div className="flex items-center gap-2">
+            <Sparkles className="text-[#00f0ff] drop-shadow-[0_0_5px_rgba(0,240,255,0.4)]" size={16} />
+            <h2 className="text-[10px] font-black tracking-widest text-white/90 uppercase">NEX AI ARCT</h2>
         </div>
-        <div className="header-controls">
+        <div className="flex items-center gap-2">
             {aiCredits !== null && (
-                <div className="fuel-gauge" title="Neural Fuel (Credits)">
-                    <div className="gauge-icon">⛽</div>
-                    <span className="gauge-val">{aiCredits}</span>
-                </div>
+                <Badge.Root>
+                    <Badge.Label 
+                        content={aiCredits} 
+                        color="primary" 
+                        variant="flat" 
+                        size="sm"
+                        className="bg-[#00f0ff]/10 text-[#00f0ff] border-none font-black"
+                    >
+                        <div className="p-1 px-2 flex items-center gap-1">
+                            <Rocket size={10} className="text-[#00f0ff]" />
+                        </div>
+                    </Badge.Label>
+                </Badge.Root>
             )}
-            <select 
-                value={selectedModel} 
-                onChange={(e) => setSelectedModel(e.target.value)}
-                className="model-select"
+            {selectionContext?.selectedText && (
+                <Tooltip content={`Selection active in ${selectionContext.activeFile}`}>
+                    <Chip 
+                        size="sm" 
+                        variant="flat" 
+                        className="bg-[#00f0ff]/20 text-[#00f0ff] h-7 border border-[#00f0ff]/30 animate-pulse"
+                        startContent={<Layout size={12} />}
+                    >
+                        SELECTED
+                    </Chip>
+                </Tooltip>
+            )}
+            <Dropdown.Root placement="bottom-end">
+                <Dropdown.Trigger>
+                    <Button 
+                        size="sm" 
+                        variant="flat" 
+                        className="bg-white/5 text-white/60 min-w-fit px-2 h-7 text-[10px]"
+                        endContent={<ChevronDown size={12} />}
+                    >
+                        {models.find(m => m.id === selectedModel)?.name || 'Model'}
+                    </Button>
+                </Dropdown.Trigger>
+                <Dropdown.Popover className="bg-[#111] border border-white/10">
+                    <Dropdown.Menu 
+                        aria-label="Model Selection"
+                        selectedKeys={[selectedModel]}
+                        onSelectionChange={(keys) => setSelectedModel(Array.from(keys)[0])}
+                        selectionMode="single"
+                    >
+                        {models.map(m => (
+                            <Dropdown.Item key={m.id}>{m.name}</Dropdown.Item>
+                        ))}
+                    </Dropdown.Menu>
+                </Dropdown.Popover>
+            </Dropdown.Root>
+            <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                onClick={toggleVoice}
+                className={voiceEnabled ? 'text-[#00f0ff]' : 'text-white/40'}
             >
-                {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
-            <button 
-                onClick={toggleVoice} 
-                className={`voice-btn ${voiceEnabled ? 'active' : ''}`}
-                title="Toggle Voice"
-            >
-                {voiceEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
-            </button>
+                {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </Button>
         </div>
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="messages-area custom-scrollbar">
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={`message-row ${m.role}`}
-            >
-              <div className={`message-bubble ${m.role}`}>
-                <div className="message-meta">
-                  {m.role === 'user' ? <User size={12} /> : <Bot size={12} />}
-                  <span className="role-name">
-                    {m.role === 'user' ? 'You' : 'NEX AI'}
-                  </span>
-                </div>
-                
-                <MessageContent content={m.content} role={m.role} />
-                
-                {m.role === 'error' && <div className="error-text">Error processing request</div>}
-              </div>
-            </div>
-          ))}
+      <ScrollShadow ref={scrollRef} className="flex-1 p-4 flex flex-col gap-6 no-scrollbar" hideScrollBar>
+          <AnimatePresence initial={false}>
+              {messages.map((m, idx) => (
+                <motion.div
+                  key={m.id}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                      duration: 0.4, 
+                      delay: idx === messages.length - 1 ? 0 : idx * 0.05,
+                      ease: [0.16, 1, 0.3, 1] 
+                  }}
+                  className={`flex w-full ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`max-w-[90%] sm:max-w-[85%] flex flex-col gap-2 ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    <div className="flex items-center gap-2 px-1">
+                        {m.role === 'user' ? (
+                            <>
+                                <span className="text-[10px] font-black text-white/40 uppercase tracking-tight">YOU</span>
+                                <Avatar.Root size="sm" className="w-5 h-5 border border-white/20">
+                                    <Avatar.Fallback className="bg-white/5"><User size={12} /></Avatar.Fallback>
+                                </Avatar.Root>
+                            </>
+                        ) : (
+                            <>
+                                <Avatar.Root size="sm" className="w-5 h-5 border border-[#00f0ff]/20 bg-[#00f0ff]/5">
+                                    <Avatar.Fallback className="bg-transparent"><Bot size={12} className="text-[#00f0ff]" /></Avatar.Fallback>
+                                </Avatar.Root>
+                                <span className="text-[10px] font-black text-[#00f0ff] uppercase tracking-tight">NEX AI</span>
+                            </>
+                        )}
+                    </div>
+                    
+                    <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-2xl border transition-all duration-300 ${
+                        m.role === 'user' 
+                        ? 'bg-gradient-to-br from-indigo-600/90 to-violet-700/90 text-white border-white/10 rounded-tr-none' 
+                        : 'bg-white/5 backdrop-blur-3xl text-white/90 border-white/10 rounded-tl-none hover:bg-white/10'
+                    }`}>
+                        <MessageContent content={m.content} role={m.role} />
+                    </div>
+                    
+                    {m.role === 'error' && <Chip color="danger" variant="flat" size="sm" className="mt-1">Neural Connection Lost</Chip>}
+                  </div>
+                </motion.div>
+              ))}
+          </AnimatePresence>
 
         {loading && (
-          <div className="loading-indicator">
-            <div className="dots">
-              <span className="dot dot-1"></span>
-              <span className="dot dot-2"></span>
-              <span className="dot dot-3"></span>
+          <motion.div 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex gap-3 p-4 items-center"
+          >
+            <div className="w-6 h-6 rounded-full bg-[#00f0ff]/10 border border-[#00f0ff]/20 flex items-center justify-center animate-pulse">
+                <Bot size={12} className="text-[#00f0ff]" />
             </div>
-          </div>
+            <div className="flex gap-1.5 items-center bg-white/5 p-2 px-3 rounded-full border border-white/5">
+              <motion.span 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 1, 0.3] }}
+                transition={{ repeat: Infinity, duration: 1, delay: 0 }}
+                className="w-1.5 h-1.5 bg-[#00f0ff] rounded-full"
+              ></motion.span>
+              <motion.span 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 1, 0.3] }}
+                transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
+                className="w-1.5 h-1.5 bg-[#00f0ff] rounded-full"
+              ></motion.span>
+              <motion.span 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 1, 0.3] }}
+                transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
+                className="w-1.5 h-1.5 bg-[#00f0ff] rounded-full"
+              ></motion.span>
+            </div>
+          </motion.div>
         )}
-      </div>
+      </ScrollShadow>
 
       {/* Attachments Preview */}
       {attachments.length > 0 && (
-          <div className="attachments-preview">
+          <ScrollShadow orientation="horizontal" className="flex gap-2 p-3 bg-black/60 border-t border-white/5 no-scrollbar">
               {attachments.map((file, index) => (
-                  <div key={index} className="attachment-chip">
-                      <span className="file-name">{file.name}</span>
-                      <button onClick={() => removeAttachment(index)} className="remove-btn">
-                          <X size={12} />
-                      </button>
-                  </div>
+                  <Chip 
+                    key={index} 
+                    onClose={() => removeAttachment(index)} 
+                    variant="flat" 
+                    className="bg-white/5 border border-white/10 text-white/70 h-7"
+                    size="sm"
+                  >
+                        {file.name}
+                  </Chip>
               ))}
-          </div>
+          </ScrollShadow>
       )}
 
       {/* Input */}
-      <div className="input-area">
-        <div className={`input-wrapper ${isListening ? 'listening' : ''}`}>
-          <input
-            className="chat-input"
+      <div className="p-4 bg-black/60 border-t border-white/5 backdrop-blur-2xl">
+        <div className="relative group">
+          <TextArea
             value={input}
+            onValueChange={setInput}
             placeholder={isListening ? "Listening..." : "Describe a component..."}
-            onChange={(e) => setInput(e.target.value)}
+            minRows={1}
+            maxRows={8}
+            variant="bordered"
+            radius="lg"
+            classNames={{
+                base: "max-w-full",
+                input: "text-sm sm:text-base pr-20",
+                inputWrapper: "bg-white/5 border-white/10 group-data-[focus=true]:border-[#00f0ff]/50 transition-all",
+            }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.key === 'Enter' && !e.shiftKey && !loading) {
+                e.preventDefault();
                 handleSend(e);
               }
             }}
@@ -632,42 +753,45 @@ export default function AICopilot({ siteData, onCodeUpdate, selectionContext }) 
           <input 
               type="file" 
               ref={fileInputRef}
-              className="hidden-file-input"
+              className="hidden"
               multiple
               onChange={handleFileSelect}
-              style={{ display: 'none' }}
           />
 
-          <div className="input-actions">
-            <button
-                type="button"
+          <div className="absolute right-2 bottom-2 flex gap-1 z-10">
+            <Button
+                isIconOnly
+                size="sm"
+                variant="light"
                 onClick={() => fileInputRef.current?.click()}
-                className="action-btn"
-                title="Attach file"
+                className="text-white/30 hover:text-white"
             >
-                <Paperclip size={16} />
-            </button>
-            <button
-                type="button"
+                <Paperclip size={18} />
+            </Button>
+            <Button
+                isIconOnly
+                size="sm"
+                variant="light"
                 onClick={toggleListening}
-                className={`action-btn mic ${isListening ? 'active' : ''}`}
+                className={isListening ? 'text-[#00f0ff] animate-pulse' : 'text-white/30'}
             >
-                <Mic size={16} />
-            </button>
-            <button
-                type="button"
+                <Mic size={18} />
+            </Button>
+            <Button
+                isIconOnly
+                size="sm"
+                className="bg-[#00f0ff]/10 text-[#00f0ff] hover:bg-[#00f0ff]/20 disabled:opacity-20"
                 onClick={handleSend}
-                disabled={loading || (!input.trim() && attachments.length === 0)}
-                className="action-btn send"
+                isLoading={loading}
+                isDisabled={!input.trim() && attachments.length === 0}
             >
-                <Send size={16} />
-            </button>
+                {!loading && <Send size={18} />}
+            </Button>
           </div>
         </div>
       </div>
       
       <style jsx>{`
-        /* Core Container */
         .copilot-container {
             display: flex;
             flex-direction: column;
@@ -676,164 +800,12 @@ export default function AICopilot({ siteData, onCodeUpdate, selectionContext }) 
             background: rgba(5, 5, 5, 0.95);
             backdrop-filter: blur(20px);
             border-left: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: -10px 0 40px rgba(0,0,0,0.6);
             color: #e2e8f0;
-            font-family: 'Inter', sans-serif;
             overflow: hidden;
         }
 
-        /* Header */
-        .header {
-            padding: 14px 18px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0) 100%);
-        }
-        .header-controls {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .model-select {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-            color: #94a3b8;
-            font-size: 11px;
-            border-radius: 4px;
-            padding: 4px 8px;
-            outline: none;
-            cursor: pointer;
-        }
-        .model-select:hover {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-        }
-        .model-select option {
-            background: #1a1a20;
-            color: #fff;
-        }
-
-        .fuel-gauge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(0, 240, 255, 0.1);
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            color: #00f0ff;
-            cursor: help;
-        }
-        .gauge-icon { font-size: 10px; }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .title {
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.15em;
-            color: #fff;
-            background: linear-gradient(90deg, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
-            margin: 0;
-        }
-        :global(.icon-sparkles) {
-            color: #00f0ff;
-            filter: drop-shadow(0 0 5px rgba(0, 240, 255, 0.5));
-            animation: pulse 3s infinite ease-in-out;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.8; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.1); }
-        }
-
-        .voice-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.05);
-            color: #94a3b8;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .voice-btn:hover { 
-            background: rgba(255,255,255,0.1); 
-            color: #fff; 
-        }
-        .voice-btn.active {
-            background: rgba(34, 211, 238, 0.15);
-            border-color: rgba(34, 211, 238, 0.3);
-            color: #22d3ee;
-            box-shadow: 0 0 10px rgba(34, 211, 238, 0.15);
-        }
-
-        /* Messages Area */
-        .messages-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            scroll-behavior: smooth;
-        }
-        .message-row {
-            display: flex;
-            width: 100%;
-            animation: fadeIn 0.3s ease-out;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .message-row.user { justify-content: flex-end; }
-        .message-row.assistant { justify-content: flex-start; }
-
-        .message-bubble {
-            max-width: 88%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            line-height: 1.6;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            position: relative;
-        }
-        .message-bubble.user {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            color: white;
-            border-top-right-radius: 2px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .message-bubble.assistant {
-            background: rgba(20, 20, 25, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #e2e8f0;
-            border-top-left-radius: 2px;
-            backdrop-filter: blur(10px);
-        }
-
-        .message-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            opacity: 0.5;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         /* Thinking Block */
         .think-block {
@@ -874,7 +846,6 @@ export default function AICopilot({ siteData, onCodeUpdate, selectionContext }) 
             line-height: 1.5;
         }
 
-        /* Action Badge */
         .action-badge {
             margin-top: 8px;
             background: rgba(6, 182, 212, 0.1);
@@ -887,23 +858,8 @@ export default function AICopilot({ siteData, onCodeUpdate, selectionContext }) 
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            animation: slideUp 0.3s ease-out;
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Loading */
-        .loading-indicator {
-            padding: 4px 16px;
-        }
-        .dots {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 8px 14px;
-            border-radius: 12px;
-            border-top-left-radius: 2px;
-            display: inline-flex;
-            gap: 4px;
-        }
-        
         /* Code Blocks */
         .code-block-wrapper { margin: 15px 0; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; background: #011627; }
         .code-header { background: rgba(255,255,255,0.05); padding: 5px 15px; display: flex; justify-content: space-between; font-size: 10px; color: #888; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -926,168 +882,11 @@ export default function AICopilot({ siteData, onCodeUpdate, selectionContext }) 
         .code-container pre { flex: 1; margin: 0 !important; border-radius: 0 !important; background: transparent !important; padding: 15px !important; line-height: 1.5; overflow-x: auto; }
         .code-container pre code { font-family: "Fira Code", monospace !important; font-size: 13px !important; }
         .inline-code { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-family: monospace; color: #00f0ff; }
-        .dot {
-            width: 4px;
-            height: 4px;
-            background: #94a3b8;
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-        .dot-1 { animation-delay: -0.32s; }
-        .dot-2 { animation-delay: -0.16s; }
-        
-        .attachments-preview {
-            display: flex;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(0,0,0,0.2);
-            border-top: 1px solid rgba(255,255,255,0.05);
-            overflow-x: auto;
-        }
-        .attachment-chip {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 11px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-        }
-        .file-name {
-            max-width: 100px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .remove-btn {
-            background: transparent;
-            border: none;
-            color: #ef4444;
-            cursor: pointer;
-            padding: 0;
-            display: flex;
-        }
-
-        /* Input Area */
-        .input-area {
-            padding: 16px 20px 24px 20px;
-            background: linear-gradient(0deg, rgba(0,0,0,0.8), rgba(0,0,0,0));
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-        }
-        .input-wrapper {
-            position: relative;
-            background: rgba(30, 30, 36, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        .input-wrapper:focus-within {
-            background: rgba(30, 30, 36, 0.9);
-            border-color: rgba(139, 92, 246, 0.4);
-            box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3), 0 8px 20px rgba(0,0,0,0.3);
-        }
-        
-        .chat-input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            padding: 14px 16px;
-            padding-right: 86px;
-            color: #f1f5f9;
-            font-size: 13px;
-            line-height: 1.5;
-            outline: none;
-        }
-        .chat-input::placeholder { color: #64748b; }
-
-        .input-actions {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            gap: 6px;
-        }
-        .action-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            border: none;
-            background: transparent;
-            color: #64748b;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .action-btn:hover { background: rgba(255,255,255,0.05); color: #94a3b8; }
-        
-        .action-btn.mic.active {
-            background: rgba(34, 211, 238, 0.15);
-            color: #22d3ee;
-            animation: pulse-mic 1.5s infinite;
-        }
-        @keyframes pulse-mic {
-            0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(34, 211, 238, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
-        }
-        
-        .action-btn.send {
-            color: #a78bfa;
-        }
-        .action-btn.send:hover {
-            background: rgba(139, 92, 246, 0.2);
-            color: #c4b5fd;
-        }
-        .action-btn.send:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            background: transparent;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-
-        @media (max-width: 768px) {
-            .header {
-                padding: 10px 15px;
-            }
-            .header-controls {
-                gap: 5px;
-            }
-            .title {
-                font-size: 9px;
-            }
-            .messages-area {
-                padding: 12px;
-                gap: 16px;
-            }
-            .message-bubble {
-                max-width: 95%;
-                padding: 10px 12px;
-                font-size: 12px;
-            }
-            .input-area {
-                padding: 12px 15px 25px 15px;
-            }
-            .chat-input {
-                padding: 12px 14px;
-                padding-right: 80px;
-                font-size: 14px;
-            }
-            .fuel-gauge {
-                padding: 2px 6px;
-            }
-            .model-select {
-                max-width: 100px;
-                font-size: 10px;
-            }
-        }
       `}</style>
     </div>
   );
-}
+});
+
+AICopilot.displayName = 'AICopilot';
+
+export default AICopilot;

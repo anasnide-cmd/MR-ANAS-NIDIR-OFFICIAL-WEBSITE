@@ -1,13 +1,13 @@
 'use client';
-import { X, FileCode, Plus } from 'lucide-react';
+import React, { memo } from 'react';
+import { X, FileCode } from 'lucide-react';
 
-export default function TabBar({ 
+const TabBar = memo(({ 
     openFiles, 
     activeFile, 
     onSelectFile, 
-    onCloseFile,
-    onTabOrderChange 
-}) {
+    onCloseFile 
+}) => {
     const getFileIcon = (filename) => {
         const ext = filename.split('.').pop().toLowerCase();
         let color = '#888';
@@ -23,7 +23,7 @@ export default function TabBar({
     return (
         <div className="tab-bar-container">
             <div className="tabs-list custom-scrollbar">
-                {openFiles.map((file, index) => (
+                {openFiles.map((file) => (
                     <div 
                         key={file} 
                         className={`tab-item ${activeFile === file ? 'active' : ''}`}
@@ -60,10 +60,10 @@ export default function TabBar({
                     height: 100%;
                     overflow-x: auto;
                     overflow-y: hidden;
-                    scrollbar-width: none; /* Firefox */
+                    scrollbar-width: none;
                 }
                 .tabs-list::-webkit-scrollbar {
-                    display: none; /* Chrome/Safari */
+                    display: none;
                 }
                 
                 .tab-item {
@@ -153,4 +153,8 @@ export default function TabBar({
             `}</style>
         </div>
     );
-}
+});
+
+TabBar.displayName = 'TabBar';
+
+export default TabBar;

@@ -1,8 +1,14 @@
-import { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, memo } from 'react';
 import { Terminal as XTerminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
+import { 
+    Button, 
+    ButtonGroup, 
+    ScrollShadow 
+} from "@heroui/react";
+import { motion, AnimatePresence } from 'framer-motion';
 
 // --- VIRTUAL NPM LOGIC ---
 const CDNS = {
@@ -11,7 +17,7 @@ const CDNS = {
     esm: (pkg) => `https://esm.sh/${pkg}`
 };
 
-export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
+const Terminal = memo(({ files, onUpdateFiles, onRun, onFixError }) => {
     const terminalRef = useRef(null);
     const xtermRef = useRef(null);
     const fitAddonRef = useRef(null);
@@ -193,17 +199,17 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
             term = new XTerminal({
                 cursorBlink: true,
                 theme: {
-                    background: '#0d1117',
+                    background: 'transparent',
                     foreground: '#c9d1d9',
-                    cursor: '#58a6ff',
-                    selectionBackground: '#264f78',
+                    cursor: '#00f0ff',
+                    selectionBackground: 'rgba(0, 240, 255, 0.3)',
                     black: '#000000',
                     red: '#ff5555',
                     green: '#50fa7b',
                     yellow: '#f1fa8c',
                     blue: '#bd93f9',
                     magenta: '#ff79c6',
-                    cyan: '#8be9fd',
+                    cyan: '#00f0ff',
                     white: '#bfbfbf',
                 },
                 fontFamily: '"JetBrains Mono", monospace',
@@ -225,7 +231,7 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
             xtermRef.current = term;
             fitAddonRef.current = fitAddon;
 
-            term.writeln('\x1b[1;34m~ Mr Build Terminal v2.0\x1b[0m');
+            term.writeln('\x1b[1;34m~ Mr Build Terminal v3.0\x1b[0m');
             term.writeln('Type \x1b[1;32mhelp\x1b[0m for commands.');
             
             if (logBuffer.current.length > 0) {
@@ -264,10 +270,10 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
             const term = xtermRef.current;
             if (key === 'Enter') {
                 term.write('\r\n');
-                handleCommand(commandRef.current.trim(), term);
+                const cmd = commandRef.current.trim();
+                handleCommand(cmd, term);
                 commandRef.current = '';
             } else if (key === 'Tab') {
-                // Simple tab completion simulation
                 const cmd = commandRef.current.trim();
                 const filesList = Object.keys(files || {});
                 const match = filesList.find(f => f.startsWith(cmd));
@@ -280,8 +286,16 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
                 term.clear();
                 commandRef.current = '';
                 prompt(term);
+            } else if (key === 'ls') {
+                commandRef.current = 'ls';
+                term.write('ls\r\n');
+                handleCommand('ls', term);
+                commandRef.current = '';
+            } else if (key === 'npm i ') {
+                commandRef.current = 'npm install ';
+                term.write('npm install ');
             } else if (key === 'Up') {
-                 // No history yet, but could be added
+                 // History could be added here
             } else {
                 commandRef.current += key;
                 term.write(key);
@@ -292,11 +306,11 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
 
         resizeObserver = new ResizeObserver(() => {
             if (!xtermRef.current) {
-                requestAnimationFrame(initTerminal);
+                setTimeout(initTerminal, 100);
             } else {
-                requestAnimationFrame(() => {
+                setTimeout(() => {
                     try { fitAddonRef.current?.fit(); } catch(e) {}
-                });
+                }, 100);
             }
         });
 
@@ -308,16 +322,14 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
             xtermRef.current = null;
             fitAddonRef.current = null;
         };
-    }, [handleCommand, handleLinkClick, prompt]);
+    }, [handleCommand, handleLinkClick, prompt, files]);
 
 
     useEffect(() => {
         window.terminalWrite = (text) => {
             if (xtermRef.current) {
                 const term = xtermRef.current;
-                // Check if text contains Error pattern
                 if (text.includes('[ERR]') || text.includes('Error:')) {
-                    // Extract error message for the link
                     const cleanMsg = text.replace(/\x1b\[[0-9;]*m/g, '').replace('[ERR]', '').trim();
                     const encoded = encodeURIComponent(cleanMsg);
                     term.write(`\r\n${text}`);
@@ -334,43 +346,45 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
     }, [prompt]);
 
     return (
-        <div className="terminal-wrapper" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="terminal-wrapper" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.4)' }}>
             <div 
                 ref={terminalRef} 
-                className="terminal-container"
+                className="terminal-container p-2"
                 style={{ flex: 1, overflow: 'hidden' }}
             />
-            <div className="virtual-keys mobile-only">
-                {['Tab', 'ls', 'cat ', 'mkdir ', 'touch ', 'rm ', 'npm i ', 'node ', 'Clear', 'Enter'].map(k => (
-                    <button key={k} onClick={() => window._terminalKeyTap(k)}>{k.trim()}</button>
-                ))}
-            </div>
+            <ScrollShadow 
+                orientation="horizontal" 
+                className="virtual-keys mobile-only flex gap-2 p-3 bg-black/80 border-t border-white/5 no-scrollbar backdrop-blur-xl"
+                hideScrollBar
+            >
+                <ButtonGroup.Root size="sm" variant="flat" className="gap-2">
+                    <AnimatePresence>
+                        {['Tab', 'ls', 'cat ', 'mkdir ', 'touch ', 'rm ', 'npm i ', 'node ', 'Clear', 'Enter'].map((k, idx) => (
+                            <motion.div
+                                key={k}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.03 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <Button 
+                                    onClick={() => window._terminalKeyTap(k)}
+                                    className="bg-white/5 border border-white/10 text-[#00f0ff] font-bold font-mono h-10 px-6 min-w-fit rounded-lg hover:border-[#00f0ff]/40 hover:bg-[#00f0ff]/5 transition-all"
+                                >
+                                    {k.trim()}
+                                </Button>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </ButtonGroup.Root>
+            </ScrollShadow>
             <style jsx>{`
+                .no-scrollbar::-webkit-scrollbar { display: none; }
+                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
                 .virtual-keys {
-                    display: flex;
-                    gap: 8px;
-                    padding: 8px;
-                    background: #000;
-                    border-top: 1px solid #222;
-                    overflow-x: auto;
+                    display: none; 
                     -webkit-overflow-scrolling: touch;
-                }
-                .virtual-keys button {
-                    background: #111;
-                    color: #00f0ff;
-                    border: 1px solid rgba(0, 240, 255, 0.2);
-                    padding: 12px 20px;
-                    border-radius: 8px;
-                    font-size: 12px;
-                    font-family: 'JetBrains Mono', monospace;
-                    white-space: nowrap;
-                    font-weight: 800;
-                    transition: 0.2s;
-                }
-                .virtual-keys button:active {
-                    background: #00f0ff;
-                    color: #000;
-                    transform: scale(0.95);
                 }
                 .mobile-only { display: none; }
                 @media (max-width: 768px) {
@@ -379,4 +393,8 @@ export default function Terminal({ files, onUpdateFiles, onRun, onFixError }) {
             `}</style>
         </div>
     );
-}
+});
+
+Terminal.displayName = 'Terminal';
+
+export default Terminal;

@@ -54,12 +54,14 @@ export const metadata = {
   },
   icons: {
     icon: '/favicon.ico',
+    apple: '/assets/icons/pwa-icon.png',
   },
 };
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: '#00f0ff',
 };
 
 export default function RootLayout({ children }) {

@@ -8,23 +8,22 @@ export default function ClientLayout({ children, navItems }) {
     const pathname = usePathname();
     const isSearchPage = pathname?.startsWith('/mr-search') || pathname?.startsWith('/nex-ai') || pathname?.startsWith('/web-store');
 
-    // Conditionally render based on '/mr-build', '/mr-engine', shared site '/s/', or '/celco' path
-    if (pathname?.startsWith('/mr-build') || pathname?.startsWith('/mr-engine') || pathname?.startsWith('/s/') || pathname?.startsWith('/celco') || pathname?.startsWith('/lab')) {
-        return (
-            <>
-                <PresenceTracker />
-                <main>{children}</main>
-            </>
-        );
-    }
-
-    // Default rendering for other paths
     return (
         <>
             <PresenceTracker />
-            {!isSearchPage && <CardNav items={navItems} />}
-            {children}
-            {!isSearchPage && <Footer />}
+            {/* Contextual Layout Handling */}
+            {(() => {
+                if (pathname?.startsWith('/mr-build') || pathname?.startsWith('/mr-engine') || pathname?.startsWith('/s/') || pathname?.startsWith('/celco') || pathname?.startsWith('/lab')) {
+                    return <main>{children}</main>;
+                }
+                return (
+                    <>
+                        {!isSearchPage && <CardNav items={navItems} />}
+                        {children}
+                        {!isSearchPage && <Footer />}
+                    </>
+                );
+            })()}
         </>
     );
 }

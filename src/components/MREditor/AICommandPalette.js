@@ -1,7 +1,14 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { 
+    Modal, 
+    Input, 
+    Button, 
+    Chip,
+    Kbd
+} from "@heroui/react";
+import { Sparkles, Command, Search, CornerDownLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Command, Sparkles, X, CornerDownLeft, Search } from 'lucide-react';
 
 export default function AICommandPalette({ isOpen, onClose, onCommand }) {
     const [query, setQuery] = useState('');
@@ -10,206 +17,109 @@ export default function AICommandPalette({ isOpen, onClose, onCommand }) {
     useEffect(() => {
         if (isOpen) {
             setQuery('');
-            setTimeout(() => inputRef.current?.focus(), 100);
+            setTimeout(() => {
+                 inputRef.current?.focus();
+            }, 100);
         }
     }, [isOpen]);
 
     const handleSubmit = (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         if (!query.trim()) return;
         onCommand(query.trim());
         onClose();
     };
 
-    // Close on Escape
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') onClose();
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onClose]);
+    const suggestions = [
+        { label: 'Fix Bugs', icon: <Sparkles size={14} className="text-[#00f0ff]" />, cmd: 'Fix all bugs in this file' },
+        { label: 'Add Documentation', icon: <Search size={14} className="text-[#00f0ff]" />, cmd: 'Add detailed comments to the code' },
+        { label: 'Refactor Code', icon: <Command size={14} className="text-[#00f0ff]" />, cmd: 'Refactor this to use modern ES6 syntax' },
+        { label: 'Optimize Performance', icon: <Rocket size={14} className="text-[#00ff88]" />, cmd: 'Optimize this code for maximum performance' },
+    ];
 
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <div className="palette-overlay">
-                    <motion.div 
-                        className="palette-backdrop"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                    />
-                    <motion.div 
-                        className="palette-content"
-                        initial={{ opacity: 0, scale: 0.9, y: -20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                        transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                    >
-                        <form onSubmit={handleSubmit} className="palette-form">
-                            <div className="input-icon">
-                                <Sparkles size={18} className="sparkle-icon" />
-                            </div>
-                            <input
+        <Modal.Root 
+            isOpen={isOpen} 
+            onOpenChange={(open) => !open && onClose()}
+        >
+            <Modal.Backdrop 
+                className="bg-black/60 backdrop-blur-md"
+            />
+            <Modal.Container className="pt-[10vh] sm:pt-[15vh]">
+                <Modal.Dialog className="bg-[#050505]/95 border border-[#00f0ff]/30 shadow-[0_0_50px_rgba(0,240,255,0.15)] overflow-hidden p-0 rounded-2xl max-w-xl">
+                    <Modal.Body className="p-0">
+                        <form onSubmit={handleSubmit} className="p-5 border-b border-white/5 bg-white/5 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-[#00f0ff] animate-pulse" />
+                            <Input
                                 ref={inputRef}
-                                type="text"
                                 value={query}
-                                onChange={(e) => setQuery(e.target.value)}
-                                placeholder="What should we build next? (e.g., 'Add a dark theme button')"
-                                className="palette-input"
+                                onValueChange={setQuery}
+                                placeholder="Execute Neural Command..."
+                                variant="underlined"
+                                className="w-full"
+                                classNames={{
+                                    input: "text-xl text-white font-black placeholder:text-white/10 h-12 tracking-wide",
+                                    inputWrapper: "border-[#00f0ff]/30 group-data-[focus=true]:border-[#00f0ff] after:bg-[#00f0ff] after:shadow-[0_0_10px_#00f0ff]",
+                                }}
+                                startContent={
+                                    <Sparkles size={22} className="text-[#00f0ff] animate-pulse drop-shadow-[0_0_8px_rgba(0,240,255,0.8)] mr-3" />
+                                }
+                                endContent={
+                                    <div className="hidden sm:flex items-center gap-2">
+                                        <Kbd keys={["enter"]} className="bg-white/5 text-[#00f0ff]/40 border-none font-black text-[10px]">ENTER</Kbd>
+                                    </div>
+                                }
                             />
-                            <div className="input-hint">
-                                <CornerDownLeft size={12} />
-                                <span>ENTER</span>
-                            </div>
                         </form>
                         
-                        <div className="palette-suggestions">
-                            <div className="suggestion-label">QUICK ACTIONS</div>
-                            <div className="suggestion-grid">
-                                <button type="button" onClick={() => { setQuery('Fix all bugs in this file'); inputRef.current?.focus(); }}>
-                                    <Sparkles size={12} /> Fix Bugs
-                                </button>
-                                <button type="button" onClick={() => { setQuery('Add detailed comments to the code'); inputRef.current?.focus(); }}>
-                                    <Search size={12} /> Add Documentation
-                                </button>
-                                <button type="button" onClick={() => { setQuery('Refactor this to use modern ES6 syntax'); inputRef.current?.focus(); }}>
-                                    <Command size={12} /> Refactor Code
-                                </button>
+                        <div className="p-5 bg-black/40">
+                            <div className="text-[9px] font-black text-[#00f0ff]/40 tracking-[4px] mb-4 uppercase flex items-center gap-3">
+                                <Search size={10} />
+                                <span>SUGGESTED PROTOCOLS</span>
+                                <div className="flex-1 h-[1px] bg-white/5" />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <AnimatePresence>
+                                    {isOpen && suggestions.map((item, idx) => (
+                                        <motion.div
+                                            key={idx}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.05 + 0.1 }}
+                                        >
+                                            <Button
+                                                size="md"
+                                                variant="flat"
+                                                className="w-full justify-start bg-white/5 border border-white/5 text-white/50 hover:text-[#00f0ff] hover:bg-[#00f0ff]/10 hover:border-[#00f0ff]/40 transition-all font-black text-xs h-10 tracking-tighter"
+                                                startContent={item.icon}
+                                                onClick={() => {
+                                                    setQuery(item.cmd);
+                                                    setTimeout(() => onCommand(item.cmd), 150);
+                                                    onClose();
+                                                }}
+                                            >
+                                                {item.label}
+                                            </Button>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
                             </div>
                         </div>
-                    </motion.div>
-
-                    <style jsx>{`
-                        .palette-overlay {
-                            position: fixed;
-                            inset: 0;
-                            z-index: 9999;
-                            display: flex;
-                            align-items: flex-start;
-                            justify-content: center;
-                            padding-top: 15vh;
-                        }
-                        .palette-backdrop {
-                            position: absolute;
-                            inset: 0;
-                            background: rgba(0, 0, 0, 0.7);
-                            backdrop-filter: blur(8px);
-                        }
-                        .palette-content {
-                            position: relative;
-                            width: 100%;
-                            max-width: 600px;
-                            background: rgba(15, 15, 20, 0.95);
-                            border: 1px solid rgba(0, 240, 255, 0.2);
-                            border-radius: 16px;
-                            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 240, 255, 0.1);
-                            overflow: hidden;
-                            margin: 0 20px;
-                        }
-                        .palette-form {
-                            display: flex;
-                            align-items: center;
-                            padding: 16px 20px;
-                            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                            background: rgba(255, 255, 255, 0.02);
-                        }
-                        .input-icon {
-                            margin-right: 15px;
-                            color: #00f0ff;
-                        }
-                        .sparkle-icon {
-                            filter: drop-shadow(0 0 5px rgba(0, 240, 255, 0.5));
-                        }
-                        .palette-input {
-                            flex: 1;
-                            background: transparent;
-                            border: none;
-                            color: #fff;
-                            font-size: 16px;
-                            font-family: 'Inter', sans-serif;
-                            outline: none;
-                        }
-                        .palette-input::placeholder {
-                            color: rgba(255, 255, 255, 0.3);
-                        }
-                        .input-hint {
-                            display: flex;
-                            align-items: center;
-                            gap: 5px;
-                            background: rgba(255, 255, 255, 0.05);
-                            padding: 4px 8px;
-                            border-radius: 4px;
-                            font-size: 10px;
-                            font-weight: 800;
-                            color: rgba(255, 255, 255, 0.5);
-                            border: 1px solid rgba(255, 255, 255, 0.1);
-                        }
-                        .palette-suggestions {
-                            padding: 15px 20px;
-                        }
-                        .suggestion-label {
-                            font-size: 10px;
-                            font-weight: 800;
-                            color: rgba(255, 255, 255, 0.3);
-                            letter-spacing: 1px;
-                            margin-bottom: 12px;
-                        }
-                        .suggestion-grid {
-                            display: flex;
-                            flex-wrap: wrap;
-                            gap: 10px;
-                        }
-                        .suggestion-grid button {
-                            background: rgba(255, 255, 255, 0.03);
-                            border: 1px solid rgba(255, 255, 255, 0.08);
-                            color: rgba(255, 255, 255, 0.7);
-                            padding: 8px 12px;
-                            border-radius: 8px;
-                            font-size: 12px;
-                            cursor: pointer;
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                            transition: 0.2s;
-                        }
-                        .suggestion-grid button:hover {
-                            background: rgba(0, 240, 255, 0.1);
-                            border-color: rgba(0, 240, 255, 0.4);
-                            color: #00f0ff;
-                            transform: translateY(-2px);
-                        }
-
-                        @media (max-width: 768px) {
-                            .palette-overlay {
-                                padding-top: 5vh;
-                            }
-                            .palette-content {
-                                margin: 0 10px;
-                                border-radius: 12px;
-                            }
-                            .palette-form {
-                                padding: 12px 15px;
-                            }
-                            .palette-input {
-                                font-size: 14px;
-                            }
-                            .input-hint {
-                                display: none;
-                            }
-                            .suggestion-grid {
-                                gap: 8px;
-                            }
-                            .suggestion-grid button {
-                                padding: 6px 10px;
-                                font-size: 11px;
-                            }
-                        }
-                    `}</style>
-                </div>
-            )}
-        </AnimatePresence>
+                        
+                        <div className="p-3 px-5 border-t border-white/5 bg-black/60 flex items-center justify-between">
+                             <div className="text-[10px] text-white/20 font-bold flex items-center gap-2">
+                                 <Command size={10} />
+                                 <span>NEURAL LINK V3 ACTIVE</span>
+                             </div>
+                             <div className="flex items-center gap-4 text-[10px] text-white/20 font-black">
+                                 <span>ESC TO DISCARD</span>
+                             </div>
+                        </div>
+                    </Modal.Body>
+                </Modal.Dialog>
+            </Modal.Container>
+        </Modal.Root>
     );
 }
+
+import { Rocket } from 'lucide-react';

@@ -1,8 +1,26 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: false,
+  swcMinify: true,
   images: { unoptimized: true },
   output: 'standalone',
   trailingSlash: true,
+  experimental: {
+    optimizePackageImports: [
+      '@heroui/react',
+      'lucide-react',
+      'framer-motion',
+      'react-icons',
+      'primeicons',
+      'primereact',
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei',
+      'firebase',
+      'gsap'
+    ],
+  },
+  transpilePackages: ['@monaco-editor/react'],
   async headers() {
     return [
       {
