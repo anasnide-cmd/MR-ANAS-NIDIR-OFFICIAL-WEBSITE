@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -334,18 +335,9 @@ function EditorContent() {
         }
     }, [activeFile, projectData, updateFileContent]);
 
-    if (loading) return <Loader text="Neural Link Establishing..." />;
-
     const currentFile = useMemo(() => {
         return (projectData?.files && projectData.files[activeFile]) || { content: '', language: 'javascript' };
     }, [projectData, activeFile]);
-
-    const ScanlineOverlay = () => (
-        <div className="absolute inset-0 pointer-events-none z-[1000] opacity-[0.05] overflow-hidden">
-            <div className="absolute inset-0 w-full h-[200%] animate-scanline" 
-                 style={{ background: 'linear-gradient(to bottom, transparent 50%, #00f0ff 50%)', backgroundSize: '100% 8px' }} />
-        </div>
-    );
 
     const handleSelectFile = useCallback((f) => { 
         setActiveFile(f); 
@@ -364,6 +356,15 @@ function EditorContent() {
             setActiveFile(newOpenFiles[newOpenFiles.length - 1] || 'index.html');
         }
     }, [openFiles, activeFile]);
+
+    if (loading) return <Loader text="Neural Link Establishing..." />;
+
+    const ScanlineOverlay = () => (
+        <div className="absolute inset-0 pointer-events-none z-[1000] opacity-[0.05] overflow-hidden">
+            <div className="absolute inset-0 w-full h-[200%] animate-scanline" 
+                 style={{ background: 'linear-gradient(to bottom, transparent 50%, #00f0ff 50%)', backgroundSize: '100% 8px' }} />
+        </div>
+    );
 
     return (
         <div className="mr-editor selection:bg-[#00f0ff] selection:text-black">
