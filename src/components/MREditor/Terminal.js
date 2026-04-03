@@ -1,3 +1,4 @@
+'use client';
 import React, { useEffect, useRef, useCallback, memo } from 'react';
 import { Terminal as XTerminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
