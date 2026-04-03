@@ -2,9 +2,14 @@
   "name": "temp_app",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@10.8.2",
+  "workspaces": [
+    "."
+  ],
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "next build",
+    "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "turbo:build": "turbo run build",
     "start": "next start",
     "lint": "eslint",
     "deploy:firebase": "npm run build && firebase deploy",
@@ -39,7 +44,7 @@
     "next": "16.1.1",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.7",
-    "prismjs": "^1.30.0",
+    "prismjs": "^1.29.0",
     "qrcode": "^1.5.4",
     "quill": "^2.0.3",
     "react": "19.2.3",
@@ -57,9 +62,11 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "autoprefixer": "^10.4.24",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "turbo": "^2.9.3"
   }
 }
