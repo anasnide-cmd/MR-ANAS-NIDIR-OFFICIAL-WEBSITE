@@ -1,0 +1,7 @@
+node_modules/next/dist/build/templates/app-page.d.ts(3,25): error TS2307: Cannot find module 'VAR_MODULE_GLOBAL_ERROR' or its corresponding type declarations.
+node_modules/next/dist/build/webpack-config.d.ts(10,104): error TS2694: Namespace '"C:/Users/USER/Anas/Project/MR-ANAS-NIDIR-OFFICIAL-WEBSITE/node_modules/next/dist/compiled/webpack/webpack".webpack' has no exported member 'RuleSetUseItem'.
+node_modules/next/dist/build/webpack/loaders/next-app-loader/index.d.ts(23,26): error TS2694: Namespace '"C:/Users/USER/Anas/Project/MR-ANAS-NIDIR-OFFICIAL-WEBSITE/node_modules/next/dist/compiled/webpack/webpack"' has no exported member 'LoaderDefinitionFunction'.
+node_modules/next/dist/server/app-render/entry-base.d.ts(1,114): error TS2307: Cannot find module 'react-server-dom-webpack/server' or its corresponding type declarations.
+node_modules/next/dist/server/app-render/entry-base.d.ts(2,27): error TS2307: Cannot find module 'react-server-dom-webpack/static' or its corresponding type declarations.
+node_modules/next/dist/types.d.ts(4,23): error TS2688: Cannot find type definition file for 'react-dom'.
+node_modules/next/dist/types.d.ts(5,23): error TS2688: Cannot find type definition file for 'react-dom/experimental'.

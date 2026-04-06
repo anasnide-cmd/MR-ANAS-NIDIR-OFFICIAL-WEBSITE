@@ -7,14 +7,20 @@
     "."
   ],
   "scripts": {
-    "dev": "next dev --turbo",
-    "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' next build",
-    "turbo:build": "turbo run build",
-    "start": "next start",
-    "lint": "eslint",
-    "deploy:firebase": "npm run build && firebase deploy",
-    "deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "dev": "nx run-many -t serve",
+    "build:all": "nx run-many -t build --exclude temp_app",
+    "start": "nx run-many -t start",
+    "lint": "nx run-many -t lint",
+    "deploy:firebase": "npm run build:all && firebase deploy",
+    "deploy:hosting": "npm run build:all && firebase deploy --only hosting",
     "deploy:rules": "firebase deploy --only firestore:rules"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "nx:noop"
+      }
+    }
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.12",
@@ -62,6 +68,9 @@
   "devDependencies": {
     "@nx/next": "^22.6.4",
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^25.5.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.24",
     "cross-env": "^7.0.3",
     "eslint": "^9",

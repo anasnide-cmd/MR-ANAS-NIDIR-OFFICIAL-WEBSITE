@@ -2,11 +2,6 @@
   "version": 2,
   "regions": ["sng1"],
   "framework": "nextjs",
-  "rewrites": [
-    { "source": "/mr-build/:path*", "destination": "apps/ide/:path*" },
-    { "source": "/mr-engine/:path*", "destination": "apps/ide/:path*" },
-    { "source": "/:path*", "destination": "apps/portfolio/:path*" }
-  ],
   "headers": [
     {
       "source": "/(.*)",
