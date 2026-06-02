@@ -136,8 +136,70 @@ export default function HandGesturePage() {
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsMounted(true);
     }, []);
+
+    function drawHand(ctx, landmarks) {
+        // Draw Connections
+        const connections = HandLandmarker.HAND_CONNECTIONS;
+        ctx.strokeStyle = "#ff00ff";
+        ctx.lineWidth = 3;
+        connections.forEach(conn => {
+            const start = landmarks[conn.start];
+            const end = landmarks[conn.end];
+            ctx.beginPath();
+            ctx.moveTo(start.x * ctx.canvas.width, start.y * ctx.canvas.height);
+            ctx.lineTo(end.x * ctx.canvas.width, end.y * ctx.canvas.height);
+            ctx.stroke();
+        });
+
+        // Draw Joints
+        ctx.fillStyle = "#fff";
+        landmarks.forEach(point => {
+            ctx.beginPath();
+            ctx.arc(point.x * ctx.canvas.width, point.y * ctx.canvas.height, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#ff00ff";
+            ctx.stroke();
+        });
+    }
+
+    function detectGesture(landmarks) {
+        // Advanced Gesture Logic
+        // 0: Wrist, 4: Thumb Tip, 8: Index Tip, 12: Middle Tip, 16: Ring Tip, 20: Pinky Tip
+        
+        const thumbTip = landmarks[4];
+        const indexTip = landmarks[8];
+        const middleTip = landmarks[12];
+        const ringTip = landmarks[16];
+        const pinkyTip = landmarks[20];
+        const wrist = landmarks[0];
+
+        // Helper to check if finger is extended
+        const isExtended = (tip, base) => tip.y < base.y - 0.1;
+
+        const indexExtended = isExtended(indexTip, landmarks[6]);
+        const middleExtended = isExtended(middleTip, landmarks[10]);
+        const ringExtended = isExtended(ringTip, landmarks[14]);
+        const pinkyExtended = isExtended(pinkyTip, landmarks[18]);
+
+        // Detect PINCH (Thumb and Index near)
+        const pinchDist = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
+        
+        if (pinchDist < 0.05) {
+            setActiveGesture('PINCH / SELECT');
+        } else if (!indexExtended && !middleExtended && !ringExtended && !pinkyExtended) {
+            setActiveGesture('FIST / GRAB');
+        } else if (indexExtended && !middleExtended && !ringExtended && !pinkyExtended) {
+            setActiveGesture('POINT / NAVIGATE');
+        } else if (indexExtended && middleExtended && ringExtended && pinkyExtended) {
+            setActiveGesture('OPEN HAND');
+        } else {
+            setActiveGesture('ANALYZING...');
+        }
+    }
 
     // Main Detection Loop
     useEffect(() => {
@@ -190,66 +252,7 @@ export default function HandGesturePage() {
         return () => cancelAnimationFrame(animationFrameId);
     }, [handLandmarker, landmarksVisible]);
 
-    const drawHand = (ctx, landmarks) => {
-        // Draw Connections
-        const connections = HandLandmarker.HAND_CONNECTIONS;
-        ctx.strokeStyle = "#ff00ff";
-        ctx.lineWidth = 3;
-        connections.forEach(conn => {
-            const start = landmarks[conn.start];
-            const end = landmarks[conn.end];
-            ctx.beginPath();
-            ctx.moveTo(start.x * ctx.canvas.width, start.y * ctx.canvas.height);
-            ctx.lineTo(end.x * ctx.canvas.width, end.y * ctx.canvas.height);
-            ctx.stroke();
-        });
 
-        // Draw Joints
-        ctx.fillStyle = "#fff";
-        landmarks.forEach(point => {
-            ctx.beginPath();
-            ctx.arc(point.x * ctx.canvas.width, point.y * ctx.canvas.height, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = "#ff00ff";
-            ctx.stroke();
-        });
-    };
-
-    const detectGesture = (landmarks) => {
-        // Advanced Gesture Logic
-        // 0: Wrist, 4: Thumb Tip, 8: Index Tip, 12: Middle Tip, 16: Ring Tip, 20: Pinky Tip
-        
-        const thumbTip = landmarks[4];
-        const indexTip = landmarks[8];
-        const middleTip = landmarks[12];
-        const ringTip = landmarks[16];
-        const pinkyTip = landmarks[20];
-        const wrist = landmarks[0];
-
-        // Helper to check if finger is extended
-        const isExtended = (tip, base) => tip.y < base.y - 0.1;
-
-        const indexExtended = isExtended(indexTip, landmarks[6]);
-        const middleExtended = isExtended(middleTip, landmarks[10]);
-        const ringExtended = isExtended(ringTip, landmarks[14]);
-        const pinkyExtended = isExtended(pinkyTip, landmarks[18]);
-
-        // Detect PINCH (Thumb and Index near)
-        const pinchDist = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
-        
-        if (pinchDist < 0.05) {
-            setActiveGesture('PINCH / SELECT');
-        } else if (!indexExtended && !middleExtended && !ringExtended && !pinkyExtended) {
-            setActiveGesture('FIST / GRAB');
-        } else if (indexExtended && !middleExtended && !ringExtended && !pinkyExtended) {
-            setActiveGesture('POINT / NAVIGATE');
-        } else if (indexExtended && middleExtended && ringExtended && pinkyExtended) {
-            setActiveGesture('OPEN HAND');
-        } else {
-            setActiveGesture('ANALYZING...');
-        }
-    };
 
     const [consented, setConsented] = useState(false);
 
@@ -273,9 +276,8 @@ export default function HandGesturePage() {
                             <Scan size={60} color="#ff00ff" style={{ marginBottom: '25px' }} />
                             <h1 style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', letterSpacing: '4px', marginBottom: '15px' }}>NEURAL_HANDSHAKE</h1>
                             <p style={{ fontSize: '0.85rem', opacity: 0.6, lineHeight: 1.8, marginBottom: '30px' }}>
-                                This protocol requires active vision sensing for hand gesture detection. 
                                 No biometric data is stored or transmitted. All processing occurs locally 
-                                within your browser's neural lattice.
+                                within your browser&apos;s neural lattice.
                             </p>
                             
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '35px', textAlign: 'left' }}>
@@ -380,8 +382,8 @@ export default function HandGesturePage() {
                             <div style={{ background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '30px', fontSize: '0.85rem', textAlign: 'left' }}>
                                 <strong style={{ color: '#fff' }}>HOW TO FIX:</strong>
                                 <ul style={{ marginTop: '10px', color: '#aaa', paddingLeft: '20px' }}>
-                                    <li>Click the 🔒 icon in your browser's address bar.</li>
-                                    <li>Ensure "Camera" is set to "Allow".</li>
+                                    <li>Click the 🔒 icon in your browser&apos;s address bar.</li>
+                                    <li>Ensure &quot;Camera&quot; is set to &quot;Allow&quot;.</li>
                                     <li>Refresh the page to re-initialize the uplink.</li>
                                 </ul>
                             </div>

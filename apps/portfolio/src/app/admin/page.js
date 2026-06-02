@@ -164,7 +164,7 @@ export default function AdminDashboard() {
                     <ol>
                         <li>Access Database Console</li>
                         <li>Update User Node: <code>{user.uid}</code></li>
-                        <li>Set <code>role: "admin"</code></li>
+                        <li>Set <code>role: &quot;admin&quot;</code></li>
                     </ol>
                     <button onClick={fetchDashboardData} className="btn-cia">RETRY HANDSHAKE</button>
                 </div>

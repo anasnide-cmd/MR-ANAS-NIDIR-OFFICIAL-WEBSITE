@@ -244,7 +244,7 @@ export default function UsersPage() {
                             </div>
 
                             <div className="dossier-section">
-                                <h3>// IDENTITY_MATRIX</h3>
+                                <h3>{"// IDENTITY_MATRIX"}</h3>
                                 <div className="data-grid">
                                     <div className="data-row"><span className="lbl">CODENAME:</span> <span className="val">{selectedUser.displayName}</span></div>
                                     <div className="data-row"><span className="lbl">CONTACT:</span> <span className="val">{selectedUser.email}</span></div>
@@ -254,7 +254,7 @@ export default function UsersPage() {
                             </div>
 
                             <div className="dossier-section">
-                                <h3>// DEPLOYMENT_LOG</h3>
+                                <h3>{"// DEPLOYMENT_LOG"}</h3>
                                 <div className="site-log">
                                     {selectedUser.sites.length > 0 ? (
                                         selectedUser.sites.map(site => (
@@ -271,7 +271,7 @@ export default function UsersPage() {
                             </div>
                             
                             <div className="dossier-section">
-                                <h3>// RAW_DATA_DUMP</h3>
+                                <h3>{"// RAW_DATA_DUMP"}</h3>
                                 <pre className="raw-dump">{JSON.stringify(selectedUser, null, 2)}</pre>
                             </div>
                         </div>

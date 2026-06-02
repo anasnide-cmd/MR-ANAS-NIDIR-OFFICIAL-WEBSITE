@@ -127,7 +127,7 @@ export default function LabPage() {
                         <div className="workbench-content">
                             <div className="code-line">
                                 <span className="line-num">01</span>
-                                <span className="line-text"><span className="type-blue">const</span> labStatus = <span className="type-green">'ACTIVE'</span>;</span>
+                                <span className="line-text"><span className="type-blue">const</span> labStatus = <span className="type-green">&apos;ACTIVE&apos;</span>;</span>
                             </div>
                             <div className="code-line">
                                 <span className="line-num">02</span>
@@ -135,11 +135,11 @@ export default function LabPage() {
                             </div>
                             <div className="code-line">
                                 <span className="line-num">03</span>
-                                <span className="line-text">&nbsp;&nbsp;<span className="type-blue">await</span> connectToNode(<span className="type-gold">'Lambda-4'</span>);</span>
+                                <span className="line-text">&nbsp;&nbsp;<span className="type-blue">await</span> connectToNode(<span className="type-gold">&apos;Lambda-4&apos;</span>);</span>
                             </div>
                             <div className="code-line">
                                 <span className="line-num">04</span>
-                                <span className="line-text">&nbsp;&nbsp;console.log(<span className="type-green">'SYSTEM_NOMINAL'</span>);</span>
+                                <span className="line-text">&nbsp;&nbsp;console.log(<span className="type-green">&apos;SYSTEM_NOMINAL&apos;</span>);</span>
                             </div>
                             <div className="code-line">
                                 <span className="line-num">05</span>
