@@ -4,23 +4,17 @@
   "private": true,
   "packageManager": "npm@10.8.2",
   "workspaces": [
-    "."
+    "apps/*",
+    "libs/*"
   ],
   "scripts": {
-    "dev": "nx run-many -t serve",
-    "build:all": "nx run-many -t build --exclude temp_app",
-    "start": "nx run-many -t start",
-    "lint": "nx run-many -t lint",
+    "dev": "turbo run dev",
+    "build:all": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
     "deploy:firebase": "npm run build:all && firebase deploy",
     "deploy:hosting": "npm run build:all && firebase deploy --only hosting",
     "deploy:rules": "firebase deploy --only firestore:rules"
-  },
-  "nx": {
-    "targets": {
-      "build": {
-        "executor": "nx:noop"
-      }
-    }
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.12",
@@ -66,7 +60,6 @@
     "three": "^0.182.0"
   },
   "devDependencies": {
-    "@nx/next": "^22.6.4",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",
@@ -75,7 +68,6 @@
     "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
-    "nx": "22.6.4",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "turbo": "^2.9.3"

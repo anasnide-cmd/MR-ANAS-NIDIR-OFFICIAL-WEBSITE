@@ -1,5 +1,3 @@
-import { composePlugins, withNx } from '@nx/next';
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
@@ -24,6 +22,5 @@ const nextConfig = {
   }
 };
 
-const plugins = [withNx];
+export default nextConfig;
 
-export default composePlugins(...plugins)(nextConfig);

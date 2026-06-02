@@ -63,7 +63,3 @@ temp_app/
 *.tsbuildinfo
 next-env.d.ts
 
-
-
-.nx/cache
-.nx/workspace-data

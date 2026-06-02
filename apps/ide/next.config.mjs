@@ -1,5 +1,3 @@
-import { composePlugins, withNx } from '@nx/next';
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
@@ -8,6 +6,5 @@ const nextConfig = {
   transpilePackages: ['@monaco-editor/react'],
 };
 
-const plugins = [withNx];
+export default nextConfig;
 
-export default composePlugins(...plugins)(nextConfig);
