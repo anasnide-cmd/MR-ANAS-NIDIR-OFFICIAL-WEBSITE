@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "regions": ["sng1"],
   "framework": "nextjs",
   "headers": [
     {
