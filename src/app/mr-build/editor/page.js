@@ -85,6 +85,10 @@ function EditorContent() {
     });
 
     useEffect(() => {
+        if (window.innerWidth < 768) {
+            setSidebarOpen(false);
+        }
+
         const handleMessage = (e) => {
             if (e.data && e.data.type === 'preview-logs') {
                 const { logType, content } = e.data;
@@ -430,7 +434,7 @@ function EditorContent() {
                     </div>
                     
                     <div className="bottom-panel">
-                        <div className="panel-tabs hidden-mobile">
+                        <div className="panel-tabs">
                             <button onClick={() => setBottomPanel('terminal')} className={bottomPanel === 'terminal' ? 'active' : ''}>TERMINAL</button>
                             <button onClick={() => setBottomPanel('auditor')} className={bottomPanel === 'auditor' ? 'active' : ''}>AUDITOR</button>
                         </div>
@@ -505,22 +509,16 @@ function EditorContent() {
                 <button className={activeTab === 'editor' ? 'active' : ''} onClick={() => setActiveTab('editor')}>
                     <Code size={18} /> <span>CODE</span>
                 </button>
-                <button className={activeTab === 'editor' && sidebarOpen ? 'active' : ''} onClick={() => { setSidebarOpen(!sidebarOpen); if(!sidebarOpen) setActiveTab('editor'); }}>
-                    <Files size={18} /> <span>FILES</span>
-                </button>
                 <button className={activeTab === 'preview' ? 'active' : ''} onClick={() => setActiveTab('preview')}>
                     <Eye size={18} /> <span>PREVIEW</span>
                 </button>
-                <button className={activeTab === 'terminal' ? 'active' : ''} onClick={() => { setActiveTab(activeTab === 'terminal' ? 'editor' : 'terminal'); setBottomPanel('terminal'); }}>
-                    <TerminalIcon size={18} /> <span>TERM</span>
+                <button className={activeTab === 'console' ? 'active' : ''} onClick={() => setActiveTab('console')}>
+                    <TerminalIcon size={18} /> <span>CONSOLE</span>
                 </button>
-                <button className={activeTab === 'auditor' ? 'active' : ''} onClick={() => { setActiveTab(activeTab === 'auditor' ? 'editor' : 'auditor'); setBottomPanel('auditor'); }}>
-                    <Layout size={18} /> <span>AUDIT</span>
-                </button>
-                <button className={activeTab === 'ai' ? 'active' : ''} onClick={() => setActiveTab(activeTab === 'ai' ? 'editor' : 'ai')}>
+                <button className={activeTab === 'ai' ? 'active' : ''} onClick={() => setActiveTab('ai')}>
                     <Sparkles size={18} /> <span>AI</span>
                 </button>
-                <button className={activeTab === 'assets' ? 'active' : ''} onClick={() => setActiveTab(activeTab === 'assets' ? 'editor' : 'assets')}>
+                <button className={activeTab === 'assets' ? 'active' : ''} onClick={() => setActiveTab('assets')}>
                     <Search size={18} /> <span>ASSETS</span>
                 </button>
             </div>
@@ -681,10 +679,7 @@ function EditorContent() {
                     .tab-editor .editor-content {
                         display: flex !important;
                     }
-                    .tab-terminal .editor-content {
-                        display: flex !important;
-                    }
-                    .tab-auditor .editor-content {
+                    .tab-console .editor-content {
                         display: flex !important;
                     }
                     .tab-preview .preview-area {
@@ -700,21 +695,47 @@ function EditorContent() {
                         z-index: 15;
                     }
 
-                    /* Hide code area if not in editor tab */
-                    .tab-terminal .code-area,
-                    .tab-auditor .code-area {
+                    /* Hide code area inside console tab */
+                    .tab-console .code-area {
                         display: none !important;
                     }
 
-                    /* Expand bottom panel to full screen when active on mobile */
-                    .tab-terminal .bottom-panel,
-                    .tab-auditor .bottom-panel {
+                    /* Expand bottom panel to full screen inside console tab on mobile */
+                    .tab-console .bottom-panel {
                         display: flex !important;
                         flex: 1 !important;
                         height: 100% !important;
                         border-top: none !important;
                         position: relative;
                         inset: auto;
+                    }
+                    
+                    /* Mobile console panel switcher tabs */
+                    .bottom-panel .panel-tabs {
+                        display: flex !important;
+                        background: #0a0a0f;
+                        padding: 6px;
+                        border-bottom: 1px solid rgba(255,255,255,0.05);
+                        gap: 6px;
+                    }
+                    .bottom-panel .panel-tabs button {
+                        flex: 1;
+                        padding: 10px;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
+                        background: rgba(255,255,255,0.02);
+                        color: #666;
+                        border: 1px solid rgba(255,255,255,0.05);
+                        border-radius: 8px;
+                        text-align: center;
+                        transition: 0.2s;
+                    }
+                    .bottom-panel .panel-tabs button.active {
+                        background: rgba(0, 240, 255, 0.08);
+                        color: #00f0ff;
+                        border-color: rgba(0, 240, 255, 0.3);
+                        box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
                     }
 
                     .hidden-mobile { display: none !important; }
