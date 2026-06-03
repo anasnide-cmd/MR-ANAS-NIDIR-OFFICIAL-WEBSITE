@@ -3,6 +3,8 @@
   "buildCommand": "cd ../.. && npx turbo run build --filter=portfolio",
   "installCommand": "cd ../.. && npm install",
   "outputDirectory": ".next",
-  "regions": ["sng1"],
+  "regions": [
+    "sin1"
+  ],
   "framework": "nextjs"
 }
