@@ -331,80 +331,81 @@ export default function BuildDashboard() {
                             const thumbSrc = `<html><head><style>body{margin:0;overflow:hidden;pointer-events:none;}::-webkit-scrollbar{display:none;}${cssStyles}</style></head><body>${safeHtml}</body></html>`;
 
                             return (
-                            <div 
-                                key={site.id} 
-                                className="project-card" 
-                                onClick={() => { if(!swipeState.id) router.push(`/mr-build/editor?id=${site.id}`); }}
-                                onTouchStart={(e) => handleTouchStart(e, site.id)}
-                                onTouchMove={handleTouchMove}
-                                onTouchEnd={handleTouchEnd}
-                                style={{
-                                    transform: swipeState.id === site.id ? `translateX(${swipeState.currentX - swipeState.startX}px)` : 'none',
-                                    transition: swipeState.id === site.id ? 'none' : 'transform 0.3s'
-                                }}
-                            >
-                                {/* Swipe Indicators */}
-                                {swipeState.id === site.id && (swipeState.currentX - swipeState.startX) > 50 && (
-                                    <div className="swipe-indicator right">OPEN 🚀</div>
-                                )}
-                                {swipeState.id === site.id && (swipeState.currentX - swipeState.startX) < -50 && (
-                                    <div className="swipe-indicator left">DELETE 🗑️</div>
-                                )}
+                             <div key={site.id} className="project-card-wrapper">
+                                 {/* Swipe Indicators underneath the card */}
+                                 {swipeState.id === site.id && (swipeState.currentX - swipeState.startX) > 50 && (
+                                     <div className="swipe-indicator right-reveal">OPEN 🚀</div>
+                                 )}
+                                 {swipeState.id === site.id && (swipeState.currentX - swipeState.startX) < -50 && (
+                                     <div className="swipe-indicator left-reveal">DELETE 🗑️</div>
+                                 )}
 
-                                <div className="card-preview">
-                                    <iframe 
-                                        title={`${site.name || 'Project'} Thumbnail`}
-                                        srcDoc={thumbSrc}
-                                        loading="lazy"
-                                        style={{
-                                            width: '400%', height: '400%', 
-                                            transform: 'scale(0.25)', transformOrigin: 'top left',
-                                            border: 'none', pointerEvents: 'none', position: 'absolute', top: 0, left: 0, zIndex: 0
-                                        }}
-                                        tabIndex="-1"
-                                        sandbox="allow-same-origin"
-                                    />
-                                    <div className="preview-overlay">
-                                        <button className="btn-launch">ENTER CONSTRUCT <ChevronDown size={14} style={{transform: 'rotate(-90deg)'}}/></button>
-                                    </div>
-                                    <div className="tech-badge">NEX ENGINE</div>
-                                </div>
-                                <div className="card-body">
-                                    <div className="card-header">
-                                        <h3>{site.name || 'Untitled Project'}</h3>
-                                        <div className="header-actions-right">
-                                            <span className={`status-dot ${site.status === 'public' ? 'online' : 'offline'}`} title={`Status: ${site.status}`}></span>
-                                            
-                                            {site.status === 'public' && site.slug && (
-                                                <button 
-                                                    className="btn-settings-icon" 
-                                                    onClick={(e) => copyToClipboard(e, site)}
-                                                    title="Copy Public Link"
-                                                >
-                                                    {copiedSiteId === site.id ? <Check size={14} color="#00ff80"/> : <Share2 size={14} />}
-                                                </button>
-                                            )}
-                                            
-                                            <button 
-                                                className="btn-settings-icon" 
-                                                onClick={(e) => { e.stopPropagation(); setEditingSite(site); }}
-                                                title="Construct Settings"
-                                            >
-                                                <Settings size={14} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <p className="card-desc">{site.description || 'No description provided.'}</p>
-                                    <div className="card-meta">
-                                        <span>Updated {new Date(site.updatedAt || 0).toLocaleDateString()}</span>
-                                        <div className="meta-icons">
-                                            {site.monetization?.enabled && <span title="Monetized">💰</span>}
-                                            <span title="Views"><Eye size={12}/> {site.views || 0}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )})
+                                 <div 
+                                     className="project-card" 
+                                     onClick={() => { if(!swipeState.id) router.push(`/mr-build/editor?id=${site.id}`); }}
+                                     onTouchStart={(e) => handleTouchStart(e, site.id)}
+                                     onTouchMove={handleTouchMove}
+                                     onTouchEnd={handleTouchEnd}
+                                     style={{
+                                         transform: swipeState.id === site.id ? `translateX(${swipeState.currentX - swipeState.startX}px)` : 'none',
+                                         transition: swipeState.id === site.id ? 'none' : 'transform 0.3s'
+                                     }}
+                                 >
+                                     <div className="card-preview">
+                                         <iframe 
+                                             title={`${site.name || 'Project'} Thumbnail`}
+                                             srcDoc={thumbSrc}
+                                             loading="lazy"
+                                             style={{
+                                                 width: '400%', height: '400%', 
+                                                 transform: 'scale(0.25)', transformOrigin: 'top left',
+                                                 border: 'none', pointerEvents: 'none', position: 'absolute', top: 0, left: 0, zIndex: 0
+                                             }}
+                                             tabIndex="-1"
+                                             sandbox="allow-same-origin"
+                                         />
+                                         <div className="preview-overlay">
+                                             <button className="btn-launch">ENTER CONSTRUCT <ChevronDown size={14} style={{transform: 'rotate(-90deg)'}}/></button>
+                                         </div>
+                                         <div className="tech-badge">NEX ENGINE</div>
+                                     </div>
+                                     <div className="card-body">
+                                         <div className="card-header">
+                                             <h3>{site.name || 'Untitled Project'}</h3>
+                                             <div className="header-actions-right">
+                                                 <span className={`status-dot ${site.status === 'public' ? 'online' : 'offline'}`} title={`Status: ${site.status}`}></span>
+                                                 
+                                                 {site.status === 'public' && site.slug && (
+                                                     <button 
+                                                         className="btn-settings-icon" 
+                                                         onClick={(e) => copyToClipboard(e, site)}
+                                                         title="Copy Public Link"
+                                                     >
+                                                         {copiedSiteId === site.id ? <Check size={14} color="#00ff80"/> : <Share2 size={14} />}
+                                                     </button>
+                                                 )}
+                                                 
+                                                 <button 
+                                                     className="btn-settings-icon" 
+                                                     onClick={(e) => { e.stopPropagation(); setEditingSite(site); }}
+                                                     title="Construct Settings"
+                                                 >
+                                                     <Settings size={14} />
+                                                 </button>
+                                             </div>
+                                         </div>
+                                         <p className="card-desc">{site.description || 'No description provided.'}</p>
+                                         <div className="card-meta">
+                                             <span>Updated {new Date(site.updatedAt || 0).toLocaleDateString()}</span>
+                                             <div className="meta-icons">
+                                                 {site.monetization?.enabled && <span title="Monetized">💰</span>}
+                                                 <span title="Views"><Eye size={12}/> {site.views || 0}</span>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                         )})
                     ) : (
                         <div className="empty-state">
                             <div className="empty-icon">📂</div>
@@ -542,64 +543,78 @@ export default function BuildDashboard() {
                 .stat-label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
 
                 /* Controls */
-                .controls-bar { display: flex; gap: 16px; margin-bottom: 30px; flex-wrap: wrap; }
-                @media (max-width: 600px) { .controls-bar { flex-direction: column; } .search-wrapper { min-width: 100%; } }
+                 /* Controls */
+                 .controls-bar { display: flex; gap: 16px; margin-bottom: 30px; flex-wrap: wrap; }
+                 @media (max-width: 768px) { .controls-bar { flex-direction: column; } .search-wrapper { min-width: 100%; } }
+ 
+                 .search-wrapper { 
+                     flex: 1; display: flex; align-items: center; gap: 10px; 
+                     background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+                     padding: 10px 16px; border-radius: 8px; min-width: 250px;
+                 }
+                 .search-wrapper input { background: transparent; border: none; color: #fff; flex: 1; outline: none; }
+                 .search-icon { color: #666; }
+                 
+                 .btn-new-project {
+                     background: #00f0ff; color: #000; border: none; padding: 10px 24px; border-radius: 8px;
+                     font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;
+                     transition: 0.2s; box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+                 }
+                 .btn-new-project:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(0, 240, 255, 0.5); }
+ 
+                 .btn-analytics {
+                     background: rgba(0, 240, 255, 0.1); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3);
+                     padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; 
+                     display: flex; align-items: center; gap: 8px; transition: 0.2s;
+                 }
+                 .btn-analytics:hover { background: rgba(0, 240, 255, 0.2); box-shadow: 0 0 15px rgba(0, 240, 255, 0.2); }
+                 
+                 @media (max-width: 768px) { .btn-new-project, .btn-analytics { width: 100%; justify-content: center; } }
+ 
+                 /* Grid */
+                 .projects-grid {
+                     display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;
+                 }
+                 @media (max-width: 768px) { .projects-grid { grid-template-columns: 1fr; } }
+ 
+                 .project-card-wrapper {
+                     position: relative;
+                     overflow: hidden;
+                     border-radius: 16px;
+                     background: #000;
+                     height: 100%;
+                     min-height: 280px;
+                 }
 
-                .search-wrapper { 
-                    flex: 1; display: flex; align-items: center; gap: 10px; 
-                    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
-                    padding: 10px 16px; border-radius: 8px; min-width: 250px;
-                }
-                .search-wrapper input { background: transparent; border: none; color: #fff; flex: 1; outline: none; }
-                .search-icon { color: #666; }
-                
-                .btn-new-project {
-                    background: #00f0ff; color: #000; border: none; padding: 10px 24px; border-radius: 8px;
-                    font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;
-                    transition: 0.2s; box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
-                }
-                .btn-new-project:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(0, 240, 255, 0.5); }
-
-                .btn-analytics {
-                    background: rgba(0, 240, 255, 0.1); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3);
-                    padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; 
-                    display: flex; align-items: center; gap: 8px; transition: 0.2s;
-                }
-                .btn-analytics:hover { background: rgba(0, 240, 255, 0.2); box-shadow: 0 0 15px rgba(0, 240, 255, 0.2); }
-                
-                @media (max-width: 600px) { .btn-new-project, .btn-analytics { width: 100%; justify-content: center; } }
-
-                /* Grid */
-                .projects-grid {
-                    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;
-                }
-                @media (max-width: 600px) { .projects-grid { grid-template-columns: 1fr; } }
-
-                .project-card {
-                    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
-                    border-radius: 16px; overflow: visible; cursor: pointer; transition: 0.3s;
-                    position: relative;
-                }
-                .project-card:hover { 
-                    transform: translateY(-5px); border-color: #00f0ff; 
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-                }
-
-                .swipe-indicator {
-                    position: absolute; top: 0; bottom: 0; width: 100px;
-                    display: flex; align-items: center; justify-content: center;
-                    font-weight: 800; font-size: 14px; letter-spacing: 1px;
-                }
-                .swipe-indicator.right {
-                    left: -100px; background: linear-gradient(90deg, transparent, rgba(0,255,0,0.2));
-                    border-right: 1px solid #00ff80; color: #00ff80;
-                    justify-content: flex-end; padding-right: 20px;
-                }
-                .swipe-indicator.left {
-                    right: -100px; background: linear-gradient(-90deg, transparent, rgba(255,0,0,0.2));
-                    border-left: 1px solid #ff4444; color: #ff4444;
-                    justify-content: flex-start; padding-left: 20px;
-                }
+                 .project-card {
+                     background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+                     border-radius: 16px; cursor: pointer; transition: 0.3s;
+                     position: relative;
+                     z-index: 2;
+                     width: 100%;
+                     height: 100%;
+                 }
+                 .project-card:hover { 
+                     transform: translateY(-5px); border-color: #00f0ff; 
+                     box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+                 }
+ 
+                 .swipe-indicator {
+                     position: absolute; top: 0; bottom: 0; width: 100px;
+                     display: flex; align-items: center; justify-content: center;
+                     font-weight: 800; font-size: 14px; letter-spacing: 1px;
+                     z-index: 1;
+                 }
+                 .swipe-indicator.right-reveal {
+                     left: 0; background: linear-gradient(90deg, rgba(0,255,128,0.2), transparent);
+                     border-left: 2px solid #00ff80; color: #00ff80;
+                     justify-content: flex-start; padding-left: 20px;
+                 }
+                 .swipe-indicator.left-reveal {
+                     right: 0; background: linear-gradient(-90deg, rgba(255,0,68,0.2), transparent);
+                     border-right: 2px solid #ff4444; color: #ff4444;
+                     justify-content: flex-end; padding-right: 20px;
+                 }
                 
                 .card-preview {
                     height: 160px; background: linear-gradient(45deg, #111, #222);

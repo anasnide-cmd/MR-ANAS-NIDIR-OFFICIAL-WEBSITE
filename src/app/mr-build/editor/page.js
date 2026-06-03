@@ -305,7 +305,7 @@ function EditorContent() {
     const currentFile = (projectData?.files && projectData.files[activeFile]) || { content: '', language: 'javascript' };
 
     return (
-        <div className="mr-editor">
+        <div className={`mr-editor tab-${activeTab}`}>
             <header className="editor-nav">
                 <div className="nav-left">
                     <button onClick={() => router.push('/mr-build/dashboard')} className="btn-back">
@@ -362,7 +362,7 @@ function EditorContent() {
                     setShowSidebar={setSidebarOpen}
                 />
 
-                <div className={`editor-content ${(activeTab !== 'editor' && window.innerWidth < 768) ? 'hidden-mobile' : ''}`}>
+                <div className="editor-content">
                     <div className="ai-quick-actions">
                         <button onClick={() => window.dispatchEvent(new CustomEvent('AI_COMMAND_PALETTE_TRIGGER', { detail: { command: '/suggest', context: selectionContext } }))}>
                             <Sparkles size={12} /> SUGGEST
@@ -386,7 +386,7 @@ function EditorContent() {
                             }
                         }}
                     />
-                    <div className={`code-area ${(bottomPanel === 'terminal' || bottomPanel === 'auditor') && window.innerWidth < 768 && activeTab !== 'editor' ? 'hidden-mobile' : ''}`}>
+                    <div className="code-area">
                         <div className="editor-container-with-lines">
                             <div className="line-numbers">
                                 {currentFile.content.split('\n').map((_, i) => (
@@ -429,7 +429,7 @@ function EditorContent() {
                         </div>
                     </div>
                     
-                    <div className={`bottom-panel ${activeTab !== 'terminal' && activeTab !== 'auditor' ? 'hidden-mobile' : ''}`}>
+                    <div className="bottom-panel">
                         <div className="panel-tabs hidden-mobile">
                             <button onClick={() => setBottomPanel('terminal')} className={bottomPanel === 'terminal' ? 'active' : ''}>TERMINAL</button>
                             <button onClick={() => setBottomPanel('auditor')} className={bottomPanel === 'auditor' ? 'active' : ''}>AUDITOR</button>
@@ -450,7 +450,7 @@ function EditorContent() {
                 </div>
 
                 {showPreview && (
-                    <div className={`preview-area ${activeTab !== 'preview' ? 'hidden-mobile' : ''}`}>
+                    <div className="preview-area">
                         <div className="preview-mode-selector">
                             <div className={`selector-bg ${previewMode}`}></div>
                             <button 
@@ -486,8 +486,7 @@ function EditorContent() {
                         </div>
                     </div>
                 )}
-
-                <aside className={`right-panel ${(activeTab !== 'ai' && activeTab !== 'assets') || zenMode ? 'hidden-mobile hidden-desktop' : ''}`}>
+                <aside className="right-panel">
                     {activeTab === 'assets' || (rightPanel === 'assets' && activeTab === 'editor') ? (
                         <AssetManager onInsert={handleInsertAsset} onSpriteEditor={() => setShowSpriteEditor(true)} />
                     ) : (rightPanel === 'library') ? (
@@ -664,7 +663,60 @@ function EditorContent() {
                 .right-panel { width: 300px; background: #080808; flex-shrink: 0; }
                 
                 @media (max-width: 768px) {
-                    .preview-area, .right-panel, .bottom-panel { width: 100%; position: absolute; inset: 0; z-index: 10; background: #000; }
+                    /* Hide nav-right on mobile to keep header clean */
+                    .nav-right { display: none !important; }
+
+                    /* Hide panels by default on mobile */
+                    .editor-content, .preview-area, .right-panel {
+                        display: none !important;
+                        position: absolute;
+                        inset: 0;
+                        width: 100% !important;
+                        height: 100% !important;
+                        z-index: 10;
+                        background: #050505;
+                    }
+
+                    /* Show only active tab views */
+                    .tab-editor .editor-content {
+                        display: flex !important;
+                    }
+                    .tab-terminal .editor-content {
+                        display: flex !important;
+                    }
+                    .tab-auditor .editor-content {
+                        display: flex !important;
+                    }
+                    .tab-preview .preview-area {
+                        display: flex !important;
+                        z-index: 15;
+                    }
+                    .tab-ai .right-panel {
+                        display: block !important;
+                        z-index: 15;
+                    }
+                    .tab-assets .right-panel {
+                        display: block !important;
+                        z-index: 15;
+                    }
+
+                    /* Hide code area if not in editor tab */
+                    .tab-terminal .code-area,
+                    .tab-auditor .code-area {
+                        display: none !important;
+                    }
+
+                    /* Expand bottom panel to full screen when active on mobile */
+                    .tab-terminal .bottom-panel,
+                    .tab-auditor .bottom-panel {
+                        display: flex !important;
+                        flex: 1 !important;
+                        height: 100% !important;
+                        border-top: none !important;
+                        position: relative;
+                        inset: auto;
+                    }
+
                     .hidden-mobile { display: none !important; }
                     .mobile-only { display: flex !important; }
                 }
