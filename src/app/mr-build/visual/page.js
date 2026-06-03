@@ -1,79 +1,648 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../../lib/firebase';
 import { doc, getDoc, setDoc, collection } from 'firebase/firestore';
-import { 
-    ChevronLeft, 
-    Save, 
-    Play, 
-    Download, 
-    Layout, 
-    Smartphone, 
-    Monitor, 
-    Plus, 
-    Trash, 
-    ArrowUp, 
-    ArrowDown, 
-    Sliders, 
-    Code, 
-    Sparkles, 
-    FileText,
-    Grid,
-    Link as LinkIcon,
-    Palette
+import {
+    ChevronLeft, Save, Monitor, Smartphone, Tablet,
+    Plus, Trash2, ArrowUp, ArrowDown, Code2,
+    Layers, Layout, Sparkles, Grid3X3,
+    FileText, Palette, Square,
+    GripVertical, ChevronRight, ChevronDown, Check,
+    Zap, Copy, ExternalLink, PanelLeft, PanelRight
 } from 'lucide-react';
 import Loader from '../../../components/Loader';
 
-// Initial Template Data
+// â”€â”€â”€ Global CSS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const VISUAL_CSS = `
+* { box-sizing: border-box; }
+
+.vb {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: #09090f;
+    color: #e2e2f0;
+    font-family: 'Inter', -apple-system, sans-serif;
+    overflow: hidden;
+}
+
+/* â”€â”€ Navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.vb-nav {
+    height: 52px;
+    background: #0d0d18;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    gap: 12px;
+    flex-shrink: 0;
+    z-index: 200;
+}
+.vb-nav-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.vb-nav-center { display: flex; align-items: center; }
+.vb-nav-right { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: flex-end; }
+
+.vb-back {
+    width: 32px; height: 32px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    color: #888;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.15s;
+    flex-shrink: 0;
+}
+.vb-back:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+.vb-title-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
+.vb-title {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #e2e2f0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    outline: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: 0.15s;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.vb-title:hover { border-color: rgba(255,255,255,0.1); }
+.vb-title:focus { border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.05); }
+.vb-draft {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #666;
+    background: rgba(255,255,255,0.04);
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+}
+
+/* Viewport Toggle */
+.viewport-toggle {
+    display: flex;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+}
+.vt-btn {
+    width: 32px; height: 28px;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    color: #555;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.15s;
+}
+.vt-btn:hover { color: #999; background: rgba(255,255,255,0.05); }
+.vt-active { background: rgba(99,102,241,0.15) !important; color: #818cf8 !important; }
+
+.vb-icon-btn {
+    width: 32px; height: 32px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    color: #666;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.15s;
+}
+.vb-icon-btn:hover { color: #aaa; background: rgba(255,255,255,0.08); }
+
+.vb-btn-outline {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 12px; height: 32px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: #aaa;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: 0.15s;
+    white-space: nowrap;
+}
+.vb-btn-outline:hover { background: rgba(255,255,255,0.08); color: #e2e2f0; border-color: rgba(255,255,255,0.15); }
+
+.vb-btn-save {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 16px; height: 32px;
+    background: #6366f1;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.15s;
+    white-space: nowrap;
+}
+.vb-btn-save:hover { background: #5558e8; box-shadow: 0 0 0 3px rgba(99,102,241,0.25); }
+.vb-btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* â”€â”€ Body Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.vb-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+
+/* â”€â”€ Left Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.vb-left {
+    width: 240px;
+    background: #0d0d18;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.25s ease, opacity 0.25s ease;
+    overflow: hidden;
+}
+.vb-left-hidden { width: 0; opacity: 0; pointer-events: none; }
+
+.lp-tabs {
+    display: flex;
+    padding: 8px;
+    gap: 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.lp-tab {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 7px;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    color: #555;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s;
+}
+.lp-tab:hover { color: #aaa; background: rgba(255,255,255,0.04); }
+.lp-tab-active { background: rgba(99,102,241,0.12) !important; color: #818cf8 !important; }
+
+.lp-layers { flex: 1; overflow-y: auto; padding: 6px; }
+.lp-empty {
+    padding: 40px 16px;
+    text-align: center;
+    color: #444;
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
+
+.layer-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.1s;
+    margin-bottom: 2px;
+    border: 1px solid transparent;
+}
+.layer-item:hover { background: rgba(255,255,255,0.04); }
+.layer-active { background: rgba(99,102,241,0.1) !important; border-color: rgba(99,102,241,0.25) !important; }
+.layer-grip { color: #333; flex-shrink: 0; }
+.layer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.layer-label { flex: 1; font-size: 0.8rem; font-weight: 500; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.layer-active .layer-label { color: #e2e2f0; }
+.layer-acts { display: flex; gap: 2px; opacity: 0; transition: 0.15s; }
+.layer-item:hover .layer-acts { opacity: 1; }
+.layer-btn {
+    width: 22px; height: 22px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #555;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.1s;
+}
+.layer-btn:hover { background: rgba(255,255,255,0.06); color: #ccc; }
+.layer-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+.layer-del:hover { color: #f87171 !important; background: rgba(248,113,113,0.08) !important; }
+
+.lp-widgets { flex: 1; overflow-y: auto; padding: 8px; }
+.lp-widgets-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.8px; color: #444; text-transform: uppercase; padding: 6px 10px 4px; }
+.wb-card {
+    width: 100%;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    color: #bbb;
+    cursor: pointer;
+    transition: 0.15s;
+    margin-bottom: 5px;
+    text-align: left;
+}
+.wb-card:hover { background: rgba(99,102,241,0.07); border-color: rgba(99,102,241,0.25); color: #e2e2f0; }
+.wb-icon {
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+.wb-text { flex: 1; min-width: 0; }
+.wb-text strong { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wb-text span { font-size: 0.7rem; color: #555; white-space: nowrap; }
+.wb-plus { color: #444; flex-shrink: 0; }
+.wb-card:hover .wb-plus { color: #818cf8; }
+
+/* â”€â”€ Canvas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.vb-canvas {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background: #0b0b14;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+.canvas-scroll {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: auto;
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+.canvas-frame {
+    background: #000;
+    border-radius: 12px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 30px 80px rgba(0,0,0,0.8);
+    overflow: hidden;
+    min-height: 200px;
+    transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    width: 100%;
+    max-width: 1280px;
+}
+.canvas-frame.viewport-tablet { width: 768px !important; max-width: 768px; }
+.canvas-frame.viewport-mobile { width: 390px !important; max-width: 390px; }
+
+.canvas-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 120px 40px;
+    text-align: center;
+    color: #333;
+}
+.canvas-empty h3 { font-size: 1.1rem; font-weight: 600; color: #444; margin-bottom: 8px; }
+.canvas-empty p { font-size: 0.85rem; color: #333; line-height: 1.6; }
+.canvas-empty strong { color: #555; }
+
+.viewport-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #333;
+    text-transform: uppercase;
+    margin-top: 4px;
+    padding-bottom: 24px;
+}
+
+/* â”€â”€ Canvas Section Styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.cs-wrap {
+    position: relative;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.15s;
+}
+.cs-wrap:hover { border-color: rgba(99,102,241,0.4); }
+.cs-selected { border-color: #6366f1 !important; }
+
+.cs-toolbar {
+    position: absolute;
+    top: 8px; left: 8px; right: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    opacity: 0;
+    transition: 0.15s;
+    z-index: 50;
+    pointer-events: none;
+}
+.cs-wrap:hover .cs-toolbar,
+.cs-selected .cs-toolbar { opacity: 1; pointer-events: auto; }
+
+.cs-badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    border: 1px solid;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    text-transform: uppercase;
+}
+.cs-actions {
+    display: flex;
+    gap: 3px;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+.cs-btn {
+    width: 26px; height: 26px;
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    color: #888;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.1s;
+}
+.cs-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); color: #fff; }
+.cs-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.cs-btn-danger:hover { background: rgba(248,113,113,0.15) !important; color: #f87171 !important; }
+
+/* Section Renders */
+.cr-navbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 36px; }
+.cr-brand { font-weight: 900; font-size: 1rem; letter-spacing: 2px; }
+.cr-links { display: flex; gap: 20px; font-size: 0.82rem; font-weight: 500; opacity: 0.8; }
+
+.cr-hero { padding: 70px 36px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.cr-hero-title { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 900; letter-spacing: -0.5px; margin-bottom: 16px; line-height: 1.15; }
+.cr-hero-sub { font-size: 0.95rem; opacity: 0.65; max-width: 500px; margin-bottom: 28px; line-height: 1.6; }
+.cr-btn { padding: 12px 28px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; display: inline-block; }
+
+.cr-features { padding: 60px 36px; text-align: center; }
+.cr-sec-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 32px; letter-spacing: -0.3px; }
+.cr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+.cr-card { padding: 24px 20px; border-radius: 14px; border: 1px solid; text-align: left; }
+.cr-icon { font-size: 1.6rem; display: block; margin-bottom: 12px; }
+.cr-card strong { display: block; font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+.cr-card p { font-size: 0.78rem; opacity: 0.6; line-height: 1.5; margin: 0; }
+
+.cr-cta { padding: 70px 36px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.cr-cta-title { font-size: 2rem; font-weight: 900; margin-bottom: 12px; }
+.cr-cta-sub { font-size: 0.9rem; margin-bottom: 28px; max-width: 420px; }
+
+.cr-text { padding: 50px 36px; }
+.cr-text h3 { font-size: 1.4rem; font-weight: 800; margin-bottom: 12px; }
+.cr-text p { font-size: 0.88rem; opacity: 0.7; line-height: 1.7; }
+
+.cr-footer { padding: 30px 36px; text-align: center; border-top: 1px solid rgba(255,255,255,0.04); }
+.cr-footer p { font-size: 0.78rem; }
+
+/* â”€â”€ Right Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.vb-right {
+    width: 280px;
+    background: #0d0d18;
+    border-left: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.25s ease, opacity 0.25s ease;
+    overflow: hidden;
+}
+.vb-right-hidden { width: 0; opacity: 0; pointer-events: none; }
+
+.rp-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+}
+.rp-title { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.3px; color: #888; text-transform: uppercase; }
+.rp-close {
+    background: none; border: none;
+    color: #555; font-size: 1.3rem; cursor: pointer;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 5px; transition: 0.1s;
+}
+.rp-close:hover { background: rgba(255,255,255,0.06); color: #fff; }
+
+.props-empty {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    color: #444;
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
+.props-scroll { flex: 1; overflow-y: auto; }
+.props-section-tag {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 10px 16px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.prop-section { border-bottom: 1px solid rgba(255,255,255,0.04); }
+.prop-section-header {
+    width: 100%;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 16px;
+    background: none; border: none;
+    color: #888;
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: 0.1s;
+    text-transform: uppercase;
+}
+.prop-section-header:hover { background: rgba(255,255,255,0.03); color: #bbb; }
+.prop-section-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+.prop-field { display: flex; flex-direction: column; gap: 5px; }
+.prop-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.3px; color: #555; text-transform: uppercase; }
+.prop-input {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 7px;
+    padding: 8px 10px;
+    color: #e2e2f0;
+    font-size: 0.82rem;
+    font-family: Inter, -apple-system, sans-serif;
+    outline: none;
+    width: 100%;
+    transition: 0.15s;
+    resize: vertical;
+    min-height: 36px;
+}
+.prop-input:focus { border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.04); }
+.prop-input::placeholder { color: #444; }
+textarea.prop-input { min-height: 72px; }
+select.prop-input { cursor: pointer; }
+
+.color-row { display: flex; gap: 8px; align-items: center; }
+.color-swatch {
+    width: 36px; height: 36px;
+    padding: 2px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 7px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.color-swatch::-webkit-color-swatch-wrapper { padding: 0; border-radius: 5px; }
+.color-swatch::-webkit-color-swatch { border: none; border-radius: 5px; }
+.color-text { flex: 1; font-family: 'Courier New', monospace; font-size: 0.78rem; }
+
+.link-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.link-row .prop-input { flex: 1; }
+.link-del {
+    width: 30px; height: 30px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px; color: #666; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.1s; flex-shrink: 0;
+}
+.link-del:hover { background: rgba(248,113,113,0.1); color: #f87171; border-color: rgba(248,113,113,0.2); }
+
+.add-link-btn {
+    display: flex; align-items: center; gap: 6px;
+    width: 100%; padding: 8px 10px;
+    background: rgba(99,102,241,0.06);
+    border: 1px dashed rgba(99,102,241,0.2);
+    border-radius: 7px;
+    color: #6366f1;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s;
+}
+.add-link-btn:hover { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.4); }
+
+.feature-item-edit {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 9px;
+    padding: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+    margin-bottom: 8px;
+}
+.feature-item-header { display: flex; align-items: center; justify-content: space-between; }
+.feature-item-idx { font-size: 0.65rem; font-weight: 700; color: #444; }
+.prop-row { display: flex; gap: 6px; }
+.icon-input { width: 50px !important; text-align: center; }
+
+/* â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.vb-toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: #22c55e;
+    color: #000;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    animation: slideInToast 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 9999;
+}
+.vb-toast-error { background: #ef4444; color: #fff; }
+@keyframes slideInToast {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* â”€â”€ Scrollbars â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.lp-layers::-webkit-scrollbar,
+.lp-widgets::-webkit-scrollbar,
+.props-scroll::-webkit-scrollbar,
+.canvas-scroll::-webkit-scrollbar { width: 4px; }
+.lp-layers::-webkit-scrollbar-track,
+.lp-widgets::-webkit-scrollbar-track,
+.props-scroll::-webkit-scrollbar-track,
+.canvas-scroll::-webkit-scrollbar-track { background: transparent; }
+.lp-layers::-webkit-scrollbar-thumb,
+.lp-widgets::-webkit-scrollbar-thumb,
+.props-scroll::-webkit-scrollbar-thumb,
+.canvas-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+/* â”€â”€ Mobile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 900px) {
+    .vb-left { position: absolute; left: 0; top: 0; bottom: 0; z-index: 150; box-shadow: 4px 0 30px rgba(0,0,0,0.6); }
+    .vb-right { position: absolute; right: 0; top: 0; bottom: 0; z-index: 150; box-shadow: -4px 0 30px rgba(0,0,0,0.6); }
+    .vb-btn-outline span, .vb-btn-save span { display: none; }
+    .vb-draft { display: none; }
+    .vb-title { max-width: 120px; }
+}
+`;
+
+// â”€â”€â”€ Section Templates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 const DEFAULT_SECTIONS = [
     {
-        id: 'navbar-1',
+        id: 'navbar-default',
         type: 'navbar',
-        brand: 'NEX BUILDER',
-        bg: '#050508',
-        color: '#00f0ff',
+        brand: 'MY BRAND',
+        bg: '#0a0a0f',
+        color: '#ffffff',
+        accentColor: '#6366f1',
         links: [
             { text: 'Home', url: '#' },
-            { text: 'Specs', url: '#specs' },
-            { text: 'Connect', url: '#connect' }
+            { text: 'About', url: '#about' },
+            { text: 'Contact', url: '#contact' }
         ]
     },
     {
-        id: 'hero-1',
+        id: 'hero-default',
         type: 'hero',
-        title: 'BUILD THE NEON FUTURE',
-        subtitle: 'Drag sections, customize colors, and launch responsive websites visually without writing single line of code.',
-        buttonText: 'LAUNCH PROJECT',
-        buttonUrl: '#specs',
-        buttonBg: '#00f0ff',
-        buttonColor: '#000000',
-        bg: '#090a14',
-        color: '#ffffff'
+        title: 'Build Something Amazing',
+        subtitle: 'A modern, fast, and beautiful website â€” crafted visually without a single line of code.',
+        buttonText: 'Get Started',
+        buttonUrl: '#',
+        buttonBg: '#6366f1',
+        buttonColor: '#ffffff',
+        bg: '#0d0d16',
+        color: '#ffffff',
+        gradientFrom: '#6366f1',
+        gradientTo: '#8b5cf6'
     },
     {
-        id: 'features-1',
+        id: 'features-default',
         type: 'features',
-        title: 'WIDGET CAPABILITIES',
-        bg: '#050508',
+        title: 'Why Choose Us',
+        bg: '#0a0a0f',
         color: '#ffffff',
-        cardBg: '#0e0f19',
-        cardBorder: 'rgba(0, 240, 255, 0.1)',
+        cardBg: '#12121a',
+        cardBorder: 'rgba(99,102,241,0.15)',
+        accentColor: '#6366f1',
         items: [
-            { icon: '⚡', title: 'Live Compilation', desc: 'Generates clean, semantic HTML and CSS inline as you edit.' },
-            { icon: '📱', title: 'Responsive Core', desc: 'Auto-adapts to phones and desktop viewports out of the box.' },
-            { icon: '🚀', title: 'Cloud Deploy', desc: 'Deploys directly to the public web with customizable routing.' }
+            { icon: 'âš¡', title: 'Lightning Fast', desc: 'Optimized performance from the ground up.' },
+            { icon: 'ðŸŽ¨', title: 'Beautiful Design', desc: 'Stunning visuals that captivate your audience.' },
+            { icon: 'ðŸ“±', title: 'Fully Responsive', desc: 'Looks perfect on every screen size.' }
         ]
     },
     {
-        id: 'footer-1',
+        id: 'footer-default',
         type: 'footer',
-        text: '© 2026 MR BUILD VISUAL CORE. ALL RIGHTS RESERVED.',
-        bg: '#030305',
-        color: '#888888'
+        text: 'Â© 2026 My Brand. All rights reserved.',
+        bg: '#07070d',
+        color: '#555577'
     }
 ];
+
+// â”€â”€â”€ Code Compiler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function compileVisualToCode(sections, name) {
     let html = `<!DOCTYPE html>
@@ -81,232 +650,483 @@ function compileVisualToCode(sections, name) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${name || 'My Visual Website'}</title>
+    <title>${name || 'My Website'}</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Orbitron:wght@800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
 `;
-
     sections.forEach(sec => {
         if (sec.type === 'navbar') {
-            html += `    <nav class="navbar" style="background: ${sec.bg}; color: ${sec.color};">
-        <div class="brand">${sec.brand}</div>
-        <div class="nav-links">
-            ${sec.links.map(l => `<a href="${l.url}" style="color: ${sec.color};">${l.text}</a>`).join('\n            ')}
-        </div>
-    </nav>\n`;
+            html += `<nav class="navbar" style="background:${sec.bg};color:${sec.color};">
+  <div class="brand" style="color:${sec.accentColor || sec.color};">${sec.brand}</div>
+  <div class="nav-links">${sec.links.map(l => `<a href="${l.url}" style="color:${sec.color};">${l.text}</a>`).join('')}</div>
+</nav>\n`;
         } else if (sec.type === 'hero') {
-            html += `    <header class="hero-section" style="background: ${sec.bg}; color: ${sec.color};">
-        <h1 class="hero-title">${sec.title}</h1>
-        <p class="hero-subtitle">${sec.subtitle}</p>
-        <a href="${sec.buttonUrl}" class="btn-hero" style="background: ${sec.buttonBg}; color: ${sec.buttonColor};">${sec.buttonText}</a>
-    </header>\n`;
+            html += `<header class="hero" style="background:${sec.bg};color:${sec.color};">
+  <h1 class="hero-title" style="background:linear-gradient(135deg,${sec.gradientFrom || sec.color},${sec.gradientTo || sec.color});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">${sec.title}</h1>
+  <p class="hero-subtitle">${sec.subtitle}</p>
+  <a href="${sec.buttonUrl}" class="btn-primary" style="background:${sec.buttonBg};color:${sec.buttonColor};">${sec.buttonText}</a>
+</header>\n`;
         } else if (sec.type === 'features') {
-            html += `    <section class="features-section" id="specs" style="background: ${sec.bg}; color: ${sec.color};">
-        <h2 class="section-heading">${sec.title}</h2>
-        <div class="features-grid">
-            ${sec.items.map(item => `            <div class="feature-card" style="background: ${sec.cardBg}; border-color: ${sec.cardBorder};">
-                <div class="feature-icon">${item.icon}</div>
-                <h3>${item.title}</h3>
-                <p>${item.desc}</p>
-            </div>`).join('\n')}
-        </div>
-    </section>\n`;
+            html += `<section class="features" style="background:${sec.bg};color:${sec.color};">
+  <h2 class="section-title">${sec.title}</h2>
+  <div class="grid">${sec.items.map(i => `<div class="card" style="background:${sec.cardBg};border-color:${sec.cardBorder};">
+    <div class="card-icon">${i.icon}</div>
+    <h3>${i.title}</h3>
+    <p>${i.desc}</p>
+  </div>`).join('')}</div>
+</section>\n`;
         } else if (sec.type === 'rich_text') {
-            html += `    <section class="text-section" style="background: ${sec.bg}; color: ${sec.color}; text-align: ${sec.align || 'left'};">
-        <h2 class="text-heading">${sec.title}</h2>
-        <p class="text-content">${sec.content}</p>
-    </section>\n`;
+            html += `<section class="text-sec" style="background:${sec.bg};color:${sec.color};text-align:${sec.align || 'left'};">
+  <h2>${sec.title}</h2>
+  <p>${sec.content}</p>
+</section>\n`;
+        } else if (sec.type === 'cta') {
+            html += `<section class="cta-sec" style="background:${sec.bg};color:${sec.color};">
+  <h2>${sec.title}</h2>
+  <p>${sec.subtitle}</p>
+  <a href="${sec.buttonUrl}" class="btn-primary" style="background:${sec.buttonBg};color:${sec.buttonColor};">${sec.buttonText}</a>
+</section>\n`;
         } else if (sec.type === 'footer') {
-            html += `    <footer class="footer-section" style="background: ${sec.bg}; color: ${sec.color};">
-        <p>${sec.text}</p>
-    </footer>\n`;
+            html += `<footer class="footer" style="background:${sec.bg};color:${sec.color};">
+  <p>${sec.text}</p>
+</footer>\n`;
         }
     });
+    html += `</body>\n</html>`;
 
-    html += `</body>
-</html>`;
-
-    let css = `body {
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-    background: #000;
-    color: #fff;
-}
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 50px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.navbar .brand {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 900;
-    font-size: 1.25rem;
-    letter-spacing: 1.5px;
-}
-.navbar .nav-links {
-    display: flex;
-    gap: 24px;
-}
-.navbar .nav-links a {
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: opacity 0.2s;
-}
-.navbar .nav-links a:hover {
-    opacity: 0.8;
-}
-.hero-section {
-    padding: 140px 20px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-.hero-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 3.5rem;
-    font-weight: 900;
-    letter-spacing: 2px;
-    margin: 0 0 20px;
-    line-height: 1.2;
-    background: linear-gradient(90deg, #fff, #00f0ff);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.hero-subtitle {
-    font-size: 1.15rem;
-    color: #8f9bb3;
-    max-width: 600px;
-    margin: 0 0 40px;
-    line-height: 1.6;
-}
-.btn-hero {
-    display: inline-block;
-    padding: 15px 38px;
-    border-radius: 30px;
-    font-weight: 900;
-    font-size: 0.95rem;
-    text-decoration: none;
-    box-shadow: 0 0 25px rgba(0, 240, 255, 0.25);
-    transition: 0.2s;
-}
-.btn-hero:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0 35px rgba(0, 240, 255, 0.45);
-}
-.features-section {
-    padding: 100px 20px;
-    text-align: center;
-}
-.section-heading {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 2.2rem;
-    font-weight: 900;
-    letter-spacing: 1.5px;
-    margin: 0 0 50px;
-}
-.features-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 30px;
-    max-width: 1100px;
-    margin: 0 auto;
-}
-.feature-card {
-    flex: 1;
-    min-width: 280px;
-    max-width: 340px;
-    padding: 40px 30px;
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.05);
-    text-align: left;
-    transition: 0.3s;
-}
-.feature-card:hover {
-    transform: translateY(-5px);
-    border-color: #00f0ff;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-.feature-icon {
-    font-size: 2.5rem;
-    margin-bottom: 25px;
-}
-.feature-card h3 {
-    font-size: 1.3rem;
-    margin: 0 0 12px;
-    font-weight: 700;
-}
-.feature-card p {
-    color: #8f9bb3;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    margin: 0;
-}
-.text-section {
-    padding: 80px 20px;
-    max-width: 800px;
-    margin: 0 auto;
-}
-.text-heading {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.8rem;
-    font-weight: 800;
-    margin: 0 0 20px;
-}
-.text-content {
-    color: #ccc;
-    font-size: 1rem;
-    line-height: 1.8;
-    margin: 0;
-}
-.footer-section {
-    padding: 50px 20px;
-    text-align: center;
-    border-top: 1px solid rgba(255,255,255,0.05);
-}
-.footer-section p {
-    margin: 0;
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-}
-@media (max-width: 768px) {
-    .navbar {
-        padding: 20px;
-        flex-direction: column;
-        gap: 15px;
-    }
-    .hero-title {
-        font-size: 2.2rem;
-    }
-    .hero-subtitle {
-        font-size: 1rem;
-    }
-    .features-grid {
-        flex-direction: column;
-        align-items: center;
-    }
-    .feature-card {
-        width: 100%;
-        box-sizing: border-box;
-    }
-}
-`;
+    const css = `*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;line-height:1.6;overflow-x:hidden}
+a{text-decoration:none}
+.navbar{display:flex;justify-content:space-between;align-items:center;padding:20px 60px;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px);}
+.brand{font-weight:900;font-size:1.2rem;letter-spacing:2px}
+.nav-links{display:flex;gap:28px;font-weight:500;font-size:.9rem}
+.nav-links a:hover{opacity:.7}
+.hero{padding:120px 60px;text-align:center;display:flex;flex-direction:column;align-items:center;min-height:100vh;justify-content:center;}
+.hero-title{font-size:clamp(2.5rem,6vw,5rem);font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:24px}
+.hero-subtitle{font-size:1.2rem;opacity:.7;max-width:600px;margin-bottom:40px;line-height:1.7}
+.btn-primary{padding:16px 40px;border-radius:50px;font-weight:700;font-size:1rem;transition:.2s;display:inline-block;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.features{padding:100px 60px;text-align:center}
+.section-title{font-size:2.5rem;font-weight:800;margin-bottom:60px;letter-spacing:-0.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:28px;max-width:1100px;margin:0 auto}
+.card{padding:36px 28px;border-radius:20px;border:1px solid;text-align:left;transition:.3s;}
+.card:hover{transform:translateY(-5px)}
+.card-icon{font-size:2.2rem;margin-bottom:20px}
+.card h3{font-size:1.2rem;font-weight:700;margin-bottom:10px}
+.card p{font-size:.9rem;opacity:.6;line-height:1.6}
+.text-sec{padding:80px 60px;max-width:800px;margin:0 auto}
+.text-sec h2{font-size:2rem;font-weight:800;margin-bottom:20px}
+.text-sec p{opacity:.75;font-size:1.05rem;line-height:1.8}
+.cta-sec{padding:100px 60px;text-align:center}
+.cta-sec h2{font-size:2.8rem;font-weight:900;margin-bottom:20px}
+.cta-sec p{font-size:1.1rem;opacity:.7;margin-bottom:40px}
+.footer{padding:50px 60px;text-align:center;border-top:1px solid rgba(255,255,255,.06)}
+.footer p{font-size:.85rem;opacity:.5}
+@media(max-width:768px){
+  .navbar{padding:16px 24px;flex-direction:column;gap:16px}
+  .hero{padding:80px 24px}
+  .features{padding:60px 24px}
+  .section-title{font-size:1.8rem}
+  .btn-primary{padding:14px 32px}
+}`;
 
     return {
         'index.html': { content: html, language: 'html' },
         'styles.css': { content: css, language: 'css' }
     };
 }
+
+// â”€â”€â”€ Live Preview HTML Generator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+function buildPreviewHtml(sections, name) {
+    const files = compileVisualToCode(sections, name);
+    const css = files['styles.css'].content;
+    const bodyMatch = files['index.html'].content.match(/<body>([\s\S]*?)<\/body>/);
+    const bodyContent = bodyMatch ? bodyMatch[1] : '';
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${name}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>${css}</style>
+</head>
+<body>${bodyContent}</body>
+</html>`;
+}
+
+// â”€â”€â”€ Section Blueprints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const WIDGET_BLUEPRINTS = [
+    {
+        type: 'navbar',
+        label: 'Navigation Bar',
+        desc: 'Logo + links header',
+        icon: Layout,
+        color: '#6366f1',
+        create: () => ({
+            brand: 'MY BRAND', bg: '#0a0a0f', color: '#ffffff', accentColor: '#6366f1',
+            links: [{ text: 'Home', url: '#' }, { text: 'About', url: '#' }, { text: 'Contact', url: '#' }]
+        })
+    },
+    {
+        type: 'hero',
+        label: 'Hero Section',
+        desc: 'Big headline callout',
+        icon: Sparkles,
+        color: '#8b5cf6',
+        create: () => ({
+            title: 'Your Headline Here', subtitle: 'A compelling subtitle that tells your story.',
+            buttonText: 'Get Started', buttonUrl: '#',
+            buttonBg: '#6366f1', buttonColor: '#fff',
+            bg: '#0d0d16', color: '#ffffff',
+            gradientFrom: '#6366f1', gradientTo: '#8b5cf6'
+        })
+    },
+    {
+        type: 'features',
+        label: 'Feature Cards',
+        desc: 'Grid of feature items',
+        icon: Grid3X3,
+        color: '#06b6d4',
+        create: () => ({
+            title: 'Key Features', bg: '#0a0a0f', color: '#ffffff',
+            cardBg: '#12121a', cardBorder: 'rgba(99,102,241,0.15)', accentColor: '#6366f1',
+            items: [
+                { icon: 'ðŸš€', title: 'Fast', desc: 'Blazing fast performance.' },
+                { icon: 'ðŸ’Ž', title: 'Premium', desc: 'High quality design standards.' },
+                { icon: 'ðŸ”’', title: 'Secure', desc: 'Enterprise-grade security.' }
+            ]
+        })
+    },
+    {
+        type: 'cta',
+        label: 'Call to Action',
+        desc: 'Conversion-focused block',
+        icon: Zap,
+        color: '#f59e0b',
+        create: () => ({
+            title: 'Ready to Get Started?', subtitle: 'Join thousands of happy customers today.',
+            buttonText: 'Start Now', buttonUrl: '#',
+            buttonBg: '#f59e0b', buttonColor: '#000',
+            bg: '#0d0d16', color: '#ffffff'
+        })
+    },
+    {
+        type: 'rich_text',
+        label: 'Rich Text',
+        desc: 'Heading + paragraph',
+        icon: FileText,
+        color: '#10b981',
+        create: () => ({
+            title: 'About Us', content: 'Write your content here. This section supports rich text and can be styled to match your brand.',
+            bg: '#0a0a0f', color: '#ffffff', align: 'left'
+        })
+    },
+    {
+        type: 'footer',
+        label: 'Footer',
+        desc: 'Bottom copyright bar',
+        icon: Square,
+        color: '#64748b',
+        create: () => ({
+            text: 'Â© 2026 My Brand. All rights reserved.',
+            bg: '#07070d', color: '#555577'
+        })
+    }
+];
+
+// â”€â”€â”€ Section Type Labels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const TYPE_META = Object.fromEntries(WIDGET_BLUEPRINTS.map(w => [w.type, w]));
+
+// â”€â”€â”€ Property Panel Components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+function PropInput({ label, value, onChange, type = 'text', placeholder = '' }) {
+    return (
+        <div className="prop-field">
+            <label className="prop-label">{label}</label>
+            {type === 'textarea' ? (
+                <textarea className="prop-input" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+            ) : type === 'color' ? (
+                <div className="color-row">
+                    <input type="color" className="color-swatch" value={value} onChange={e => onChange(e.target.value)} />
+                    <input type="text" className="prop-input color-text" value={value} onChange={e => onChange(e.target.value)} />
+                </div>
+            ) : (
+                <input type={type} className="prop-input" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+            )}
+        </div>
+    );
+}
+
+function PropSelect({ label, value, onChange, options }) {
+    return (
+        <div className="prop-field">
+            <label className="prop-label">{label}</label>
+            <select className="prop-input" value={value} onChange={e => onChange(e.target.value)}>
+                {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+        </div>
+    );
+}
+
+function PropSection({ title, children, defaultOpen = true }) {
+    const [open, setOpen] = useState(defaultOpen);
+    return (
+        <div className="prop-section">
+            <button className="prop-section-header" onClick={() => setOpen(!open)}>
+                <span>{title}</span>
+                {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+            {open && <div className="prop-section-body">{children}</div>}
+        </div>
+    );
+}
+
+// â”€â”€â”€ Properties Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+function PropertiesPanel({ section, onChange }) {
+    if (!section) {
+        return (
+            <div className="props-empty">
+                <Layers size={28} style={{ opacity: 0.2, marginBottom: 12 }} />
+                <p>Select a section on the canvas to edit its properties</p>
+            </div>
+        );
+    }
+
+    const set = (key, val) => onChange({ [key]: val });
+
+    return (
+        <div className="props-scroll">
+            <div className="props-section-tag" style={{ color: TYPE_META[section.type]?.color || '#888' }}>
+                {TYPE_META[section.type]?.label || section.type.toUpperCase()}
+            </div>
+
+            <PropSection title="Colors">
+                <PropInput label="Background" value={section.bg || '#000000'} onChange={v => set('bg', v)} type="color" />
+                <PropInput label="Text Color" value={section.color || '#ffffff'} onChange={v => set('color', v)} type="color" />
+                {section.accentColor !== undefined && (
+                    <PropInput label="Accent Color" value={section.accentColor} onChange={v => set('accentColor', v)} type="color" />
+                )}
+            </PropSection>
+
+            {section.type === 'navbar' && (
+                <PropSection title="Navigation">
+                    <PropInput label="Brand Name" value={section.brand} onChange={v => set('brand', v)} placeholder="MY BRAND" />
+                    <div className="prop-label" style={{ marginBottom: 8 }}>Navigation Links</div>
+                    {section.links.map((link, idx) => (
+                        <div key={idx} className="link-row">
+                            <input
+                                className="prop-input"
+                                type="text"
+                                value={link.text}
+                                placeholder="Label"
+                                onChange={e => {
+                                    const nl = [...section.links];
+                                    nl[idx] = { ...nl[idx], text: e.target.value };
+                                    onChange({ links: nl });
+                                }}
+                            />
+                            <input
+                                className="prop-input"
+                                type="text"
+                                value={link.url}
+                                placeholder="URL"
+                                onChange={e => {
+                                    const nl = [...section.links];
+                                    nl[idx] = { ...nl[idx], url: e.target.value };
+                                    onChange({ links: nl });
+                                }}
+                            />
+                            <button className="link-del" onClick={() => {
+                                onChange({ links: section.links.filter((_, i) => i !== idx) });
+                            }}><Trash2 size={12} /></button>
+                        </div>
+                    ))}
+                    <button className="add-link-btn" onClick={() => onChange({ links: [...section.links, { text: 'Link', url: '#' }] })}>
+                        <Plus size={12} /> Add Link
+                    </button>
+                </PropSection>
+            )}
+
+            {(section.type === 'hero' || section.type === 'cta') && (
+                <PropSection title="Content">
+                    <PropInput label="Heading" value={section.title} onChange={v => set('title', v)} />
+                    <PropInput label="Subtitle" value={section.subtitle} onChange={v => set('subtitle', v)} type="textarea" />
+                    <PropInput label="Button Text" value={section.buttonText} onChange={v => set('buttonText', v)} />
+                    <PropInput label="Button URL" value={section.buttonUrl} onChange={v => set('buttonUrl', v)} placeholder="https://" />
+                </PropSection>
+            )}
+
+            {(section.type === 'hero' || section.type === 'cta') && (
+                <PropSection title="Button Colors" defaultOpen={false}>
+                    <PropInput label="Button Background" value={section.buttonBg} onChange={v => set('buttonBg', v)} type="color" />
+                    <PropInput label="Button Text" value={section.buttonColor} onChange={v => set('buttonColor', v)} type="color" />
+                </PropSection>
+            )}
+
+            {section.type === 'hero' && (
+                <PropSection title="Gradient" defaultOpen={false}>
+                    <PropInput label="Gradient From" value={section.gradientFrom || '#6366f1'} onChange={v => set('gradientFrom', v)} type="color" />
+                    <PropInput label="Gradient To" value={section.gradientTo || '#8b5cf6'} onChange={v => set('gradientTo', v)} type="color" />
+                </PropSection>
+            )}
+
+            {section.type === 'features' && (
+                <PropSection title="Content">
+                    <PropInput label="Section Title" value={section.title} onChange={v => set('title', v)} />
+                    <PropInput label="Card Background" value={section.cardBg} onChange={v => set('cardBg', v)} type="color" />
+                    <div className="prop-label" style={{ marginTop: 8, marginBottom: 8 }}>Feature Items</div>
+                    {section.items.map((item, idx) => (
+                        <div key={idx} className="feature-item-edit">
+                            <div className="feature-item-header">
+                                <span className="feature-item-idx">#{idx + 1}</span>
+                                <button className="link-del" onClick={() => onChange({ items: section.items.filter((_, i) => i !== idx) })}>
+                                    <Trash2 size={11} />
+                                </button>
+                            </div>
+                            <div className="prop-row">
+                                <input className="prop-input icon-input" type="text" value={item.icon} placeholder="ðŸš€"
+                                    onChange={e => {
+                                        const ni = [...section.items];
+                                        ni[idx] = { ...ni[idx], icon: e.target.value };
+                                        onChange({ items: ni });
+                                    }} />
+                                <input className="prop-input" type="text" value={item.title} placeholder="Title"
+                                    onChange={e => {
+                                        const ni = [...section.items];
+                                        ni[idx] = { ...ni[idx], title: e.target.value };
+                                        onChange({ items: ni });
+                                    }} />
+                            </div>
+                            <textarea className="prop-input" value={item.desc} placeholder="Description"
+                                onChange={e => {
+                                    const ni = [...section.items];
+                                    ni[idx] = { ...ni[idx], desc: e.target.value };
+                                    onChange({ items: ni });
+                                }} />
+                        </div>
+                    ))}
+                    <button className="add-link-btn" onClick={() => onChange({ items: [...section.items, { icon: 'âœ¨', title: 'New Feature', desc: 'Description here.' }] })}>
+                        <Plus size={12} /> Add Feature
+                    </button>
+                </PropSection>
+            )}
+
+            {section.type === 'rich_text' && (
+                <PropSection title="Content">
+                    <PropInput label="Heading" value={section.title} onChange={v => set('title', v)} />
+                    <PropInput label="Body Text" value={section.content} onChange={v => set('content', v)} type="textarea" />
+                    <PropSelect
+                        label="Alignment"
+                        value={section.align || 'left'}
+                        onChange={v => set('align', v)}
+                        options={[{ value: 'left', label: 'Left' }, { value: 'center', label: 'Center' }, { value: 'right', label: 'Right' }]}
+                    />
+                </PropSection>
+            )}
+
+            {section.type === 'footer' && (
+                <PropSection title="Content">
+                    <PropInput label="Footer Text" value={section.text} onChange={v => set('text', v)} />
+                </PropSection>
+            )}
+        </div>
+    );
+}
+
+// â”€â”€â”€ Canvas Section Renderer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+function CanvasSection({ sec, isSelected, idx, total, onSelect, onMove, onDelete, onDuplicate }) {
+    const meta = TYPE_META[sec.type];
+
+    return (
+        <div
+            className={`cs-wrap ${isSelected ? 'cs-selected' : ''}`}
+            style={{ background: sec.bg, color: sec.color }}
+            onClick={e => { e.stopPropagation(); onSelect(sec.id); }}
+        >
+            {/* Hover / Selected Toolbar */}
+            <div className="cs-toolbar">
+                <span className="cs-badge" style={{ color: meta?.color || '#888', borderColor: `${meta?.color || '#888'}33` }}>
+                    {meta?.label || sec.type}
+                </span>
+                <div className="cs-actions">
+                    <button className="cs-btn" title="Move Up" disabled={idx === 0} onClick={e => { e.stopPropagation(); onMove(idx, 'up'); }}>
+                        <ArrowUp size={13} />
+                    </button>
+                    <button className="cs-btn" title="Move Down" disabled={idx === total - 1} onClick={e => { e.stopPropagation(); onMove(idx, 'down'); }}>
+                        <ArrowDown size={13} />
+                    </button>
+                    <button className="cs-btn" title="Duplicate" onClick={e => { e.stopPropagation(); onDuplicate(sec.id); }}>
+                        <Copy size={13} />
+                    </button>
+                    <button className="cs-btn cs-btn-danger" title="Delete" onClick={e => { e.stopPropagation(); onDelete(sec.id); }}>
+                        <Trash2 size={13} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Section Renders */}
+            {sec.type === 'navbar' && (
+                <div className="cr-navbar">
+                    <div className="cr-brand" style={{ color: sec.accentColor || sec.color }}>{sec.brand}</div>
+                    <div className="cr-links">
+                        {sec.links.map((l, i) => <span key={i} style={{ color: sec.color }}>{l.text}</span>)}
+                    </div>
+                </div>
+            )}
+            {sec.type === 'hero' && (
+                <div className="cr-hero">
+                    <h2 className="cr-hero-title" style={{ background: `linear-gradient(135deg,${sec.gradientFrom || sec.color},${sec.gradientTo || sec.color})`, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                        {sec.title}
+                    </h2>
+                    <p className="cr-hero-sub" style={{ color: sec.color }}>{sec.subtitle}</p>
+                    <span className="cr-btn" style={{ background: sec.buttonBg, color: sec.buttonColor }}>{sec.buttonText}</span>
+                </div>
+            )}
+            {sec.type === 'features' && (
+                <div className="cr-features">
+                    <h3 className="cr-sec-title">{sec.title}</h3>
+                    <div className="cr-grid">
+                        {sec.items.map((item, i) => (
+                            <div key={i} className="cr-card" style={{ background: sec.cardBg, borderColor: sec.cardBorder }}>
+                                <span className="cr-icon">{item.icon}</span>
+                                <strong>{item.title}</strong>
+                                <p>{item.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+            {sec.type === 'cta' && (
+                <div className="cr-cta">
+                    <h3 className="cr-cta-title">{sec.title}</h3>
+                    <p className="cr-cta-sub" style={{ opacity: 0.7 }}>{sec.subtitle}</p>
+                    <span className="cr-btn" style={{ background: sec.buttonBg, color: sec.buttonColor }}>{sec.buttonText}</span>
+                </div>
+            )}
+            {sec.type === 'rich_text' && (
+                <div className="cr-text" style={{ textAlign: sec.align || 'left' }}>
+                    <h3>{sec.title}</h3>
+                    <p>{sec.content}</p>
+                </div>
+            )}
+            {sec.type === 'footer' && (
+                <div className="cr-footer">
+                    <p style={{ color: sec.color }}>{sec.text}</p>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// â”€â”€â”€ Main Builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function VisualContent() {
     const router = useRouter();
@@ -317,26 +1137,28 @@ function VisualContent() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [sections, setSections] = useState(DEFAULT_SECTIONS);
-    const [selectedSectionId, setSelectedSectionId] = useState(null);
-    const [previewMode, setPreviewMode] = useState('desktop'); // 'desktop', 'mobile'
-    const [successMsg, setSuccessMsg] = useState('');
+    const [selectedId, setSelectedId] = useState(null);
+    const [viewport, setViewport] = useState('desktop');
+    const [activeTab, setActiveTab] = useState('layers'); // 'layers' | 'widgets' | 'preview'
     const [localProjectId, setLocalProjectId] = useState(projectId);
-    const [projectName, setProjectName] = useState('Untitled Visual Project');
+    const [projectName, setProjectName] = useState('Untitled Project');
+    const [toast, setToast] = useState('');
+    const [leftOpen, setLeftOpen] = useState(true);
+    const [rightOpen, setRightOpen] = useState(true);
+    const [previewHtml, setPreviewHtml] = useState('');
+    const iframeRef = useRef(null);
 
+    // Auth + Load
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, async (u) => {
+        const unsub = onAuthStateChanged(auth, async u => {
             if (!u) { router.push('/mr-build/login'); return; }
             setUser(u);
-
             if (projectId) {
-                const docSnap = await getDoc(doc(db, 'user_sites', projectId));
-                if (docSnap.exists()) {
-                    setLocalProjectId(docSnap.id);
-                    const data = docSnap.data();
-                    setProjectName(data.name || 'Untitled Project');
-                    if (data.visualData) {
-                        setSections(data.visualData);
-                    }
+                const snap = await getDoc(doc(db, 'user_sites', projectId));
+                if (snap.exists()) {
+                    const d = snap.data();
+                    setProjectName(d.name || 'Untitled Project');
+                    if (d.visualData) setSections(d.visualData);
                 }
             }
             setLoading(false);
@@ -344,646 +1166,293 @@ function VisualContent() {
         return () => unsub();
     }, [projectId, router]);
 
+    // Update preview html
+    useEffect(() => {
+        setPreviewHtml(buildPreviewHtml(sections, projectName));
+    }, [sections, projectName]);
+
+    const showToast = (msg, type = 'success') => {
+        setToast({ msg, type });
+        setTimeout(() => setToast(''), 3000);
+    };
+
     const handleSave = async () => {
         if (!user) return;
         setSaving(true);
         try {
             let targetId = localProjectId;
             const compiledFiles = compileVisualToCode(sections, projectName);
-
-            const sitePayload = {
+            const payload = {
                 name: projectName,
                 editorMode: 'visual',
                 visualData: sections,
                 files: compiledFiles,
                 updatedAt: new Date().toISOString()
             };
-
             if (!targetId) {
                 const newRef = doc(collection(db, 'user_sites'));
                 targetId = newRef.id;
                 await setDoc(newRef, {
-                    ...sitePayload,
-                    userId: user.uid,
-                    id: targetId,
-                    status: 'draft',
-                    adminStatus: 'active',
+                    ...payload, userId: user.uid, id: targetId,
+                    status: 'draft', adminStatus: 'active',
                     slug: `visual-${targetId.substring(0, 6)}`,
-                    views: 0,
-                    createdAt: new Date().toISOString()
+                    views: 0, createdAt: new Date().toISOString()
                 });
                 setLocalProjectId(targetId);
                 router.replace(`/mr-build/visual?id=${targetId}`);
             } else {
-                await setDoc(doc(db, 'user_sites', targetId), sitePayload, { merge: true });
+                await setDoc(doc(db, 'user_sites', targetId), payload, { merge: true });
             }
-            setSuccessMsg('Visual design synchronized.');
-            setTimeout(() => setSuccessMsg(''), 3000);
+            showToast('Project saved successfully');
         } catch (err) {
             console.error(err);
-            alert('Save failed: ' + err.message);
+            showToast('Save failed: ' + err.message, 'error');
         } finally {
             setSaving(false);
         }
     };
 
-    const addSection = (type) => {
-        const id = `${type}-${Date.now()}`;
-        let newSec = {};
-
-        switch(type) {
-            case 'navbar':
-                newSec = {
-                    id, type, brand: 'NEW NAVBAR', bg: '#050508', color: '#00f0ff',
-                    links: [{ text: 'Home', url: '#' }, { text: 'Contact', url: '#' }]
-                };
-                break;
-            case 'hero':
-                newSec = {
-                    id, type, title: 'NEON HERO BLOCK', subtitle: 'Describe your concept here with custom tags.',
-                    buttonText: 'CLICK HERE', buttonUrl: '#', buttonBg: '#a000ff', buttonColor: '#ffffff',
-                    bg: '#090a14', color: '#ffffff'
-                };
-                break;
-            case 'features':
-                newSec = {
-                    id, type, title: 'CORE SPECS', bg: '#000000', color: '#ffffff',
-                    cardBg: '#0d0d12', cardBorder: 'rgba(255,255,255,0.05)',
-                    items: [
-                        { icon: '🚀', title: 'Feature 1', desc: 'Short descriptor detail.' },
-                        { icon: '💎', title: 'Feature 2', desc: 'Short descriptor detail.' }
-                    ]
-                };
-                break;
-            case 'rich_text':
-                newSec = {
-                    id, type, title: 'DOCUMENT HEADING', content: 'Detailed semantic markdown paragraph styled for modern viewports.',
-                    bg: '#050508', color: '#ffffff', align: 'left'
-                };
-                break;
-            case 'footer':
-                newSec = {
-                    id, type, text: '© 2026 BRAND INC. POWERED BY MR BUILD.', bg: '#050508', color: '#888888'
-                };
-                break;
-            default:
-                return;
-        }
-
-        setSections([...sections, newSec]);
-        setSelectedSectionId(id);
+    const addSection = (blueprint) => {
+        const id = `${blueprint.type}-${Date.now()}`;
+        setSections(prev => [...prev, { id, type: blueprint.type, ...blueprint.create() }]);
+        setSelectedId(id);
+        setActiveTab('layers');
     };
 
-    const moveSection = (index, direction) => {
-        const nextIndex = direction === 'up' ? index - 1 : index + 1;
-        if (nextIndex < 0 || nextIndex >= sections.length) return;
-
-        const newSecs = [...sections];
-        const temp = newSecs[index];
-        newSecs[index] = newSecs[nextIndex];
-        newSecs[nextIndex] = temp;
-        setSections(newSecs);
+    const moveSection = (idx, dir) => {
+        const ni = dir === 'up' ? idx - 1 : idx + 1;
+        if (ni < 0 || ni >= sections.length) return;
+        const arr = [...sections];
+        [arr[idx], arr[ni]] = [arr[ni], arr[idx]];
+        setSections(arr);
     };
 
     const deleteSection = (id) => {
-        setSections(sections.filter(s => s.id !== id));
-        if (selectedSectionId === id) setSelectedSectionId(null);
+        setSections(prev => prev.filter(s => s.id !== id));
+        if (selectedId === id) setSelectedId(null);
     };
 
-    const updateSectionProps = (id, props) => {
-        setSections(sections.map(s => s.id === id ? { ...s, ...props } : s));
+    const duplicateSection = (id) => {
+        const sec = sections.find(s => s.id === id);
+        if (!sec) return;
+        const newId = `${sec.type}-${Date.now()}`;
+        const idx = sections.findIndex(s => s.id === id);
+        const arr = [...sections];
+        arr.splice(idx + 1, 0, { ...sec, id: newId });
+        setSections(arr);
+        setSelectedId(newId);
     };
 
-    if (loading) return <Loader text="Loading Visual Workspace..." />;
+    const updateSection = (id, props) => {
+        setSections(prev => prev.map(s => s.id === id ? { ...s, ...props } : s));
+    };
 
-    const selectedSec = sections.find(s => s.id === selectedSectionId);
+    const selectedSec = sections.find(s => s.id === selectedId);
+
+    if (loading) return <Loader text="Loading Visual Builder..." />;
+
+    const viewportWidths = { desktop: '100%', tablet: '768px', mobile: '390px' };
 
     return (
-        <div className="visual-builder">
-            <header className="visual-nav">
-                <div className="nav-left">
-                    <button onClick={() => router.push('/mr-build/dashboard')} className="btn-back">
-                        <ChevronLeft size={20} />
+        <div className="vb">
+            {/* â”€â”€ Top Navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            <header className="vb-nav">
+                <div className="vb-nav-left">
+                    <button className="vb-back" onClick={() => router.push('/mr-build/dashboard')}>
+                        <ChevronLeft size={18} />
                     </button>
-                    <input 
-                        type="text" 
-                        value={projectName} 
-                        onChange={(e) => setProjectName(e.target.value)} 
-                        className="project-name-input"
-                    />
-                </div>
-                
-                <div className="nav-center">
-                    <div className="preview-selector">
-                        <button className={previewMode === 'desktop' ? 'active' : ''} onClick={() => setPreviewMode('desktop')}>
-                            <Monitor size={16} /> <span className="hide-mobile">DESKTOP</span>
-                        </button>
-                        <button className={previewMode === 'mobile' ? 'active' : ''} onClick={() => setPreviewMode('mobile')}>
-                            <Smartphone size={16} /> <span className="hide-mobile">MOBILE</span>
-                        </button>
+                    <div className="vb-title-wrap">
+                        <input
+                            className="vb-title"
+                            value={projectName}
+                            onChange={e => setProjectName(e.target.value)}
+                            spellCheck={false}
+                        />
+                        <span className="vb-draft">DRAFT</span>
                     </div>
                 </div>
 
-                <div className="nav-right">
+                <div className="vb-nav-center">
+                    <div className="viewport-toggle">
+                        {[
+                            { id: 'desktop', icon: Monitor, label: 'Desktop' },
+                            { id: 'tablet', icon: Tablet, label: 'Tablet' },
+                            { id: 'mobile', icon: Smartphone, label: 'Mobile' }
+                        ].map(v => (
+                            <button
+                                key={v.id}
+                                title={v.label}
+                                className={`vt-btn ${viewport === v.id ? 'vt-active' : ''}`}
+                                onClick={() => setViewport(v.id)}
+                            >
+                                <v.icon size={16} />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="vb-nav-right">
+                    <button className="vb-icon-btn" title="Toggle Left Panel" onClick={() => setLeftOpen(o => !o)}>
+                        <PanelLeft size={16} />
+                    </button>
+                    <button className="vb-icon-btn" title="Toggle Right Panel" onClick={() => setRightOpen(o => !o)}>
+                        <PanelRight size={16} />
+                    </button>
                     {localProjectId && (
-                        <button className="btn-code" onClick={() => router.push(`/mr-build/editor?id=${localProjectId}`)}>
-                            <Code size={16} /> <span className="hide-mobile">CODE EDITOR</span>
+                        <button className="vb-btn-outline" onClick={() => router.push(`/mr-build/editor?id=${localProjectId}`)}>
+                            <Code2 size={14} /> Code Editor
                         </button>
                     )}
-                    <button className="btn-save" onClick={handleSave} disabled={saving}>
-                        <Save size={16} /> <span>{saving ? 'SAVING...' : 'SAVE'}</span>
+                    {localProjectId && (
+                        <a href={`/s/${sections[0]?.id}`} target="_blank" rel="noopener" className="vb-btn-outline">
+                            <ExternalLink size={14} /> Preview
+                        </a>
+                    )}
+                    <button className="vb-btn-save" onClick={handleSave} disabled={saving}>
+                        <Save size={14} />
+                        <span>{saving ? 'Savingâ€¦' : 'Save'}</span>
                     </button>
                 </div>
             </header>
 
-            <div className="visual-main">
-                <aside className="widget-panel">
-                    <div className="panel-title">WIDGETS</div>
-                    <div className="widget-list">
-                        <button className="widget-btn" onClick={() => addSection('navbar')}>
-                            <Layout size={18} />
-                            <div className="widget-text">
-                                <strong>Navigation</strong>
-                                <p>Header Brand & Links</p>
-                            </div>
+            {/* â”€â”€ Body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            <div className="vb-body">
+
+                {/* â”€â”€ Left Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                <aside className={`vb-left ${leftOpen ? '' : 'vb-left-hidden'}`}>
+                    {/* Tab Row */}
+                    <div className="lp-tabs">
+                        <button className={`lp-tab ${activeTab === 'layers' ? 'lp-tab-active' : ''}`} onClick={() => setActiveTab('layers')}>
+                            <Layers size={14} /> Layers
                         </button>
-                        <button className="widget-btn" onClick={() => addSection('hero')}>
-                            <Sparkles size={18} />
-                            <div className="widget-text">
-                                <strong>Hero Section</strong>
-                                <p>Large Callout Block</p>
-                            </div>
-                        </button>
-                        <button className="widget-btn" onClick={() => addSection('features')}>
-                            <Grid size={18} />
-                            <div className="widget-text">
-                                <strong>Features Grid</strong>
-                                <p>Feature Columns</p>
-                            </div>
-                        </button>
-                        <button className="widget-btn" onClick={() => addSection('rich_text')}>
-                            <FileText size={18} />
-                            <div className="widget-text">
-                                <strong>Rich Text</strong>
-                                <p>Headings & Paragraph</p>
-                            </div>
-                        </button>
-                        <button className="widget-btn" onClick={() => addSection('footer')}>
-                            <Layout size={18} style={{ transform: 'rotate(180deg)' }} />
-                            <div className="widget-text">
-                                <strong>Footer</strong>
-                                <p>Links & Copyright</p>
-                            </div>
+                        <button className={`lp-tab ${activeTab === 'widgets' ? 'lp-tab-active' : ''}`} onClick={() => setActiveTab('widgets')}>
+                            <Plus size={14} /> Add
                         </button>
                     </div>
-                </aside>
 
-                <div className="canvas-area">
-                    <div className={`canvas-viewport viewport-${previewMode}`}>
-                        <div className="canvas-frame">
-                            {sections.length === 0 ? (
-                                <div className="canvas-empty">
-                                    <Plus size={32} />
-                                    <h3>Empty Canvas</h3>
-                                    <p>Select widgets from the left panel to build your website layout.</p>
-                                </div>
-                            ) : (
-                                sections.map((sec, idx) => {
-                                    const isSelected = selectedSectionId === sec.id;
-                                    return (
-                                        <div 
-                                            key={sec.id} 
-                                            className={`canvas-section section-${sec.type} ${isSelected ? 'selected' : ''}`}
-                                            onClick={(e) => { e.stopPropagation(); setSelectedSectionId(sec.id); }}
-                                            style={{ background: sec.bg, color: sec.color }}
-                                        >
-                                            {/* Section Floating Handles */}
-                                            <div className="section-handles">
-                                                <span className="section-badge">{sec.type.toUpperCase()}</span>
-                                                <button onClick={(e) => { e.stopPropagation(); moveSection(idx, 'up'); }} disabled={idx === 0}><ArrowUp size={12} /></button>
-                                                <button onClick={(e) => { e.stopPropagation(); moveSection(idx, 'down'); }} disabled={idx === sections.length - 1}><ArrowDown size={12} /></button>
-                                                <button onClick={(e) => { e.stopPropagation(); deleteSection(sec.id); }} className="danger"><Trash size={12} /></button>
-                                            </div>
-
-                                            {/* Renders Section View */}
-                                            {sec.type === 'navbar' && (
-                                                <div className="navbar-render">
-                                                    <div className="brand">{sec.brand}</div>
-                                                    <div className="nav-links">
-                                                        {sec.links.map((l, i) => <span key={i}>{l.text}</span>)}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {sec.type === 'hero' && (
-                                                <div className="hero-render">
-                                                    <h2>{sec.title}</h2>
-                                                    <p>{sec.subtitle}</p>
-                                                    <span className="btn-hero-render" style={{ background: sec.buttonBg, color: sec.buttonColor }}>{sec.buttonText}</span>
-                                                </div>
-                                            )}
-
-                                            {sec.type === 'features' && (
-                                                <div className="features-render">
-                                                    <h2>{sec.title}</h2>
-                                                    <div className="features-grid-render">
-                                                        {sec.items.map((item, i) => (
-                                                            <div key={i} className="card-render" style={{ background: sec.cardBg, borderColor: sec.cardBorder }}>
-                                                                <span className="card-icon">{item.icon}</span>
-                                                                <h3>{item.title}</h3>
-                                                                <p>{item.desc}</p>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {sec.type === 'rich_text' && (
-                                                <div className="text-render" style={{ textAlign: sec.align || 'left' }}>
-                                                    <h2>{sec.title}</h2>
-                                                    <p>{sec.content}</p>
-                                                </div>
-                                            )}
-
-                                            {sec.type === 'footer' && (
-                                                <div className="footer-render">
-                                                    <p>{sec.text}</p>
-                                                </div>
-                                            )}
+                    {/* Layers */}
+                    {activeTab === 'layers' && (
+                        <div className="lp-layers">
+                            {sections.length === 0 && (
+                                <div className="lp-empty">No sections yet.<br />Click Add to get started.</div>
+                            )}
+                            {sections.map((sec, idx) => {
+                                const meta = TYPE_META[sec.type];
+                                const isActive = selectedId === sec.id;
+                                return (
+                                    <div
+                                        key={sec.id}
+                                        className={`layer-item ${isActive ? 'layer-active' : ''}`}
+                                        onClick={() => setSelectedId(sec.id)}
+                                    >
+                                        <GripVertical size={13} className="layer-grip" />
+                                        <span className="layer-dot" style={{ background: meta?.color || '#555' }} />
+                                        <span className="layer-label">{meta?.label || sec.type}</span>
+                                        <div className="layer-acts">
+                                            <button className="layer-btn" disabled={idx === 0} onClick={e => { e.stopPropagation(); moveSection(idx, 'up'); }}>
+                                                <ArrowUp size={11} />
+                                            </button>
+                                            <button className="layer-btn" disabled={idx === sections.length - 1} onClick={e => { e.stopPropagation(); moveSection(idx, 'down'); }}>
+                                                <ArrowDown size={11} />
+                                            </button>
+                                            <button className="layer-btn layer-del" onClick={e => { e.stopPropagation(); deleteSection(sec.id); }}>
+                                                <Trash2 size={11} />
+                                            </button>
                                         </div>
-                                    );
-                                })
-                            )}
+                                    </div>
+                                );
+                            })}
                         </div>
-                    </div>
-                </div>
+                    )}
 
-                <aside className={`properties-panel ${selectedSectionId ? 'visible' : ''}`}>
-                    <div className="panel-title">
-                        PROPERTIES
-                        {selectedSectionId && (
-                            <button onClick={() => setSelectedSectionId(null)} className="close-btn">×</button>
-                        )}
-                    </div>
-                    {selectedSec ? (
-                        <div className="properties-content">
-                            <div className="prop-group">
-                                <label><Palette size={12} /> BACKGROUND COLOR</label>
-                                <input 
-                                    type="color" 
-                                    value={selectedSec.bg || '#000000'} 
-                                    onChange={(e) => updateSectionProps(selectedSec.id, { bg: e.target.value })} 
-                                />
-                            </div>
-                            <div className="prop-group">
-                                <label><Palette size={12} /> TEXT COLOR</label>
-                                <input 
-                                    type="color" 
-                                    value={selectedSec.color || '#ffffff'} 
-                                    onChange={(e) => updateSectionProps(selectedSec.id, { color: e.target.value })} 
-                                />
-                            </div>
-
-                            <div className="divider"></div>
-
-                            {/* Contextual Properties */}
-                            {selectedSec.type === 'navbar' && (
-                                <>
-                                    <div className="prop-group">
-                                        <label>BRAND TEXT</label>
-                                        <input 
-                                            type="text" 
-                                            value={selectedSec.brand} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { brand: e.target.value })} 
-                                        />
+                    {/* Add Widgets */}
+                    {activeTab === 'widgets' && (
+                        <div className="lp-widgets">
+                            <div className="lp-widgets-label">Click to add section</div>
+                            {WIDGET_BLUEPRINTS.map(bp => (
+                                <button key={bp.type} className="wb-card" onClick={() => addSection(bp)}>
+                                    <span className="wb-icon" style={{ color: bp.color, background: `${bp.color}15` }}>
+                                        <bp.icon size={18} />
+                                    </span>
+                                    <div className="wb-text">
+                                        <strong>{bp.label}</strong>
+                                        <span>{bp.desc}</span>
                                     </div>
-                                    <div className="prop-group">
-                                        <label>NAV LINKS (Text & URL)</label>
-                                        {selectedSec.links.map((link, idx) => (
-                                            <div key={idx} className="prop-row">
-                                                <input 
-                                                    type="text" 
-                                                    value={link.text} 
-                                                    placeholder="Text"
-                                                    onChange={(e) => {
-                                                        const newLinks = [...selectedSec.links];
-                                                        newLinks[idx].text = e.target.value;
-                                                        updateSectionProps(selectedSec.id, { links: newLinks });
-                                                    }} 
-                                                />
-                                                <input 
-                                                    type="text" 
-                                                    value={link.url} 
-                                                    placeholder="URL"
-                                                    onChange={(e) => {
-                                                        const newLinks = [...selectedSec.links];
-                                                        newLinks[idx].url = e.target.value;
-                                                        updateSectionProps(selectedSec.id, { links: newLinks });
-                                                    }} 
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-
-                            {selectedSec.type === 'hero' && (
-                                <>
-                                    <div className="prop-group">
-                                        <label>HERO TITLE</label>
-                                        <input 
-                                            type="text" 
-                                            value={selectedSec.title} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { title: e.target.value })} 
-                                        />
-                                    </div>
-                                    <div className="prop-group">
-                                        <label>HERO SUBTITLE</label>
-                                        <textarea 
-                                            value={selectedSec.subtitle} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { subtitle: e.target.value })} 
-                                        />
-                                    </div>
-                                    <div className="prop-group">
-                                        <label>BUTTON TEXT</label>
-                                        <input 
-                                            type="text" 
-                                            value={selectedSec.buttonText} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { buttonText: e.target.value })} 
-                                        />
-                                    </div>
-                                    <div className="prop-group">
-                                        <label>BUTTON URL</label>
-                                        <input 
-                                            type="text" 
-                                            value={selectedSec.buttonUrl} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { buttonUrl: e.target.value })} 
-                                        />
-                                    </div>
-                                    <div className="prop-group">
-                                        <label>BUTTON BG</label>
-                                        <input 
-                                            type="color" 
-                                            value={selectedSec.buttonBg} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { buttonBg: e.target.value })} 
-                                        />
-                                    </div>
-                                    <div className="prop-group">
-                                        <label>BUTTON TEXT COLOR</label>
-                                        <input 
-                                            type="color" 
-                                            value={selectedSec.buttonColor} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { buttonColor: e.target.value })} 
-                                        />
-                                    </div>
-                                </>
-                            )}
-
-                            {selectedSec.type === 'features' && (
-                                <>
-                                    <div className="prop-group">
-                                        <label>GRID TITLE</label>
-                                        <input 
-                                            type="text" 
-                                            value={selectedSec.title} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { title: e.target.value })} 
-                                        />
-                                    </div>
-                                    <div className="prop-group">
-                                        <label>CARD BACKGROUND</label>
-                                        <input 
-                                            type="color" 
-                                            value={selectedSec.cardBg} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { cardBg: e.target.value })} 
-                                        />
-                                    </div>
-                                    <div className="prop-group">
-                                        <label>CARD BORDER COLOR</label>
-                                        <input 
-                                            type="text" 
-                                            value={selectedSec.cardBorder} 
-                                            placeholder="rgba(255,255,255,0.05)"
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { cardBorder: e.target.value })} 
-                                        />
-                                    </div>
-                                    <div className="prop-group">
-                                        <label>GRID FEATURES</label>
-                                        {selectedSec.items.map((item, idx) => (
-                                            <div key={idx} className="prop-feature-edit">
-                                                <div className="prop-row">
-                                                    <input 
-                                                        type="text" 
-                                                        value={item.icon} 
-                                                        placeholder="Icon"
-                                                        style={{ width: '40px' }}
-                                                        onChange={(e) => {
-                                                            const newItems = [...selectedSec.items];
-                                                            newItems[idx].icon = e.target.value;
-                                                            updateSectionProps(selectedSec.id, { items: newItems });
-                                                        }} 
-                                                    />
-                                                    <input 
-                                                        type="text" 
-                                                        value={item.title} 
-                                                        placeholder="Title"
-                                                        onChange={(e) => {
-                                                            const newItems = [...selectedSec.items];
-                                                            newItems[idx].title = e.target.value;
-                                                            updateSectionProps(selectedSec.id, { items: newItems });
-                                                        }} 
-                                                    />
-                                                </div>
-                                                <textarea 
-                                                    value={item.desc} 
-                                                    placeholder="Description"
-                                                    onChange={(e) => {
-                                                        const newItems = [...selectedSec.items];
-                                                        newItems[idx].desc = e.target.value;
-                                                        updateSectionProps(selectedSec.id, { items: newItems });
-                                                    }} 
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-
-                            {selectedSec.type === 'rich_text' && (
-                                <>
-                                    <div className="prop-group">
-                                        <label>HEADING</label>
-                                        <input 
-                                            type="text" 
-                                            value={selectedSec.title} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { title: e.target.value })} 
-                                        />
-                                    </div>
-                                    <div className="prop-group">
-                                        <label>TEXT CONTENT</label>
-                                        <textarea 
-                                            value={selectedSec.content} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { content: e.target.value })} 
-                                        />
-                                    </div>
-                                    <div className="prop-group">
-                                        <label>ALIGNMENT</label>
-                                        <select 
-                                            value={selectedSec.align || 'left'} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { align: e.target.value })}
-                                        >
-                                            <option value="left">LEFT</option>
-                                            <option value="center">CENTER</option>
-                                            <option value="right">RIGHT</option>
-                                        </select>
-                                    </div>
-                                </>
-                            )}
-
-                            {selectedSec.type === 'footer' && (
-                                <>
-                                    <div className="prop-group">
-                                        <label>COPYRIGHT TEXT</label>
-                                        <input 
-                                            type="text" 
-                                            value={selectedSec.text} 
-                                            onChange={(e) => updateSectionProps(selectedSec.id, { text: e.target.value })} 
-                                        />
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="properties-empty">
-                            Select a section on the canvas to configure properties.
+                                    <Plus size={14} className="wb-plus" />
+                                </button>
+                            ))}
                         </div>
                     )}
                 </aside>
+
+                {/* â”€â”€ Canvas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                <main className="vb-canvas" onClick={() => setSelectedId(null)}>
+                    <div className="canvas-scroll">
+                        <div
+                            className={`canvas-frame viewport-${viewport}`}
+                            style={{ width: viewportWidths[viewport] }}
+                        >
+                            {sections.length === 0 ? (
+                                <div className="canvas-empty">
+                                    <Grid3X3 size={40} style={{ opacity: 0.15, marginBottom: 16 }} />
+                                    <h3>Empty Canvas</h3>
+                                    <p>Open the <strong>Add</strong> tab on the left to add sections</p>
+                                </div>
+                            ) : sections.map((sec, idx) => (
+                                <CanvasSection
+                                    key={sec.id}
+                                    sec={sec}
+                                    idx={idx}
+                                    total={sections.length}
+                                    isSelected={selectedId === sec.id}
+                                    onSelect={setSelectedId}
+                                    onMove={moveSection}
+                                    onDelete={deleteSection}
+                                    onDuplicate={duplicateSection}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Viewport Label */}
+                        <div className="viewport-label">
+                            {viewport === 'desktop' && 'Desktop â€” Full Width'}
+                            {viewport === 'tablet' && 'Tablet â€” 768px'}
+                            {viewport === 'mobile' && 'Mobile â€” 390px'}
+                        </div>
+                    </div>
+                </main>
+
+                {/* â”€â”€ Right Panel (Properties) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                <aside className={`vb-right ${rightOpen && selectedId ? '' : 'vb-right-hidden'}`}>
+                    <div className="rp-header">
+                        <span className="rp-title">Properties</span>
+                        <button className="rp-close" onClick={() => setSelectedId(null)}>Ã—</button>
+                    </div>
+                    <PropertiesPanel
+                        section={selectedSec}
+                        onChange={props => selectedId && updateSection(selectedId, props)}
+                    />
+                </aside>
             </div>
 
-            {successMsg && <div className="toast">{successMsg}</div>}
+            {/* â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {toast && (
+                <div className={`vb-toast ${toast.type === 'error' ? 'vb-toast-error' : ''}`}>
+                    {toast.type !== 'error' ? <Check size={14} /> : null}
+                    {toast.msg}
+                </div>
+            )}
 
-            <style jsx>{`
-                .visual-builder { height: 100dvh; display: flex; flex-direction: column; background: #050508; color: #fff; overflow: hidden; font-family: 'Inter', sans-serif; }
-                .visual-nav { height: 60px; background: #000; border-bottom: 1px solid rgba(0, 240, 255, 0.15); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; flex-shrink: 0; }
-                .nav-left, .nav-center, .nav-right { display: flex; align-items: center; gap: 12px; }
-                
-                .btn-back { background: transparent; border: none; color: #888; cursor: pointer; display: flex; align-items: center; transition: 0.2s; }
-                .btn-back:hover { color: #00f0ff; }
-                .project-name-input { background: transparent; border: 1px solid transparent; color: #fff; font-family: 'Orbitron'; font-size: 0.9rem; font-weight: 700; outline: none; padding: 4px 8px; border-radius: 4px; transition: 0.2s; max-width: 250px; }
-                .project-name-input:focus { border-color: rgba(0, 240, 255, 0.3); background: rgba(255,255,255,0.02); }
-
-                .preview-selector { display: flex; background: #0d0d12; padding: 4px; border-radius: 8px; gap: 4px; border: 1px solid rgba(255,255,255,0.05); }
-                .preview-selector button { background: transparent; border: none; color: #666; font-size: 0.7rem; font-weight: 800; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-                .preview-selector button.active { background: rgba(0, 240, 255, 0.08); color: #00f0ff; box-shadow: 0 0 10px rgba(0, 240, 255, 0.1); }
-                
-                .btn-code, .btn-save { background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.3); color: #00f0ff; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-                .btn-code:hover { background: rgba(0, 240, 255, 0.15); box-shadow: 0 0 15px rgba(0, 240, 255, 0.2); }
-                .btn-save { background: #00f0ff; color: #000; border: none; box-shadow: 0 0 15px rgba(0, 240, 255, 0.3); }
-                .btn-save:hover { box-shadow: 0 0 25px rgba(0, 240, 255, 0.5); transform: translateY(-1px); }
-
-                .visual-main { flex: 1; display: flex; overflow: hidden; position: relative; }
-                
-                /* Widgets Sidebar */
-                .widget-panel { width: 250px; background: rgba(5,5,8,0.5); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; flex-shrink: 0; }
-                .panel-title { padding: 15px 20px; font-size: 0.7rem; font-family: 'Orbitron'; color: #444; font-weight: 800; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
-                .widget-list { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-                .widget-btn { display: flex; align-items: center; gap: 15px; padding: 12px 15px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: rgba(255,255,255,0.6); text-align: left; cursor: pointer; transition: 0.2s; }
-                .widget-btn:hover { background: rgba(0, 240, 255, 0.05); border-color: rgba(0, 240, 255, 0.3); color: #00f0ff; }
-                .widget-text strong { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 2px; }
-                .widget-text p { font-size: 0.7rem; opacity: 0.6; margin: 0; }
-
-                /* Properties Sidebar */
-                .properties-panel { width: 300px; background: rgba(5,5,8,0.5); backdrop-filter: blur(20px); border-left: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; flex-shrink: 0; transform: translateX(100%); transition: 0.3s cubic-bezier(0.19, 1, 0.22, 1); }
-                .properties-panel.visible { transform: translateX(0); }
-                .properties-content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-                .properties-empty { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; text-align: center; color: #444; font-size: 0.85rem; }
-                .close-btn { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
-                .close-btn:hover { color: #fff; }
-
-                .prop-group { display: flex; flex-direction: column; gap: 8px; }
-                .prop-group label { font-size: 0.65rem; font-weight: 800; color: #666; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
-                .prop-group input[type="text"], .prop-group select, .prop-group textarea { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; transition: 0.2s; }
-                .prop-group input[type="text"]:focus, .prop-group select:focus, .prop-group textarea:focus { border-color: rgba(0, 240, 255, 0.4); background: rgba(0, 240, 255, 0.02); }
-                .prop-group textarea { height: 80px; resize: none; }
-                .prop-group input[type="color"] { -webkit-appearance: none; border: none; width: 100%; height: 35px; border-radius: 8px; cursor: pointer; background: transparent; }
-                .prop-group input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-                .prop-group input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; }
-                
-                .prop-row { display: flex; gap: 10px; }
-                .prop-row input { flex: 1; }
-                .prop-feature-edit { background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-
-                /* Canvas Area */
-                .canvas-area { flex: 1; background: #0c0d12; overflow-y: auto; padding: 40px 20px; display: flex; justify-content: center; position: relative; background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 20px 20px; }
-                .canvas-viewport { background: #000; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); overflow: hidden; transition: width 0.3s cubic-bezier(0.19, 1, 0.22, 1); min-height: 500px; }
-                .viewport-desktop { width: 100%; max-width: 960px; }
-                .viewport-mobile { width: 375px; }
-                .canvas-frame { width: 100%; height: 100%; display: flex; flex-direction: column; background: #000; position: relative; }
-                
-                .canvas-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 100px 40px; text-align: center; color: #333; }
-                .canvas-empty h3 { color: #666; margin: 15px 0 5px; }
-                .canvas-empty p { font-size: 0.85rem; max-width: 300px; opacity: 0.6; }
-
-                /* Canvas Element Styles */
-                .canvas-section { position: relative; padding: 40px 30px; transition: 0.2s; border: 2px solid transparent; cursor: pointer; }
-                .canvas-section:hover { border-color: rgba(0, 240, 255, 0.3); }
-                .canvas-section.selected { border-color: #00f0ff; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15); }
-                
-                .section-handles { position: absolute; top: 10px; right: 10px; display: none; gap: 4px; background: #0d0d12; border: 1px solid rgba(255,255,255,0.05); padding: 4px; border-radius: 6px; z-index: 50; }
-                .canvas-section:hover .section-handles { display: flex; }
-                .section-handles button { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); color: #888; border-radius: 4px; padding: 4px; cursor: pointer; display: flex; align-items: center; transition: 0.2s; }
-                .section-handles button:hover:not(:disabled) { color: #00f0ff; background: rgba(0,240,255,0.05); }
-                .section-handles button.danger:hover { color: #ff4444; background: rgba(255,68,68,0.05); }
-                .section-handles button:disabled { opacity: 0.3; cursor: not-allowed; }
-                .section-badge { font-size: 8px; font-weight: 900; letter-spacing: 0.5px; color: #00f0ff; padding: 4px 8px; background: rgba(0, 240, 255, 0.08); border-radius: 4px; display: flex; align-items: center; }
-
-                /* Render Styling Templates */
-                .navbar-render { display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 10px; }
-                .navbar-render .brand { font-family: 'Orbitron'; font-weight: 900; font-size: 1.1rem; letter-spacing: 1px; }
-                .navbar-render .nav-links { display: flex; gap: 15px; font-size: 0.8rem; font-weight: 600; opacity: 0.8; }
-                
-                .hero-render { text-align: center; padding: 60px 10px; display: flex; flex-direction: column; align-items: center; }
-                .hero-render h2 { font-family: 'Orbitron'; font-size: 2rem; font-weight: 900; letter-spacing: 1px; margin: 0 0 15px; }
-                .hero-render p { font-size: 0.9rem; opacity: 0.7; max-width: 500px; margin: 0 0 25px; line-height: 1.5; }
-                .btn-hero-render { padding: 10px 25px; border-radius: 20px; font-weight: 900; font-size: 0.8rem; }
-
-                .features-render h2 { font-family: 'Orbitron'; font-size: 1.5rem; text-align: center; margin: 0 0 35px; }
-                .features-grid-render { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; width: 100%; }
-                .card-render { padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
-                .card-icon { font-size: 1.8rem; display: block; margin-bottom: 15px; }
-                .card-render h3 { font-size: 1.05rem; font-weight: 700; margin: 0 0 8px; }
-                .card-render p { font-size: 0.8rem; opacity: 0.6; line-height: 1.5; margin: 0; }
-
-                .text-render h2 { font-family: 'Orbitron'; font-size: 1.4rem; margin: 0 0 15px; }
-                .text-render p { font-size: 0.9rem; opacity: 0.8; line-height: 1.6; margin: 0; }
-
-                .footer-render { text-align: center; font-size: 0.75rem; color: #555; }
-                .footer-render p { margin: 0; }
-
-                .divider { height: 1px; background: rgba(255,255,255,0.05); margin: 10px 0; }
-                .toast { position: fixed; bottom: 30px; right: 30px; background: #00f0ff; color: #000; padding: 10px 20px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; animation: slideUp 0.3s; z-index: 1000; }
-                @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-                @media (max-width: 768px) {
-                    .hide-mobile { display: none !important; }
-                    .visual-nav { padding: 0 10px; }
-                    .project-name-input { max-width: 150px; font-size: 0.8rem; }
-                    .widget-panel { width: 70px; }
-                    .widget-text { display: none; }
-                    .widget-btn { justify-content: center; padding: 12px; }
-                    .properties-panel { position: absolute; top: 0; right: 0; bottom: 0; z-index: 100; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
-                    .canvas-viewport { max-width: 100%; }
-                    .canvas-area { padding: 10px; }
-                }
-            `}</style>
+            <style dangerouslySetInnerHTML={{ __html: VISUAL_CSS }} />
         </div>
     );
 }
 
 export default function VisualPage() {
     return (
-        <Suspense fallback={<Loader text="Initializing Visual Workspace..." />}>
+        <Suspense fallback={<Loader text="Initializing Visual Builder..." />}>
             <VisualContent />
         </Suspense>
     );
 }
+
