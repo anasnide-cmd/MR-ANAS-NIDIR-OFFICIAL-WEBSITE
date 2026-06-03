@@ -99,7 +99,12 @@ export default function BuildDashboard() {
         if (diff > threshold) {
             // Swipe Right -> Deploy/Enter
             triggerHaptic(50);
-            router.push(`/mr-build/editor?id=${swipeState.id}`);
+            const swipedSite = sites.find(s => s.id === swipeState.id);
+            if (swipedSite?.editorMode === 'visual') {
+                router.push(`/mr-build/visual?id=${swipeState.id}`);
+            } else {
+                router.push(`/mr-build/editor?id=${swipeState.id}`);
+            }
         } else if (diff < -threshold) {
              // Swipe Left -> Delete
              triggerHaptic([30, 50, 30]);
@@ -342,7 +347,15 @@ export default function BuildDashboard() {
 
                                  <div 
                                      className="project-card" 
-                                     onClick={() => { if(!swipeState.id) router.push(`/mr-build/editor?id=${site.id}`); }}
+                                     onClick={() => {
+                                         if (!swipeState.id) {
+                                             if (site.editorMode === 'visual') {
+                                                 router.push(`/mr-build/visual?id=${site.id}`);
+                                             } else {
+                                                 router.push(`/mr-build/editor?id=${site.id}`);
+                                             }
+                                         }
+                                     }}
                                      onTouchStart={(e) => handleTouchStart(e, site.id)}
                                      onTouchMove={handleTouchMove}
                                      onTouchEnd={handleTouchEnd}
@@ -462,6 +475,11 @@ export default function BuildDashboard() {
                             <button onClick={() => setShowNewModal(false)}><X size={20}/></button>
                         </div>
                         <div className="modal-options-grid">
+                            <button className="option-tile visual" onClick={() => router.push('/mr-build/visual?new=true')}>
+                                <div className="tile-icon" style={{color: '#ffaa00'}}><Layout size={24}/></div>
+                                <h3>Visual Core</h3>
+                                <p>Drag & Drop Builder</p>
+                            </button>
                             <button className="option-tile architect" onClick={() => { setShowNewModal(false); setShowArchitect(true); }}>
                                 <div className="tile-icon"><Star size={24}/></div>
                                 <h3>AI Architect</h3>
@@ -693,6 +711,8 @@ export default function BuildDashboard() {
                 .option-tile p { font-size: 0.8rem; color: #666; }
                 .option-tile.architect .tile-icon { color: #d000ff; }
                 .option-tile.architect:hover { border-color: #d000ff; background: rgba(208, 0, 255, 0.05); }
+                .option-tile.visual .tile-icon { color: #ffaa00; }
+                .option-tile.visual:hover { border-color: #ffaa00; background: rgba(255, 170, 0, 0.05); }
 
                 /* Limit Modal Specific */
                 .limit-modal {
