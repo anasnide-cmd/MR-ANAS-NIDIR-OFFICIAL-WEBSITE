@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { auth } from '../../@mr/core/firebase';
+import { auth } from '@mr/core/firebase';
 import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
@@ -124,7 +123,7 @@ export default function BuildLogin() {
                 <div className="divider"><span>OR</span></div>
 
                 <button onClick={handleGoogle} className="btn-google" disabled={loading}>
-                    <Image src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" width={18} height={18} />
+                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" width={18} height={18} />
                     Sync Google Identity
                 </button>
 

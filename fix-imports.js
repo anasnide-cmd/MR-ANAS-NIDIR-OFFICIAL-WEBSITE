@@ -34,8 +34,8 @@ function getAllFiles(dirPath, arrayOfFiles) {
  * regardless of the number of '../' segments.
  */
 const replacements = [
-  // 1. Fix broken previous cleanup attempts (e.g. ../@mr/ui)
-  { search: /['"]\.*\/*@mr\//g, replace: "'@mr/" },
+  // 1. Fix broken previous cleanup attempts (e.g. ../../@mr/ui)
+  { search: /['"](?:\.\.\/|\.\/)*@mr\//g, replace: "'@mr/" },
   
   // 2. GREEDY UNIVERSAL: Replace ANY relative path looking for components
   //    Matches ./components, ../components, ../../components, etc.
@@ -63,9 +63,10 @@ foldersToScan.forEach(folder => {
       let changed = false;
 
       replacements.forEach(entry => {
-        if (entry.search.test(content)) {
+        const nextContent = content.replace(entry.search, entry.replace);
+        if (nextContent !== content) {
           console.log(`Fixing: ${path.relative(root, file)}`);
-          content = content.replace(entry.search, entry.replace);
+          content = nextContent;
           changed = true;
         }
       });

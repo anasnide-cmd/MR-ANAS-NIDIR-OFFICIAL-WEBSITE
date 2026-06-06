@@ -2,29 +2,29 @@
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, db, storage } from '../../@mr/core/firebase';
+import { auth, db, storage } from '@mr/core/firebase';
 import { doc, getDoc, setDoc, collection } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 import dynamic from 'next/dynamic';
-import Loader from '../../@mr/ui/Loader';
+import Loader from '@mr/ui/Loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
 // Shared Components
-const AICopilot = dynamic(() => import('../../@mr/ui/MREditor/AICopilot'), { ssr: false });
-const AssetManager = dynamic(() => import('../../@mr/ui/MREditor/AssetManager'), { ssr: false });
-const SpriteEditor = dynamic(() => import('../../@mr/ui/MREditor/SpriteEditor'), { ssr: false });
-const Terminal = dynamic(() => import('../../@mr/ui/MREditor/Terminal'), { ssr: false });
-const Auditor = dynamic(() => import('../../@mr/ui/MREditor/Auditor'), { ssr: false });
-const FileTree = dynamic(() => import('../../@mr/ui/MREditor/FileTree'), { ssr: false });
-const ARPreview = dynamic(() => import('../../@mr/ui/MREditor/ARPreview'), { ssr: false });
-const NormalPreview = dynamic(() => import('../../@mr/ui/MREditor/NormalPreview'), { ssr: false });
-const LibraryManager = dynamic(() => import('../../@mr/ui/MREditor/LibraryManager'), { ssr: false });
-const AICommandPalette = dynamic(() => import('../../@mr/ui/MREditor/AICommandPalette'), { ssr: false });
-const MonacoEditor = dynamic(() => import('../../@mr/ui/MREditor/MonacoEditor'), { ssr: false });
+const AICopilot = dynamic(() => import('@mr/ui/MREditor/AICopilot'), { ssr: false });
+const AssetManager = dynamic(() => import('@mr/ui/MREditor/AssetManager'), { ssr: false });
+const SpriteEditor = dynamic(() => import('@mr/ui/MREditor/SpriteEditor'), { ssr: false });
+const Terminal = dynamic(() => import('@mr/ui/MREditor/Terminal'), { ssr: false });
+const Auditor = dynamic(() => import('@mr/ui/MREditor/Auditor'), { ssr: false });
+const FileTree = dynamic(() => import('@mr/ui/MREditor/FileTree'), { ssr: false });
+const ARPreview = dynamic(() => import('@mr/ui/MREditor/ARPreview'), { ssr: false });
+const NormalPreview = dynamic(() => import('@mr/ui/MREditor/NormalPreview'), { ssr: false });
+const LibraryManager = dynamic(() => import('@mr/ui/MREditor/LibraryManager'), { ssr: false });
+const AICommandPalette = dynamic(() => import('@mr/ui/MREditor/AICommandPalette'), { ssr: false });
+const MonacoEditor = dynamic(() => import('@mr/ui/MREditor/MonacoEditor'), { ssr: false });
 
-import TabBar from '../../@mr/ui/MREditor/TabBar';
+import TabBar from '@mr/ui/MREditor/TabBar';
 
 import { 
     Save, 

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { db } from '../../@mr/core/firebase';
+import { db } from '@mr/core/firebase';
 import { doc, updateDoc, deleteDoc, collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { X, Save, Trash2, Globe, Lock, Gamepad2, Clock, UserPlus, ShieldAlert, BookOpen } from 'lucide-react';
 

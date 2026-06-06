@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { db } from '../../@mr/core/firebase';
+import { db } from '@mr/core/firebase';
 import { doc, updateDoc, deleteDoc, collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { X, Save, Trash2, Globe, Lock, DollarSign, Clock, UserPlus, ShieldAlert } from 'lucide-react';
-import { addSiteLog } from '../../@mr/core/siteHistory';
+import { addSiteLog } from '@mr/core/siteHistory';
 
 export default function SiteSettingsModal({ site, user, onClose, onUpdate, onDelete }) {
     const [activeTab, setActiveTab] = useState('params'); // 'params', 'history', 'ownership', 'marketplace'

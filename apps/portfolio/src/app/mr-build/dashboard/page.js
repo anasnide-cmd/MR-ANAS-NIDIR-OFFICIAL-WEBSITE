@@ -1,12 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { auth, db } from '../../@mr/core/firebase';
+import { auth, db } from '@mr/core/firebase';
 import { collection, query, where, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Loader from '../../@mr/ui/Loader';
-import SkeletonLoader from '../../@mr/ui/SkeletonLoader';
+import Loader from '@mr/ui/Loader';
+import SkeletonLoader from '@mr/ui/SkeletonLoader';
 import { 
     Book, 
     Star, 

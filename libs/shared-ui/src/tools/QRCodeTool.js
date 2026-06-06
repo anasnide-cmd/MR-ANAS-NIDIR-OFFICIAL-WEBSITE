@@ -55,6 +55,18 @@ export default function QRCodeTool({ onClose }) {
         }
     }, [qrData, qrColor, bgColor, qrSize, qrMargin, qrLevel, mode]);
 
+    const onScanSuccess = (decodedText, decodedResult) => {
+        setScannedResult(decodedText);
+        setIsScanning(false);
+        if (scannerRef.current) {
+            scannerRef.current.clear();
+        }
+    };
+
+    const onScanFailure = (error) => {
+        // Soft error, usually means no QR in frame
+    };
+
     // Handle Scanner
     useEffect(() => {
         if (mode === 'scanner' && isScanning) {
@@ -74,18 +86,6 @@ export default function QRCodeTool({ onClose }) {
             };
         }
     }, [mode, isScanning]);
-
-    const onScanSuccess = (decodedText, decodedResult) => {
-        setScannedResult(decodedText);
-        setIsScanning(false);
-        if (scannerRef.current) {
-            scannerRef.current.clear();
-        }
-    };
-
-    const onScanFailure = (error) => {
-        // Soft error, usually means no QR in frame
-    };
 
     const handleDownload = () => {
         const link = document.createElement('a');

@@ -16,8 +16,8 @@ export default function AICommandPalette({ isOpen, onClose, onCommand }) {
 
     useEffect(() => {
         if (isOpen) {
-            setQuery('');
             setTimeout(() => {
+                 setQuery('');
                  inputRef.current?.focus();
             }, 100);
         }

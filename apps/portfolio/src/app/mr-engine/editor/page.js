@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { auth, db, storage } from '../../@mr/core/firebase';
+import { auth, db, storage } from '@mr/core/firebase';
 import { doc, setDoc, deleteDoc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,7 +10,7 @@ import Link from 'next/link';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
-import Loader from '../../@mr/ui/Loader';
+import Loader from '@mr/ui/Loader';
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
@@ -22,12 +22,12 @@ import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-markdown';
 
 // Shared Components
-const Terminal = dynamic(() => import('../../@mr/ui/MREditor/Terminal'), { ssr: false });
-const AssetManager = dynamic(() => import('../../@mr/ui/MREditor/AssetManager'), { ssr: false });
-const AICopilot = dynamic(() => import('../../@mr/ui/MREditor/AICopilot'), { ssr: false });
-const FileTree = dynamic(() => import('../../@mr/ui/MREditor/FileTree'), { ssr: false });
-const Auditor = dynamic(() => import('../../@mr/ui/MREditor/Auditor'), { ssr: false });
-const SpriteEditor = dynamic(() => import('../../@mr/ui/MREditor/SpriteEditor'), { ssr: false });
+const Terminal = dynamic(() => import('@mr/ui/MREditor/Terminal'), { ssr: false });
+const AssetManager = dynamic(() => import('@mr/ui/MREditor/AssetManager'), { ssr: false });
+const AICopilot = dynamic(() => import('@mr/ui/MREditor/AICopilot'), { ssr: false });
+const FileTree = dynamic(() => import('@mr/ui/MREditor/FileTree'), { ssr: false });
+const Auditor = dynamic(() => import('@mr/ui/MREditor/Auditor'), { ssr: false });
+const SpriteEditor = dynamic(() => import('@mr/ui/MREditor/SpriteEditor'), { ssr: false });
 
 import 'prismjs/themes/prism-tomorrow.css';  
 import { 

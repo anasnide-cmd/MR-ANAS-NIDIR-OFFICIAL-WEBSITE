@@ -141,7 +141,7 @@ export default function StoreDashboard() {
                                         <span className="order-id">#ORD-772{i}</span>
                                         <span className="order-customer">Customer Node {i}</span>
                                     </div>
-                                    <span className="order-amount">${(Math.random() * 500).toFixed(2)}</span>
+                                    <span className="order-amount">${(i * 87.5 + 45.0).toFixed(2)}</span>
                                 </div>
                             ))}
                         </div>

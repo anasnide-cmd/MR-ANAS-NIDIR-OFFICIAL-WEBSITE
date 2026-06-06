@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, Bot, User, ChevronRight, Mic, Volume2, VolumeX, Paperclip, X, ChevronDown, Rocket, Copy, Check } from 'lucide-react';
+import { useState, useRef, useEffect, memo } from 'react';
+import { Sparkles, Send, Bot, User, ChevronRight, Mic, Volume2, VolumeX, Paperclip, X, ChevronDown, Rocket, Copy, Check, Layout } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Card,
