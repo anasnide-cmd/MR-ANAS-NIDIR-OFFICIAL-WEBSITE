@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 18, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/USER/Anas/Project/MR-ANAS-NIDIR-OFFICIAL-WEBSITE/apps/portfolio/src/app/savoirpedia/page.js"],"sourcesContent":["import HubClient from '../@mr/ui/Savoirpedia/HubClient';\r\n\r\nexport const metadata = {\r\n  title: 'Savoirpedia | Knowledge Base',\r\n  description: 'The official knowledge base and documentation hub for MR ANAS NIDIR projects. Explore articles, devlogs, and technical documentation.',\r\n  openGraph: {\r\n    title: 'Savoirpedia | Knowledge Base',\r\n    description: 'The official knowledge base and documentation hub for MR ANAS NIDIR projects.',\r\n    images: [\r\n      {\r\n        url: '/assets/logo.jpg',\r\n        width: 1200,\r\n        height: 630,\r\n        alt: 'Savoirpedia Logo',\r\n      },\r\n    ],\r\n  },\r\n};\r\n\r\nexport default function SavoirpediaHub() {\r\n  return <HubClient />;\r\n}\r\n"],"names":[],"mappings":";;;;;;;;;;;;;;AAEO,MAAM,WAAW;IACtB,OAAO;IACP,aAAa;IACb,WAAW;QACT,OAAO;QACP,aAAa;QACb,QAAQ;YACN;gBACE,KAAK;gBACL,OAAO;gBACP,QAAQ;gBACR,KAAK;YACP;SACD;IACH;AACF;AAEe,SAAS;IACtB,qBAAO,8OAAC;;;;;AACV"}}]
-}

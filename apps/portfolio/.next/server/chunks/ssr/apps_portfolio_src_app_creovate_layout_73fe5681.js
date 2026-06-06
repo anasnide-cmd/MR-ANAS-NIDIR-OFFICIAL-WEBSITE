@@ -1,3 +1,0 @@
-module.exports=[52177,a=>{"use strict";var b=a.i(7997);function c({children:a}){return(0,b.jsx)("div",{style:{height:"100vh",width:"100vw",overflow:"hidden",background:"#000",color:"#fff"},children:a})}a.s(["default",()=>c,"metadata",0,{title:"Creovate | AI Creative Studio",description:"A sleek, luxury graphic editor built for the NEX ecosystem."}])}];
-
-//# sourceMappingURL=apps_portfolio_src_app_creovate_layout_73fe5681.js.map

@@ -1,1 +1,0 @@
-(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,12590,e=>{"use strict";e.i(43476),e.i(15837),e.i(71645),e.i(18566),e.i(22016);let o=Error("Cannot find module '../../@mr/core/searchService'");throw o.code="MODULE_NOT_FOUND",o}]);

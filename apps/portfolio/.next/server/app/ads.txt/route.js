@@ -1,9 +1,0 @@
-var R=require("../../chunks/[turbopack]_runtime.js")("server/app/ads.txt/route.js")
-R.c("server/chunks/[root-of-the-server]__63338613._.js")
-R.c("server/chunks/[root-of-the-server]__7c87e5d6._.js")
-R.c("server/chunks/libs_core_src_firebase_456c79b7.js")
-R.c("server/chunks/node_modules_5cf12a84._.js")
-R.c("server/chunks/[root-of-the-server]__8893af36._.js")
-R.c("server/chunks/apps_portfolio__next-internal_server_app_ads_txt_route_actions_e326c8d3.js")
-R.m(26550)
-module.exports=R.m(26550).exports

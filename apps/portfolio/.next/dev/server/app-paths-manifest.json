@@ -1,7 +1,0 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/celco/page": "app/celco/page.js",
-  "/page": "app/page.js",
-  "/savoirpedia/page": "app/savoirpedia/page.js",
-  "/savoirpedia/post/[slug]/page": "app/savoirpedia/post/[slug]/page.js"
-}
