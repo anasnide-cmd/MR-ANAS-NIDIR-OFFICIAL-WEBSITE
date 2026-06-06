@@ -5,8 +5,8 @@
   "packageManager": "pnpm@10.0.0",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "build:all": "next build",
+    "build": "next build --webpack",
+    "build:all": "next build --webpack",
     "start": "next start",
     "lint": "next lint",
     "deploy:firestore": "firebase deploy --only firestore"
