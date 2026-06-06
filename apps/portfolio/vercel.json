@@ -1,10 +1,17 @@
 {
   "version": 2,
+  "framework": "nextjs",
   "buildCommand": "cd ../.. && npx turbo run build --filter=portfolio",
   "installCommand": "cd ../.. && npm install",
   "outputDirectory": ".next",
-  "regions": [
-    "sin1"
-  ],
-  "framework": "nextjs"
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
 }
