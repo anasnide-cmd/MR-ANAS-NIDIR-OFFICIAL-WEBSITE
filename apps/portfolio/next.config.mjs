@@ -4,6 +4,22 @@ const nextConfig = {
   output: 'standalone',
   trailingSlash: true,
   transpilePackages: ['@monaco-editor/react'],
+  async rewrites() {
+    return [
+      {
+        source: '/mr-build',
+        destination: `${process.env.NEXT_PUBLIC_IDE_URL || 'http://localhost:4210'}/mr-build`,
+      },
+      {
+        source: '/mr-build/:path*',
+        destination: `${process.env.NEXT_PUBLIC_IDE_URL || 'http://localhost:4210'}/mr-build/:path*`,
+      },
+      {
+        source: '/mr-engine/:path*',
+        destination: `${process.env.NEXT_PUBLIC_IDE_URL || 'http://localhost:4210'}/mr-engine/:path*`,
+      }
+    ];
+  }
 };
 
 export default nextConfig;
