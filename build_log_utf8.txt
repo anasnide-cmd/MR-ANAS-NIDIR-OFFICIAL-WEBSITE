@@ -1,0 +1,3310 @@
+﻿
+> temp_app@0.1.0 build
+> next build
+
+node.exe : ΓÜá Invalid 
+next.config.mjs options 
+detected: 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (ΓÜá  
+   Invalid nex...ions de   
+ tected: :String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+ΓÜá     Unrecognized 
+key(s) in object: 
+'swcMinify', 
+'optimizePackageImports'
+ΓÜá See more info here: htt
+ps://nextjs.org/docs/messag
+es/invalid-next-config
+Γû▓ Next.js 16.1.1 (Turbopack)
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build 
+failed with 34 errors:
+./src/app/mr-build/editor/p
+age.js:1:20
+Ecmascript file had an 
+error
+[0m[31m[1m>[22m[39m[9
+0m 1 |[39m 
+[36mimport[39m { 
+useState[33m,[39m 
+useEffect[33m,[39m [33mS
+uspense[39m[33m,[39m 
+useMemo[33m,[39m 
+useCallback[33m,[39m 
+useRef } [36mfrom[39m [3
+2m'react'[39m[33m;[39m
+ [90m   |[39m            
+        [31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m 
+[36mimport[39m { 
+useRouter[33m,[39m 
+useSearchParams } 
+[36mfrom[39m [32m'next/n
+avigation'[39m[33m;[39m
+ [90m 3 |[39m 
+[36mimport[39m { 
+onAuthStateChanged } 
+[36mfrom[39m [32m'fireba
+se/auth'[39m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+auth[33m,[39m 
+db[33m,[39m storage } 
+[36mfrom[39m [32m'../../
+../lib/firebase'[39m[33m;
+[39m[0m
+
+You're importing a 
+component that needs 
+`useEffect`. This React 
+Hook only works in a 
+Client Component. To fix, 
+mark the file (or its 
+parent) with the `"use 
+client"` directive.
+
+ Learn more: https://nextjs
+.org/docs/app/api-reference
+/directives/use-client
+
+
+
+
+./src/app/mr-build/editor/p
+age.js:1:63
+Ecmascript file had an 
+error
+[0m[31m[1m>[22m[39m[9
+0m 1 |[39m 
+[36mimport[39m { 
+useState[33m,[39m 
+useEffect[33m,[39m [33mS
+uspense[39m[33m,[39m 
+useMemo[33m,[39m 
+useCallback[33m,[39m 
+useRef } [36mfrom[39m [3
+2m'react'[39m[33m;[39m
+ [90m   |[39m            
+                           
+                        [3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m
+ [90m 2 |[39m 
+[36mimport[39m { 
+useRouter[33m,[39m 
+useSearchParams } 
+[36mfrom[39m [32m'next/n
+avigation'[39m[33m;[39m
+ [90m 3 |[39m 
+[36mimport[39m { 
+onAuthStateChanged } 
+[36mfrom[39m [32m'fireba
+se/auth'[39m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+auth[33m,[39m 
+db[33m,[39m storage } 
+[36mfrom[39m [32m'../../
+../lib/firebase'[39m[33m;
+[39m[0m
+
+You're importing a 
+component that needs 
+`useRef`. This React Hook 
+only works in a Client 
+Component. To fix, mark 
+the file (or its parent) 
+with the `"use client"` 
+directive.
+
+ Learn more: https://nextjs
+.org/docs/app/api-reference
+/directives/use-client
+
+
+
+
+./src/app/mr-build/editor/p
+age.js:2:10
+Ecmascript file had an 
+error
+[0m [90m 1 |[39m 
+[36mimport[39m { 
+useState[33m,[39m 
+useEffect[33m,[39m [33mS
+uspense[39m[33m,[39m 
+useMemo[33m,[39m 
+useCallback[33m,[39m 
+useRef } [36mfrom[39m [3
+2m'react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 
+2 |[39m [36mimport[39m 
+{ useRouter[33m,[39m 
+useSearchParams } 
+[36mfrom[39m [32m'next/n
+avigation'[39m[33m;[39m
+ [90m   |[39m          [
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m
+ [90m 3 |[39m 
+[36mimport[39m { 
+onAuthStateChanged } 
+[36mfrom[39m [32m'fireba
+se/auth'[39m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+auth[33m,[39m 
+db[33m,[39m storage } 
+[36mfrom[39m [32m'../../
+../lib/firebase'[39m[33m;
+[39m
+ [90m 5 |[39m 
+[36mimport[39m { 
+doc[33m,[39m 
+getDoc[33m,[39m 
+setDoc[33m,[39m 
+collection } 
+[36mfrom[39m [32m'fireba
+se/firestore'[39m[33m;[3
+9m[0m
+
+You're importing a 
+component that needs 
+`useRouter`. This React 
+Hook only works in a 
+Client Component. To fix, 
+mark the file (or its 
+parent) with the `"use 
+client"` directive.
+
+ Learn more: https://nextjs
+.org/docs/app/api-reference
+/directives/use-client
+
+
+
+
+./src/app/mr-build/editor/p
+age.js:2:21
+Ecmascript file had an 
+error
+[0m [90m 1 |[39m 
+[36mimport[39m { 
+useState[33m,[39m 
+useEffect[33m,[39m [33mS
+uspense[39m[33m,[39m 
+useMemo[33m,[39m 
+useCallback[33m,[39m 
+useRef } [36mfrom[39m [3
+2m'react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 
+2 |[39m [36mimport[39m 
+{ useRouter[33m,[39m 
+useSearchParams } 
+[36mfrom[39m [32m'next/n
+avigation'[39m[33m;[39m
+ [90m   |[39m            
+         [31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m
+ [90m 3 |[39m 
+[36mimport[39m { 
+onAuthStateChanged } 
+[36mfrom[39m [32m'fireba
+se/auth'[39m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+auth[33m,[39m 
+db[33m,[39m storage } 
+[36mfrom[39m [32m'../../
+../lib/firebase'[39m[33m;
+[39m
+ [90m 5 |[39m 
+[36mimport[39m { 
+doc[33m,[39m 
+getDoc[33m,[39m 
+setDoc[33m,[39m 
+collection } 
+[36mfrom[39m [32m'fireba
+se/firestore'[39m[33m;[3
+9m[0m
+
+You're importing a 
+component that needs 
+`useSearchParams`. This 
+React Hook only works in a 
+Client Component. To fix, 
+mark the file (or its 
+parent) with the `"use 
+client"` directive.
+
+ Learn more: https://nextjs
+.org/docs/app/api-reference
+/directives/use-client
+
+
+
+
+./src/app/mr-build/editor/p
+age.js:1:10
+Ecmascript file had an 
+error
+[0m[31m[1m>[22m[39m[9
+0m 1 |[39m 
+[36mimport[39m { 
+useState[33m,[39m 
+useEffect[33m,[39m [33mS
+uspense[39m[33m,[39m 
+useMemo[33m,[39m 
+useCallback[33m,[39m 
+useRef } [36mfrom[39m [3
+2m'react'[39m[33m;[39m
+ [90m   |[39m          [
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+ [90m 2 |[39m 
+[36mimport[39m { 
+useRouter[33m,[39m 
+useSearchParams } 
+[36mfrom[39m [32m'next/n
+avigation'[39m[33m;[39m
+ [90m 3 |[39m 
+[36mimport[39m { 
+onAuthStateChanged } 
+[36mfrom[39m [32m'fireba
+se/auth'[39m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+auth[33m,[39m 
+db[33m,[39m storage } 
+[36mfrom[39m [32m'../../
+../lib/firebase'[39m[33m;
+[39m[0m
+
+You're importing a 
+component that needs 
+`useState`. This React 
+Hook only works in a 
+Client Component. To fix, 
+mark the file (or its 
+parent) with the `"use 
+client"` directive.
+
+ Learn more: https://nextjs
+.org/docs/app/api-reference
+/directives/use-client
+
+
+
+
+./src/app/mr-build/editor/p
+age.js:14:19
+Ecmascript file had an 
+error
+[0m [90m 12 |[39m
+ [90m 13 |[39m [90m// 
+Shared Components[39m
+[31m[1m>[22m[39m[90m 
+14 |[39m [36mconst[39m 
+[33mAICopilot[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AICopilot'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m           
+        [31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+ [90m 15 |[39m 
+[36mconst[39m 
+[33mAssetManager[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AssetManager'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 16 |[39m 
+[36mconst[39m 
+[33mSpriteEditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/SpriteEditor'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 17 |[39m 
+[36mconst[39m 
+[33mTerminal[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Terminal'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in Server 
+Components. Please move it 
+into a Client Component.
+
+
+./src/app/mr-build/editor/p
+age.js:15:22
+Ecmascript file had an 
+error
+[0m [90m 13 |[39m 
+[90m// Shared 
+Components[39m
+ [90m 14 |[39m 
+[36mconst[39m 
+[33mAICopilot[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AICopilot'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+[31m[1m>[22m[39m[90m 
+15 |[39m [36mconst[39m 
+[33mAssetManager[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AssetManager'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m           
+           [31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m
+ [90m 16 |[39m 
+[36mconst[39m 
+[33mSpriteEditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/SpriteEditor'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 17 |[39m 
+[36mconst[39m 
+[33mTerminal[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Terminal'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 18 |[39m 
+[36mconst[39m 
+[33mAuditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Auditor'[39m)[
+33m,[39m { ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in Server 
+Components. Please move it 
+into a Client Component.
+
+
+./src/app/mr-build/editor/p
+age.js:16:22
+Ecmascript file had an 
+error
+[0m [90m 14 |[39m 
+[36mconst[39m 
+[33mAICopilot[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AICopilot'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 15 |[39m 
+[36mconst[39m 
+[33mAssetManager[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AssetManager'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+[31m[1m>[22m[39m[90m 
+16 |[39m [36mconst[39m 
+[33mSpriteEditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/SpriteEditor'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m           
+           [31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m
+ [90m 17 |[39m 
+[36mconst[39m 
+[33mTerminal[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Terminal'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 18 |[39m 
+[36mconst[39m 
+[33mAuditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Auditor'[39m)[
+33m,[39m { ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 19 |[39m 
+[36mconst[39m 
+[33mFileTree[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/FileTree'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in Server 
+Components. Please move it 
+into a Client Component.
+
+
+./src/app/mr-build/editor/p
+age.js:17:18
+Ecmascript file had an 
+error
+[0m [90m 15 |[39m 
+[36mconst[39m 
+[33mAssetManager[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AssetManager'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 16 |[39m 
+[36mconst[39m 
+[33mSpriteEditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/SpriteEditor'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+[31m[1m>[22m[39m[90m 
+17 |[39m [36mconst[39m 
+[33mTerminal[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Terminal'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m           
+       [31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m
+ [90m 18 |[39m 
+[36mconst[39m 
+[33mAuditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Auditor'[39m)[
+33m,[39m { ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 19 |[39m 
+[36mconst[39m 
+[33mFileTree[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/FileTree'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 20 |[39m 
+[36mconst[39m 
+[33mARPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/ARPreview'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in Server 
+Components. Please move it 
+into a Client Component.
+
+
+./src/app/mr-build/editor/p
+age.js:18:17
+Ecmascript file had an 
+error
+[0m [90m 16 |[39m 
+[36mconst[39m 
+[33mSpriteEditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/SpriteEditor'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 17 |[39m 
+[36mconst[39m 
+[33mTerminal[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Terminal'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+[31m[1m>[22m[39m[90m 
+18 |[39m [36mconst[39m 
+[33mAuditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Auditor'[39m)[
+33m,[39m { ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m           
+      [31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m
+ [90m 19 |[39m 
+[36mconst[39m 
+[33mFileTree[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/FileTree'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 20 |[39m 
+[36mconst[39m 
+[33mARPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/ARPreview'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 21 |[39m 
+[36mconst[39m 
+[33mNormalPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/NormalPreview'[
+39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in Server 
+Components. Please move it 
+into a Client Component.
+
+
+./src/app/mr-build/editor/p
+age.js:19:18
+Ecmascript file had an 
+error
+[0m [90m 17 |[39m 
+[36mconst[39m 
+[33mTerminal[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Terminal'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 18 |[39m 
+[36mconst[39m 
+[33mAuditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Auditor'[39m)[
+33m,[39m { ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+[31m[1m>[22m[39m[90m 
+19 |[39m [36mconst[39m 
+[33mFileTree[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/FileTree'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m           
+       [31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m
+ [90m 20 |[39m 
+[36mconst[39m 
+[33mARPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/ARPreview'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 21 |[39m 
+[36mconst[39m 
+[33mNormalPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/NormalPreview'[
+39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 22 |[39m 
+[36mconst[39m 
+[33mLibraryManager[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/LibraryManager'
+[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in Server 
+Components. Please move it 
+into a Client Component.
+
+
+./src/app/mr-build/editor/p
+age.js:20:19
+Ecmascript file had an 
+error
+[0m [90m 18 |[39m 
+[36mconst[39m 
+[33mAuditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Auditor'[39m)[
+33m,[39m { ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 19 |[39m 
+[36mconst[39m 
+[33mFileTree[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/FileTree'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+[31m[1m>[22m[39m[90m 
+20 |[39m [36mconst[39m 
+[33mARPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/ARPreview'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m           
+        [31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+ [90m 21 |[39m 
+[36mconst[39m 
+[33mNormalPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/NormalPreview'[
+39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 22 |[39m 
+[36mconst[39m 
+[33mLibraryManager[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/LibraryManager'
+[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 23 |[39m 
+[36mconst[39m 
+[33mAICommandPalette[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AICommandPalette
+'[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in Server 
+Components. Please move it 
+into a Client Component.
+
+
+./src/app/mr-build/editor/p
+age.js:21:23
+Ecmascript file had an 
+error
+[0m [90m 19 |[39m 
+[36mconst[39m 
+[33mFileTree[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/FileTree'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 20 |[39m 
+[36mconst[39m 
+[33mARPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/ARPreview'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+[31m[1m>[22m[39m[90m 
+21 |[39m [36mconst[39m 
+[33mNormalPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/NormalPreview'[
+39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m           
+            [31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m
+ [90m 22 |[39m 
+[36mconst[39m 
+[33mLibraryManager[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/LibraryManager'
+[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 23 |[39m 
+[36mconst[39m 
+[33mAICommandPalette[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AICommandPalette
+'[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 24 |[39m 
+[36mconst[39m 
+[33mMonacoEditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/MonacoEditor'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in Server 
+Components. Please move it 
+into a Client Component.
+
+
+./src/app/mr-build/editor/p
+age.js:22:24
+Ecmascript file had an 
+error
+[0m [90m 20 |[39m 
+[36mconst[39m 
+[33mARPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/ARPreview'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 21 |[39m 
+[36mconst[39m 
+[33mNormalPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/NormalPreview'[
+39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+[31m[1m>[22m[39m[90m 
+22 |[39m [36mconst[39m 
+[33mLibraryManager[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/LibraryManager'
+[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m           
+             [31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m
+ [90m 23 |[39m 
+[36mconst[39m 
+[33mAICommandPalette[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AICommandPalette
+'[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 24 |[39m 
+[36mconst[39m 
+[33mMonacoEditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/MonacoEditor'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 25 |[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in Server 
+Components. Please move it 
+into a Client Component.
+
+
+./src/app/mr-build/editor/p
+age.js:23:26
+Ecmascript file had an 
+error
+[0m [90m 21 |[39m 
+[36mconst[39m 
+[33mNormalPreview[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/NormalPreview'[
+39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 22 |[39m 
+[36mconst[39m 
+[33mLibraryManager[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/LibraryManager'
+[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+[31m[1m>[22m[39m[90m 
+23 |[39m [36mconst[39m 
+[33mAICommandPalette[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AICommandPalette
+'[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m           
+               [31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m
+ [90m 24 |[39m 
+[36mconst[39m 
+[33mMonacoEditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/MonacoEditor'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 25 |[39m
+ [90m 26 |[39m 
+[36mimport[39m 
+[33mTabBar[39m 
+[36mfrom[39m [32m'../../
+../components/MREditor/TabB
+ar'[39m[33m;[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in Server 
+Components. Please move it 
+into a Client Component.
+
+
+./src/app/mr-build/editor/p
+age.js:24:22
+Ecmascript file had an 
+error
+[0m [90m 22 |[39m 
+[36mconst[39m 
+[33mLibraryManager[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/LibraryManager'
+[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 23 |[39m 
+[36mconst[39m 
+[33mAICommandPalette[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/AICommandPalette
+'[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+[31m[1m>[22m[39m[90m 
+24 |[39m [36mconst[39m 
+[33mMonacoEditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/MonacoEditor'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m           
+           [31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m
+ [90m 25 |[39m
+ [90m 26 |[39m 
+[36mimport[39m 
+[33mTabBar[39m 
+[36mfrom[39m [32m'../../
+../components/MREditor/TabB
+ar'[39m[33m;[39m
+ [90m 27 |[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in Server 
+Components. Please move it 
+into a Client Component.
+
+
+./src/components/MREditor/A
+uditor.js:1:20
+Ecmascript file had an 
+error
+[0m[31m[1m>[22m[39m[9
+0m 1 |[39m 
+[36mimport[39m { 
+useState[33m,[39m 
+useEffect } [36mfrom[39m 
+[32m'react'[39m[33m;[39
+m
+ [90m   |[39m            
+        [31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m 
+[36mimport[39m { [33mChe
+ckCircle2[39m[33m,[39m 
+[33mAlertTriangle[39m[33m
+,[39m [33mXCircle[39m[3
+3m,[39m 
+[33mInfo[39m[33m,[39m 
+[33mRefreshCw[39m } 
+[36mfrom[39m [32m'lucide
+-react'[39m[33m;[39m
+ [90m 3 |[39m
+ [90m 4 |[39m 
+[36mexport[39m 
+[36mdefault[39m 
+[36mfunction[39m 
+[33mAuditor[39m({ files 
+}) {[0m
+
+You're importing a 
+component that needs 
+`useEffect`. This React 
+Hook only works in a 
+Client Component. To fix, 
+mark the file (or its 
+parent) with the `"use 
+client"` directive.
+
+ Learn more: https://nextjs
+.org/docs/app/api-reference
+/directives/use-client
+
+
+
+Import traces:
+  Server Component:
+    ./src/components/MREdit
+or/Auditor.js
+    ./src/app/mr-build/edit
+or/page.js
+
+  Client Component Browser:
+    ./src/components/MREdit
+or/Auditor.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+
+./src/components/MREditor/A
+uditor.js:1:10
+Ecmascript file had an 
+error
+[0m[31m[1m>[22m[39m[9
+0m 1 |[39m 
+[36mimport[39m { 
+useState[33m,[39m 
+useEffect } [36mfrom[39m 
+[32m'react'[39m[33m;[39
+m
+ [90m   |[39m          [
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+ [90m 2 |[39m 
+[36mimport[39m { [33mChe
+ckCircle2[39m[33m,[39m 
+[33mAlertTriangle[39m[33m
+,[39m [33mXCircle[39m[3
+3m,[39m 
+[33mInfo[39m[33m,[39m 
+[33mRefreshCw[39m } 
+[36mfrom[39m [32m'lucide
+-react'[39m[33m;[39m
+ [90m 3 |[39m
+ [90m 4 |[39m 
+[36mexport[39m 
+[36mdefault[39m 
+[36mfunction[39m 
+[33mAuditor[39m({ files 
+}) {[0m
+
+You're importing a 
+component that needs 
+`useState`. This React 
+Hook only works in a 
+Client Component. To fix, 
+mark the file (or its 
+parent) with the `"use 
+client"` directive.
+
+ Learn more: https://nextjs
+.org/docs/app/api-reference
+/directives/use-client
+
+
+
+Import traces:
+  Server Component:
+    ./src/components/MREdit
+or/Auditor.js
+    ./src/app/mr-build/edit
+or/page.js
+
+  Client Component Browser:
+    ./src/components/MREdit
+or/Auditor.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+
+./src/components/MREditor/T
+erminal.js:1:17
+Ecmascript file had an 
+error
+[0m[31m[1m>[22m[39m[9
+0m 1 |[39m 
+[36mimport[39m 
+[33mReact[39m[33m,[39m 
+{ useEffect[33m,[39m 
+useRef[33m,[39m 
+useCallback[33m,[39m 
+memo } [36mfrom[39m [32m
+'react'[39m[33m;[39m
+ [90m   |[39m            
+     [31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+ [90m 2 |[39m 
+[36mimport[39m { 
+[33mTerminal[39m 
+[36mas[39m 
+[33mXTerminal[39m } 
+[36mfrom[39m [32m'@xterm
+/xterm'[39m[33m;[39m
+ [90m 3 |[39m 
+[36mimport[39m { 
+[33mFitAddon[39m } 
+[36mfrom[39m [32m'@xterm
+/addon-fit'[39m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+[33mWebLinksAddon[39m } 
+[36mfrom[39m [32m'@xterm
+/addon-web-links'[39m[33m
+;[39m[0m
+
+You're importing a 
+component that needs 
+`useEffect`. This React 
+Hook only works in a 
+Client Component. To fix, 
+mark the file (or its 
+parent) with the `"use 
+client"` directive.
+
+ Learn more: https://nextjs
+.org/docs/app/api-reference
+/directives/use-client
+
+
+
+Import traces:
+  Server Component:
+    ./src/components/MREdit
+or/Terminal.js
+    ./src/app/mr-build/edit
+or/page.js
+
+  Client Component Browser:
+    ./src/components/MREdit
+or/Terminal.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+
+./src/components/MREditor/T
+erminal.js:1:28
+Ecmascript file had an 
+error
+[0m[31m[1m>[22m[39m[9
+0m 1 |[39m 
+[36mimport[39m 
+[33mReact[39m[33m,[39m 
+{ useEffect[33m,[39m 
+useRef[33m,[39m 
+useCallback[33m,[39m 
+memo } [36mfrom[39m [32m
+'react'[39m[33m;[39m
+ [90m   |[39m            
+                [31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m
+ [90m 2 |[39m 
+[36mimport[39m { 
+[33mTerminal[39m 
+[36mas[39m 
+[33mXTerminal[39m } 
+[36mfrom[39m [32m'@xterm
+/xterm'[39m[33m;[39m
+ [90m 3 |[39m 
+[36mimport[39m { 
+[33mFitAddon[39m } 
+[36mfrom[39m [32m'@xterm
+/addon-fit'[39m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+[33mWebLinksAddon[39m } 
+[36mfrom[39m [32m'@xterm
+/addon-web-links'[39m[33m
+;[39m[0m
+
+You're importing a 
+component that needs 
+`useRef`. This React Hook 
+only works in a Client 
+Component. To fix, mark 
+the file (or its parent) 
+with the `"use client"` 
+directive.
+
+ Learn more: https://nextjs
+.org/docs/app/api-reference
+/directives/use-client
+
+
+
+Import traces:
+  Server Component:
+    ./src/components/MREdit
+or/Terminal.js
+    ./src/app/mr-build/edit
+or/page.js
+
+  Client Component Browser:
+    ./src/components/MREdit
+or/Terminal.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+
+./src/app/nex-ai/page.js:4:
+1
+Module not found: Can't 
+resolve 'prismjs'
+[0m [90m 2 |[39m 
+[36mimport[39m { 
+useState[33m,[39m 
+useRef[33m,[39m 
+useEffect } [36mfrom[39m 
+[32m'react'[39m[33m;[39
+m
+ [90m 3 |[39m 
+[36mimport[39m 
+[33mLink[39m 
+[36mfrom[39m [32m'next/l
+ink'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 
+4 |[39m [36mimport[39m 
+[33mPrism[39m 
+[36mfrom[39m [32m'prismj
+s'[39m[33m;[39m
+ [90m   |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m
+ [90m 5 |[39m 
+[36mimport[39m [32m'pris
+mjs/themes/prism-tomorrow.c
+ss'[39m[33m;[39m
+ [90m 6 |[39m 
+[36mimport[39m { 
+db[33m,[39m auth } 
+[36mfrom[39m [32m'@/lib/
+firebase'[39m[33m;[39m
+ [90m 7 |[39m 
+[36mimport[39m { onAuthSt
+ateChanged[33m,[39m [33m
+GoogleAuthProvider[39m[33
+m,[39m 
+signInWithPopup[33m,[39m 
+signOut } [36mfrom[39m [
+32m'firebase/auth'[39m[33
+m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    
+./src/app/nex-ai/page.js 
+[Client Component Browser]
+    
+./src/app/nex-ai/page.js 
+[Server Component]
+
+  Client Component SSR:
+    
+./src/app/nex-ai/page.js 
+[Client Component SSR]
+    
+./src/app/nex-ai/page.js 
+[Server Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/mr-engine/editor/
+page.js:16:1
+Module not found: Can't 
+resolve 'prismjs/components
+/prism-clike'
+[0m [90m 14 |[39m 
+[36mimport[39m 
+[33mEditor[39m 
+[36mfrom[39m [32m'react-
+simple-code-editor'[39m[3
+3m;[39m
+ [90m 15 |[39m 
+[36mimport[39m { 
+highlight[33m,[39m 
+languages } [36mfrom[39m 
+[32m'prismjs/components/pr
+ism-core'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 
+16 |[39m [36mimport[39m 
+[32m'prismjs/components/pr
+ism-clike'[39m[33m;[39m
+ [90m    |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m
+ [90m 17 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-javasc
+ript'[39m[33m;[39m
+ [90m 18 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-css'[
+39m[33m;[39m
+ [90m 19 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-markup
+'[39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component SSR]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/mr-engine/editor/
+page.js:15:1
+Module not found: Can't 
+resolve 'prismjs/components
+/prism-core'
+[0m [90m 13 |[39m 
+[36mimport[39m 
+[33mLoader[39m 
+[36mfrom[39m [32m'../../
+../components/Loader'[39m
+[33m;[39m
+ [90m 14 |[39m 
+[36mimport[39m 
+[33mEditor[39m 
+[36mfrom[39m [32m'react-
+simple-code-editor'[39m[3
+3m;[39m
+[31m[1m>[22m[39m[90m 
+15 |[39m [36mimport[39m 
+{ highlight[33m,[39m 
+languages } [36mfrom[39m 
+[32m'prismjs/components/pr
+ism-core'[39m[33m;[39m
+ [90m    |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m
+ [90m 16 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-clike'
+[39m[33m;[39m
+ [90m 17 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-javasc
+ript'[39m[33m;[39m
+ [90m 18 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-css'[
+39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component SSR]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/mr-engine/editor/
+page.js:18:1
+Module not found: Can't 
+resolve 'prismjs/components
+/prism-css'
+[0m [90m 16 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-clike'
+[39m[33m;[39m
+ [90m 17 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-javasc
+ript'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 
+18 |[39m [36mimport[39m 
+[32m'prismjs/components/pr
+ism-css'[39m[33m;[39m
+ [90m    |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m
+ [90m 19 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-markup
+'[39m[33m;[39m
+ [90m 20 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-python
+'[39m[33m;[39m
+ [90m 21 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-json'
+[39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component SSR]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/mr-engine/editor/
+page.js:17:1
+Module not found: Can't 
+resolve 'prismjs/components
+/prism-javascript'
+[0m [90m 15 |[39m 
+[36mimport[39m { 
+highlight[33m,[39m 
+languages } [36mfrom[39m 
+[32m'prismjs/components/pr
+ism-core'[39m[33m;[39m
+ [90m 16 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-clike'
+[39m[33m;[39m
+[31m[1m>[22m[39m[90m 
+17 |[39m [36mimport[39m 
+[32m'prismjs/components/pr
+ism-javascript'[39m[33m;
+[39m
+ [90m    |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+ [90m 18 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-css'[
+39m[33m;[39m
+ [90m 19 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-markup
+'[39m[33m;[39m
+ [90m 20 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-python
+'[39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component SSR]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/mr-engine/editor/
+page.js:21:1
+Module not found: Can't 
+resolve 'prismjs/components
+/prism-json'
+[0m [90m 19 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-markup
+'[39m[33m;[39m
+ [90m 20 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-python
+'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 
+21 |[39m [36mimport[39m 
+[32m'prismjs/components/pr
+ism-json'[39m[33m;[39m
+ [90m    |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m
+ [90m 22 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-markdo
+wn'[39m[33m;[39m
+ [90m 23 |[39m
+ [90m 24 |[39m [90m// 
+Shared Components[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component SSR]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/mr-engine/editor/
+page.js:22:1
+Module not found: Can't 
+resolve 'prismjs/components
+/prism-markdown'
+[0m [90m 20 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-python
+'[39m[33m;[39m
+ [90m 21 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-json'
+[39m[33m;[39m
+[31m[1m>[22m[39m[90m 
+22 |[39m [36mimport[39m 
+[32m'prismjs/components/pr
+ism-markdown'[39m[33m;[3
+9m
+ [90m    |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m
+ [90m 23 |[39m
+ [90m 24 |[39m [90m// 
+Shared Components[39m
+ [90m 25 |[39m 
+[36mconst[39m 
+[33mTerminal[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/Terminal'[39m)
+[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component SSR]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/mr-engine/editor/
+page.js:19:1
+Module not found: Can't 
+resolve 'prismjs/components
+/prism-markup'
+[0m [90m 17 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-javasc
+ript'[39m[33m;[39m
+ [90m 18 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-css'[
+39m[33m;[39m
+[31m[1m>[22m[39m[90m 
+19 |[39m [36mimport[39m 
+[32m'prismjs/components/pr
+ism-markup'[39m[33m;[39m
+ [90m    |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+ [90m 20 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-python
+'[39m[33m;[39m
+ [90m 21 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-json'
+[39m[33m;[39m
+ [90m 22 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-markdo
+wn'[39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component SSR]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/mr-engine/editor/
+page.js:20:1
+Module not found: Can't 
+resolve 'prismjs/components
+/prism-python'
+[0m [90m 18 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-css'[
+39m[33m;[39m
+ [90m 19 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-markup
+'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 
+20 |[39m [36mimport[39m 
+[32m'prismjs/components/pr
+ism-python'[39m[33m;[39m
+ [90m    |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+ [90m 21 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-json'
+[39m[33m;[39m
+ [90m 22 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-markdo
+wn'[39m[33m;[39m
+ [90m 23 |[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component SSR]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/mr-engine/editor/
+page.js:32:1
+Module not found: Can't 
+resolve 'prismjs/themes/pri
+sm-tomorrow.css'
+[0m [90m 30 |[39m 
+[36mconst[39m 
+[33mSpriteEditor[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimport[3
+9m([32m'../../../component
+s/MREditor/SpriteEditor'[3
+9m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m 31 |[39m
+[31m[1m>[22m[39m[90m 
+32 |[39m [36mimport[39m 
+[32m'prismjs/themes/prism-
+tomorrow.css'[39m[33m;[3
+9m  
+ [90m    |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m
+ [90m 33 |[39m 
+[36mimport[39m { 
+ [90m 34 |[39m     [33mG
+amepad2[39m[33m,[39m 
+ [90m 35 |[39m     
+[33mStar[39m[33m,[39m 
+[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component SSR]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/nex-ai/page.js:5:
+1
+Module not found: Can't 
+resolve 'prismjs/themes/pri
+sm-tomorrow.css'
+[0m [90m 3 |[39m 
+[36mimport[39m 
+[33mLink[39m 
+[36mfrom[39m [32m'next/l
+ink'[39m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m 
+[33mPrism[39m 
+[36mfrom[39m [32m'prismj
+s'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 
+5 |[39m [36mimport[39m 
+[32m'prismjs/themes/prism-t
+omorrow.css'[39m[33m;[39
+m
+ [90m   |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m
+ [90m 6 |[39m 
+[36mimport[39m { 
+db[33m,[39m auth } 
+[36mfrom[39m [32m'@/lib/
+firebase'[39m[33m;[39m
+ [90m 7 |[39m 
+[36mimport[39m { onAuthSt
+ateChanged[33m,[39m [33m
+GoogleAuthProvider[39m[33
+m,[39m 
+signInWithPopup[33m,[39m 
+signOut } [36mfrom[39m [
+32m'firebase/auth'[39m[33
+m;[39m
+ [90m 8 |[39m 
+[36mimport[39m { [0m
+
+
+
+Import traces:
+  Client Component Browser:
+    
+./src/app/nex-ai/page.js 
+[Client Component Browser]
+    
+./src/app/nex-ai/page.js 
+[Server Component]
+
+  Client Component SSR:
+    
+./src/app/nex-ai/page.js 
+[Client Component SSR]
+    
+./src/app/nex-ai/page.js 
+[Server Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/mr-engine/editor/
+page.js:14:1
+Module not found: Can't 
+resolve 
+'react-simple-code-editor'
+[0m [90m 12 |[39m
+ [90m 13 |[39m 
+[36mimport[39m 
+[33mLoader[39m 
+[36mfrom[39m [32m'../../
+../components/Loader'[39m
+[33m;[39m
+[31m[1m>[22m[39m[90m 
+14 |[39m [36mimport[39m 
+[33mEditor[39m 
+[36mfrom[39m [32m'react-
+simple-code-editor'[39m[3
+3m;[39m
+ [90m    |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m
+ [90m 15 |[39m 
+[36mimport[39m { 
+highlight[33m,[39m 
+languages } [36mfrom[39m 
+[32m'prismjs/components/pr
+ism-core'[39m[33m;[39m
+ [90m 16 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-clike'
+[39m[33m;[39m
+ [90m 17 |[39m 
+[36mimport[39m [32m'pris
+mjs/components/prism-javasc
+ript'[39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component Browser]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/mr-engine/edi
+tor/page.js [Client 
+Component SSR]
+    ./src/app/mr-engine/edi
+tor/page.js [Server 
+Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/app/mr-build/editor
+Invalid import
+'client-only' cannot be 
+imported from a Server 
+Component module. It 
+should only be used from a 
+Client Component.
+The error was caused by 
+using 'styled-jsx'. It 
+only works in a Client 
+Component but none of its 
+parents are marked with 
+"use client", so they're 
+Server Components by 
+default.
+
+
+
+./src/components/MREditor
+Invalid import
+'client-only' cannot be 
+imported from a Server 
+Component module. It 
+should only be used from a 
+Client Component.
+The error was caused by 
+using 'styled-jsx'. It 
+only works in a Client 
+Component but none of its 
+parents are marked with 
+"use client", so they're 
+Server Components by 
+default.
+
+
+
+    at <unknown> (./src/app
+/mr-build/editor/page.js:1:
+20)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:1:
+63)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:2:
+10)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:2:
+21)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:1:
+10)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:14
+:19)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:15
+:22)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:16
+:22)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:17
+:18)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:18
+:17)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:19
+:18)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:20
+:19)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:21
+:23)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:22
+:24)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:23
+:26)
+    at <unknown> (./src/app
+/mr-build/editor/page.js:24
+:22)
+    at <unknown> (./src/com
+ponents/MREditor/Auditor.js
+:1:20)
+    at <unknown> (./src/com
+ponents/MREditor/Auditor.js
+:1:10)
+    at <unknown> (./src/com
+ponents/MREditor/Terminal.j
+s:1:17)
+    at <unknown> (./src/com
+ponents/MREditor/Terminal.j
+s:1:28)
+    at <unknown> (./src/app
+/nex-ai/page.js:4:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/app
+/mr-engine/editor/page.js:1
+6:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/app
+/mr-engine/editor/page.js:1
+5:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/app
+/mr-engine/editor/page.js:1
+8:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/app
+/mr-engine/editor/page.js:1
+7:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/app
+/mr-engine/editor/page.js:2
+1:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/app
+/mr-engine/editor/page.js:2
+2:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/app
+/mr-engine/editor/page.js:1
+9:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/app
+/mr-engine/editor/page.js:2
+0:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/app
+/mr-engine/editor/page.js:3
+2:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/app
+/nex-ai/page.js:5:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/app
+/mr-engine/editor/page.js:1
+4:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
