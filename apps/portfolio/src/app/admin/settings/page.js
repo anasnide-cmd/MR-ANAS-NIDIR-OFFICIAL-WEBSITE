@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { auth, db } from '../../@mr/core/firebase';
+import { auth, db } from '@mr/core/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import Loader from '../../@mr/ui/Loader';
+import Loader from '@mr/ui/Loader';
 
 const ALLOWED_ADMINS = ['anasnide@gmail.com', 'ceo@anasnidir.com'];
 

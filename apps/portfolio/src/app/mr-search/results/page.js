@@ -2,11 +2,11 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getSearchResults } from '../../@mr/core/searchService';
-import SkeletonLoader from '../../@mr/ui/SkeletonLoader';
-import SearchControlMenu from '../../@mr/ui/SearchEngine/SearchControlMenu';
-import SearchSettingsModal from '../../@mr/ui/SearchEngine/SearchSettingsModal';
-import AppLauncher from '../../@mr/ui/SearchEngine/AppLauncher';
+import { getSearchResults } from '@mr/core/searchService';
+import SkeletonLoader from '@mr/ui/SkeletonLoader';
+import SearchControlMenu from '@mr/ui/SearchEngine/SearchControlMenu';
+import SearchSettingsModal from '@mr/ui/SearchEngine/SearchSettingsModal';
+import AppLauncher from '@mr/ui/SearchEngine/AppLauncher';
 
 function SearchResultsContent() {
     const searchParams = useSearchParams();

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import { Sparkles, LayoutGrid, Type, Square, Image as ImageIcon, Search, Circle, Layers } from 'lucide-react';
-import { TEMPLATES_DATA } from '../../app/creovate/templates/data';
+import { TEMPLATES_DATA } from './data';
 
 export default function Toolbar({ addElement, canvasBg, setCanvasBg, loadTemplate }) {
     const [activeTab, setActiveTab] = useState(null); // default closed on mobile to show canvas

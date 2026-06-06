@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { products } from '../../data/shop-products';
+import { products } from '../data/shop-products';
 import { auth, db } from '@mr/core/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';

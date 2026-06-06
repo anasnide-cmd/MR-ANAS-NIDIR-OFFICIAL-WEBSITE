@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
-import { auth, db } from '../../@mr/core/firebase';
+import { auth, db } from '@mr/core/firebase';
 import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Loader from '../../@mr/ui/Loader';
+import Loader from '@mr/ui/Loader';
 
 import { onAuthStateChanged } from 'firebase/auth';
 

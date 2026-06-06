@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { products } from '../../data/shop-products';
+import { products } from '../data/shop-products';
 import { GridItem } from './CommandGrid';
 import { 
   ShoppingBag, Users, DollarSign, TrendingUp, 

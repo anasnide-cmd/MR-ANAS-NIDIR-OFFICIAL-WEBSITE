@@ -1,5 +1,5 @@
 'use client';
-import StoreDashboard from '../../@mr/ui/Admin/StoreDashboard';
+import StoreDashboard from '@mr/ui/Admin/StoreDashboard';
 
 export default function AdminStorePage() {
     return (
