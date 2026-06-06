@@ -98,6 +98,7 @@ export default function ARPreview({ url, srcDoc }) {
                             srcDoc={srcDoc}
                             style={{width: '100%', height: '100%', border: 'none'}}
                             title="AR Preview"
+                            loading="lazy"
                         />
                     </PhoneModel>
 

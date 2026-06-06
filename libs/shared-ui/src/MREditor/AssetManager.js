@@ -181,7 +181,7 @@ export default function AssetManager({ onInsert, onSpriteEditor }) {
                     assets.map(asset => (
                         <div key={asset.path} className="asset-card">
                             <div className="img-wrapper" onClick={() => onInsert && onInsert(asset.url)}>
-                                <img src={asset.url} alt={asset.name} />
+                                <img src={asset.url} alt={asset.name} loading="lazy" />
                             </div>
                             <div className="actions">
                                 <button onClick={() => copyToClipboard(asset.url)} title="Copy URL"><Copy size={12}/></button>

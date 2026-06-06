@@ -143,6 +143,7 @@ export default function UserProfile() {
                          src={`https://ui-avatars.com/api/?name=${profileUser.displayName}&background=00f0ff&color=000&size=128`} 
                          alt={profileUser.displayName} 
                          className="profile-avatar"
+                         loading="lazy"
                     />
                     <div className="profile-info">
                         <h1 className="username">{profileUser.displayName}</h1>

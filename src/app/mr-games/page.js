@@ -281,6 +281,7 @@ function CommunityPlayer({ game }) {
             srcDoc={srcDoc}
             style={{ width: '100%', height: '100%', border: 'none' }}
             title={game.name}
+            loading="lazy"
         />
     );
 }

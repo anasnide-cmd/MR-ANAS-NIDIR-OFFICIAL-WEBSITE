@@ -39,6 +39,7 @@ export default function NormalPreview({ srcDoc }) {
                     id="preview-iframe"
                     srcDoc={srcDoc}
                     title="Normal Preview"
+                    loading="lazy"
                     sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
                 />
             </div>

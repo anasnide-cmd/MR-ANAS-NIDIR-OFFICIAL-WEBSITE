@@ -275,6 +275,7 @@ export default function BuildDashboard() {
                             src={`https://ui-avatars.com/api/?name=${user.email}&background=00f0ff&color=000`} 
                             alt="User" 
                             className="avatar-sm" 
+                            loading="lazy"
                         />
                     </div>
                 </div>

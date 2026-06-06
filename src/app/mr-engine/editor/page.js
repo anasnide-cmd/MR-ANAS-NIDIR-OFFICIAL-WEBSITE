@@ -337,6 +337,7 @@ function EditorContent() {
                         </div>
                         <iframe 
                             key={previewKey}
+                            loading="lazy"
                             srcDoc={`
                                 <html>
                                     <head>
