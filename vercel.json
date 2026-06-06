@@ -1,8 +1,6 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "buildCommand": "npx turbo run build --filter=portfolio",
-  "outputDirectory": "apps/portfolio/.next",
   "headers": [
     {
       "source": "/(.*)",

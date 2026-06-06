@@ -3,16 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "npm@10.8.2",
-  "workspaces": [
-    "apps/*",
-    "libs/*"
-  ],
   "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "build:all": "turbo run build",
-    "start": "turbo run start",
-    "lint": "turbo run lint",
+    "dev": "next dev",
+    "build": "next build",
+    "build:all": "next build",
+    "start": "next start",
+    "lint": "next lint",
     "deploy:firestore": "firebase deploy --only firestore"
   },
   "dependencies": {
@@ -69,7 +65,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18",
-    "turbo": "^2.9.3"
+    "tailwindcss": "^4.1.18"
   }
 }
