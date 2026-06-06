@@ -14,7 +14,7 @@ This project is built as a high-performance, AI-first platform utilizing modern 
 - **Framework**: Next.js 16.1 (App Router)
 - **Styling & Animation**: Tailwind CSS v4, Framer Motion, GSAP, and HeroUI 
 - **3D Experiences**: Three.js, React Three Fiber, React Three Drei
-- **Backend/DB**: Firebase Ecosystem (Authentication, Firestore, Storage, Hosting)
+- **Backend/DB**: Firebase Ecosystem (Authentication, Firestore, Storage)
 - **AI Integration**: Vercel AI SDK, OpenAI integration for conversational and generative capabilities
 - **Payment & Data**: PayPal JS SDK, Chart.js, HTML5-Qrcode
 
@@ -62,17 +62,12 @@ npm run dev
 
 ### Deployment
 
-Deploying the application and its configurations to Firebase:
+- **Application (Next.js)**: Automatically built and deployed via **Vercel** integration (using the root `vercel.json`).
+- **Database (Firebase/Firestore)**: Deploy database rules and indexes using:
 
 ```bash
-# Build the application
-npm run build
-
-# Deploy Hosting
-npm run deploy:hosting
-
-# Deploy Firestore Rules
-npm run deploy:rules
+# Deploy Firestore rules and indexes
+npm run deploy:firestore
 ```
 
 ## 🤝 Contributing & Maintenance

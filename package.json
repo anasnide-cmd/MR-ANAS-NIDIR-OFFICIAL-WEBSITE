@@ -9,12 +9,11 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
+    "build": "turbo run build",
     "build:all": "turbo run build",
     "start": "turbo run start",
     "lint": "turbo run lint",
-    "deploy:firebase": "npm run build:all && firebase deploy",
-    "deploy:hosting": "npm run build:all && firebase deploy --only hosting",
-    "deploy:rules": "firebase deploy --only firestore:rules"
+    "deploy:firestore": "firebase deploy --only firestore"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.12",

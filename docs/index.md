@@ -62,4 +62,4 @@ Control center for site administrators and user profile management.
 
 - **Local Dev**: `npm run dev`
 - **Build**: `npm run build`
-- **Deploy**: Integrated Firebase Hosting and Firestore Rules.
+- **Deploy**: Vercel for web application hosting, and Firestore database rules/indexes.
