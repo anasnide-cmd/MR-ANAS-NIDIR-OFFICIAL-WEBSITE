@@ -2,29 +2,29 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, db, storage } from '../../../lib/firebase';
+import { auth, db, storage } from '@mr/core/firebase';
 import { doc, getDoc, setDoc, collection } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 import dynamic from 'next/dynamic';
-import Loader from '../../../components/Loader';
+import Loader from '@mr/ui/Loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
 // Shared Components
-const AICopilot = dynamic(() => import('../../../components/MREditor/AICopilot'), { ssr: false });
-const AssetManager = dynamic(() => import('../../../components/MREditor/AssetManager'), { ssr: false });
-const SpriteEditor = dynamic(() => import('../../../components/MREditor/SpriteEditor'), { ssr: false });
-const Terminal = dynamic(() => import('../../../components/MREditor/Terminal'), { ssr: false });
-const Auditor = dynamic(() => import('../../../components/MREditor/Auditor'), { ssr: false });
-const FileTree = dynamic(() => import('../../../components/MREditor/FileTree'), { ssr: false });
-const ARPreview = dynamic(() => import('../../../components/MREditor/ARPreview'), { ssr: false });
-const NormalPreview = dynamic(() => import('../../../components/MREditor/NormalPreview'), { ssr: false });
-const LibraryManager = dynamic(() => import('../../../components/MREditor/LibraryManager'), { ssr: false });
-const AICommandPalette = dynamic(() => import('../../../components/MREditor/AICommandPalette'), { ssr: false });
+const AICopilot = dynamic(() => import('@mr/ui/MREditor/AICopilot'), { ssr: false });
+const AssetManager = dynamic(() => import('@mr/ui/MREditor/AssetManager'), { ssr: false });
+const SpriteEditor = dynamic(() => import('@mr/ui/MREditor/SpriteEditor'), { ssr: false });
+const Terminal = dynamic(() => import('@mr/ui/MREditor/Terminal'), { ssr: false });
+const Auditor = dynamic(() => import('@mr/ui/MREditor/Auditor'), { ssr: false });
+const FileTree = dynamic(() => import('@mr/ui/MREditor/FileTree'), { ssr: false });
+const ARPreview = dynamic(() => import('@mr/ui/MREditor/ARPreview'), { ssr: false });
+const NormalPreview = dynamic(() => import('@mr/ui/MREditor/NormalPreview'), { ssr: false });
+const LibraryManager = dynamic(() => import('@mr/ui/MREditor/LibraryManager'), { ssr: false });
+const AICommandPalette = dynamic(() => import('@mr/ui/MREditor/AICommandPalette'), { ssr: false });
 
 import Editor from 'react-simple-code-editor';
-import TabBar from '../../../components/MREditor/TabBar';
+import TabBar from '@mr/ui/MREditor/TabBar';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';

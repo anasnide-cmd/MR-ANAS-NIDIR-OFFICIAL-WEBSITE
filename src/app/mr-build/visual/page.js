@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, db } from '../../../lib/firebase';
+import { auth, db } from '@mr/core/firebase';
 import { doc, getDoc, setDoc, collection } from 'firebase/firestore';
 import {
     ChevronLeft, Save, Monitor, Smartphone, Tablet,
@@ -12,7 +12,7 @@ import {
     GripVertical, ChevronRight, ChevronDown, Check,
     Zap, Copy, ExternalLink, PanelLeft, PanelRight
 } from 'lucide-react';
-import Loader from '../../../components/Loader';
+import Loader from '@mr/ui/Loader';
 
 // â”€â”€â”€ Global CSS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const VISUAL_CSS = `
